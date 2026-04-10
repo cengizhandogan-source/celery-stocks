@@ -13,6 +13,7 @@ import Minimap from '@/components/layout/Minimap';
 import { useWindowShortcuts } from '@/hooks/useWindowShortcuts';
 import { usePresence } from '@/hooks/usePresence';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useUser } from '@/hooks/useUser';
 import { WindowType, LayoutItem } from '@/lib/types';
 
 const SYMBOL_EDITABLE_TYPES: Set<WindowType> = new Set([
@@ -88,6 +89,17 @@ export default function TerminalShell() {
   usePresence();
   useUserProfile();
   const hydrated = useLayoutHydrated();
+  const { user, loading: authLoading } = useUser();
+  const supabaseSynced = useRef(false);
+
+  // Initialize layout from Supabase after localStorage hydration + auth resolution
+  useEffect(() => {
+    if (!hydrated || authLoading || supabaseSynced.current) return;
+    supabaseSynced.current = true;
+    if (user) {
+      useLayoutStore.getState().initializeFromSupabase();
+    }
+  }, [hydrated, user, authLoading]);
   const { windows, layouts, removeWindow, updateWindowPosition, updateWindowSize, bringToFront, canvasOffset, setCanvasOffset, canvasScale, setCanvasScale, isDragging, setIsDragging, setViewportSize, minimizedWindows, pinnedWindows, toggleMinimize, togglePin } = useLayoutStore();
   const activeSymbol = useAppStore((s) => s.activeSymbol);
   const [menuOpen, setMenuOpen] = useState(false);

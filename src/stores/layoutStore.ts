@@ -3,6 +3,108 @@ import { persist } from 'zustand/middleware';
 import { useState, useEffect } from 'react';
 import { WindowConfig, WindowType, LayoutItem } from '@/lib/types';
 import { WINDOW_DEFAULTS, WINDOW_TYPE_LABELS, CASCADE_OFFSET, PANEL_HEADER_HEIGHT } from '@/lib/constants';
+import { createClient } from '@/utils/supabase/client';
+
+const supabase = createClient();
+
+// --- Cached auth for synchronous access in beforeunload ---
+
+let cachedUserId: string | null = null;
+let cachedAccessToken: string | null = null;
+let lastSavedJson = '';
+
+if (typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((_event, session) => {
+    cachedUserId = session?.user?.id ?? null;
+    cachedAccessToken = session?.access_token ?? null;
+  });
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    cachedUserId = session?.user?.id ?? null;
+    cachedAccessToken = session?.access_token ?? null;
+  });
+}
+
+// --- Supabase helpers ---
+
+interface PersistedLayout {
+  windows: WindowConfig[];
+  layouts: LayoutItem[];
+  maxZIndex: number;
+  canvasOffset: { x: number; y: number };
+  canvasScale: number;
+  minimizedWindows: Record<string, { h: number; minH: number }>;
+  pinnedWindows: string[];
+}
+
+async function saveLayoutToSupabase(data: PersistedLayout): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Keep unload cache fresh
+    const { data: { session } } = await supabase.auth.getSession();
+    cachedUserId = user.id;
+    cachedAccessToken = session?.access_token ?? null;
+
+    await supabase.from('user_layouts').upsert(
+      { user_id: user.id, layout_data: data, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
+
+    lastSavedJson = JSON.stringify(data);
+  } catch {
+    // Silently fail — localStorage is the fallback
+  }
+}
+
+async function loadLayoutFromSupabase(): Promise<PersistedLayout | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data } = await supabase
+      .from('user_layouts')
+      .select('layout_data')
+      .eq('user_id', user.id)
+      .single();
+    return data?.layout_data as PersistedLayout | null;
+  } catch {
+    return null;
+  }
+}
+
+function migrateLayoutData(layouts: LayoutItem[]): { layouts: LayoutItem[]; maxZIndex: number } {
+  if (layouts.length === 0) return { layouts, maxZIndex: 0 };
+
+  const needsMigration = layouts.some(l => l.w > 0 && l.w < 20);
+  if (needsMigration) {
+    const COL_PX = 100;
+    const ROW_PX = 80;
+    const migrated = layouts.map((l, idx) => ({
+      ...l,
+      x: l.x * COL_PX,
+      y: l.y * ROW_PX,
+      w: l.w * COL_PX,
+      h: l.h * ROW_PX,
+      minW: (l.minW ?? 2) * COL_PX,
+      minH: (l.minH ?? 2) * ROW_PX,
+      zIndex: l.zIndex ?? idx,
+    }));
+    return { layouts: migrated, maxZIndex: migrated.length };
+  }
+
+  const fixed = layouts.map((l, idx) => ({
+    ...l,
+    zIndex: l.zIndex ?? idx,
+    y: Number.isFinite(l.y) ? l.y : 0,
+  }));
+  return { layouts: fixed, maxZIndex: Math.max(0, ...fixed.map(l => l.zIndex ?? 0)) };
+}
+
+// --- Hydration guard for debounced save ---
+
+let isHydrating = false;
+
+// --- Store ---
 
 interface LayoutState {
   windows: WindowConfig[];
@@ -32,11 +134,12 @@ interface LayoutState {
   togglePin: (id: string) => void;
   updateLayout: (layout: Array<{ i: string; x: number; y: number; w: number; h: number }>) => void;
   clearAll: () => void;
+  initializeFromSupabase: () => Promise<void>;
 }
 
 export const useLayoutStore = create<LayoutState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       windows: [],
       layouts: [],
       maxZIndex: 0,
@@ -221,6 +324,43 @@ export const useLayoutStore = create<LayoutState>()(
       })),
 
       clearAll: () => set({ windows: [], layouts: [], maxZIndex: 0, canvasOffset: { x: 0, y: 0 }, canvasScale: 1, minimizedWindows: {}, pinnedWindows: [] }),
+
+      initializeFromSupabase: async () => {
+        isHydrating = true;
+        try {
+          const cloudData = await loadLayoutFromSupabase();
+          if (cloudData && cloudData.layouts && cloudData.layouts.length > 0) {
+            // Cloud data exists — apply it (with migration if needed)
+            const migrated = migrateLayoutData(cloudData.layouts);
+            set({
+              windows: cloudData.windows,
+              layouts: migrated.layouts,
+              maxZIndex: migrated.maxZIndex,
+              canvasOffset: cloudData.canvasOffset ?? { x: 0, y: 0 },
+              canvasScale: cloudData.canvasScale ?? 1,
+              minimizedWindows: cloudData.minimizedWindows ?? {},
+              pinnedWindows: cloudData.pinnedWindows ?? [],
+            });
+          } else {
+            // No cloud data — migrate current localStorage state up to Supabase
+            const state = get();
+            const localData: PersistedLayout = {
+              windows: state.windows,
+              layouts: state.layouts,
+              maxZIndex: state.maxZIndex,
+              canvasOffset: state.canvasOffset,
+              canvasScale: state.canvasScale,
+              minimizedWindows: state.minimizedWindows,
+              pinnedWindows: state.pinnedWindows,
+            };
+            if (localData.windows.length > 0) {
+              await saveLayoutToSupabase(localData);
+            }
+          }
+        } finally {
+          isHydrating = false;
+        }
+      },
     }),
     {
       name: 'celery-layout',
@@ -235,35 +375,93 @@ export const useLayoutStore = create<LayoutState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (!state?.layouts || state.layouts.length === 0) return;
-
-        // Migration: detect old grid-unit layouts (w values 1-19 are grid units, not pixels)
-        const needsMigration = state.layouts.some(l => l.w > 0 && l.w < 20);
-        if (needsMigration) {
-          const COL_PX = 100;
-          const ROW_PX = 80;
-          state.layouts = state.layouts.map((l, idx) => ({
-            ...l,
-            x: l.x * COL_PX,
-            y: l.y * ROW_PX,
-            w: l.w * COL_PX,
-            h: l.h * ROW_PX,
-            minW: (l.minW ?? 2) * COL_PX,
-            minH: (l.minH ?? 2) * ROW_PX,
-            zIndex: l.zIndex ?? idx,
-          }));
-          state.maxZIndex = state.layouts.length;
-        } else {
-          state.layouts = state.layouts.map((l, idx) => ({
-            ...l,
-            zIndex: l.zIndex ?? idx,
-            y: Number.isFinite(l.y) ? l.y : 0,
-          }));
-          state.maxZIndex = Math.max(0, ...state.layouts.map(l => l.zIndex ?? 0));
-        }
+        const migrated = migrateLayoutData(state.layouts);
+        state.layouts = migrated.layouts;
+        state.maxZIndex = migrated.maxZIndex;
       },
     }
   )
 );
+
+// --- Debounced save to Supabase ---
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+const SAVE_DEBOUNCE_MS = 2500;
+
+useLayoutStore.subscribe((state) => {
+  if (isHydrating) return;
+  if (state.isDragging) return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const s = useLayoutStore.getState();
+    saveLayoutToSupabase({
+      windows: s.windows,
+      layouts: s.layouts,
+      maxZIndex: s.maxZIndex,
+      canvasOffset: s.canvasOffset,
+      canvasScale: s.canvasScale,
+      minimizedWindows: s.minimizedWindows,
+      pinnedWindows: s.pinnedWindows,
+    });
+  }, SAVE_DEBOUNCE_MS);
+});
+
+// Synchronous save for unload/visibility-change events
+function flushSaveSync(): void {
+  if (!cachedUserId || !cachedAccessToken) return;
+
+  const s = useLayoutStore.getState();
+  const data: PersistedLayout = {
+    windows: s.windows,
+    layouts: s.layouts,
+    maxZIndex: s.maxZIndex,
+    canvasOffset: s.canvasOffset,
+    canvasScale: s.canvasScale,
+    minimizedWindows: s.minimizedWindows,
+    pinnedWindows: s.pinnedWindows,
+  };
+
+  const json = JSON.stringify(data);
+  if (json === lastSavedJson) return;
+
+  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/user_layouts?on_conflict=user_id`;
+  try {
+    fetch(url, {
+      method: 'POST',
+      keepalive: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        'Authorization': `Bearer ${cachedAccessToken}`,
+        'Prefer': 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        user_id: cachedUserId,
+        layout_data: data,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+  } catch {
+    // Best effort
+  }
+}
+
+// Flush pending save on page unload + tab hide
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    flushSaveSync();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+      flushSaveSync();
+    }
+  });
+}
+
+// --- Exports ---
 
 export function getViewportCenterPosition(): { x: number; y: number } {
   const state = useLayoutStore.getState();
