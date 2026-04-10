@@ -1,31 +1,103 @@
 'use client';
 
-import { useState } from 'react';
-import { usePortfolioStore } from '@/stores/portfolioStore';
+import { useState, useEffect, useRef } from 'react';
+import { usePortfolio } from '@/hooks/usePortfolio';
 import { useQuotes } from '@/hooks/useQuotes';
 import { formatPrice, formatChange, formatPercent } from '@/lib/formatters';
+import PortfolioSelector from '@/components/portfolio/PortfolioSelector';
+import CreatePortfolioModal from '@/components/portfolio/CreatePortfolioModal';
+import PortfolioMenu from '@/components/portfolio/PortfolioMenu';
+import PerformanceChart from '@/components/portfolio/PerformanceChart';
+import TickerLogo from '@/components/ui/TickerLogo';
 
 export default function PortfolioPanel() {
-  const { positions, addPosition, removePosition } = usePortfolioStore();
-  const symbols = positions.map(p => p.symbol);
+  const {
+    portfolios,
+    activePortfolioId,
+    positions,
+    snapshots,
+    loading,
+    setActivePortfolio,
+    createPortfolio,
+    renamePortfolio,
+    deletePortfolio,
+    addPosition,
+    removePosition,
+    recordSnapshot,
+  } = usePortfolio();
+
+  const symbols = positions.map((p) => p.symbol);
   const { quotes } = useQuotes(symbols);
-  const [showModal, setShowModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAddPosition, setShowAddPosition] = useState(false);
+  const snapshotRecorded = useRef(false);
+
+  const activePortfolio = portfolios.find((p) => p.id === activePortfolioId);
 
   // Summary calculations
   let totalValue = 0;
   let totalCost = 0;
+  let dayChange = 0;
   for (const p of positions) {
     const q = quotes[p.symbol];
     const price = q?.price ?? p.avgCost;
     totalValue += price * p.shares;
     totalCost += p.avgCost * p.shares;
+    if (q?.change) dayChange += q.change * p.shares;
   }
   const totalPnl = totalValue - totalCost;
   const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
+  const dayChangePct = totalValue - dayChange > 0 ? (dayChange / (totalValue - dayChange)) * 100 : 0;
   const pnlColor = totalPnl > 0 ? 'text-up' : totalPnl < 0 ? 'text-down' : 'text-text-secondary';
+  const dayColor = dayChange > 0 ? 'text-up' : dayChange < 0 ? 'text-down' : 'text-text-secondary';
+
+  // Record daily snapshot when we have live data
+  useEffect(() => {
+    if (positions.length > 0 && Object.keys(quotes).length > 0 && !snapshotRecorded.current && activePortfolioId) {
+      snapshotRecorded.current = true;
+      recordSnapshot(totalValue, totalCost, dayChange);
+    }
+  }, [positions, quotes, activePortfolioId]);
+
+  // Reset snapshot flag when portfolio changes
+  useEffect(() => {
+    snapshotRecorded.current = false;
+  }, [activePortfolioId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full text-text-muted text-sm font-mono">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
+      {/* Portfolio toolbar */}
+      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-terminal-border shrink-0">
+        <PortfolioSelector
+          portfolios={portfolios}
+          activeId={activePortfolioId}
+          onSelect={setActivePortfolio}
+          onCreateNew={() => setShowCreateModal(true)}
+        />
+        <div className="flex-1" />
+        <PortfolioMenu
+          portfolioName={activePortfolio?.name ?? ''}
+          canDelete={portfolios.length > 1}
+          onRename={(name) => activePortfolioId && renamePortfolio(activePortfolioId, name)}
+          onDelete={() => activePortfolioId && deletePortfolio(activePortfolioId)}
+        />
+      </div>
+
+      {/* Performance chart */}
+      <PerformanceChart
+        snapshots={snapshots}
+        currentValue={totalValue}
+        totalCost={totalCost}
+      />
+
       {/* Summary */}
       {positions.length > 0 && (
         <div className="flex items-center gap-4 px-3 py-2 bg-terminal-bg text-data font-mono border-b border-terminal-border shrink-0">
@@ -35,10 +107,11 @@ export default function PortfolioPanel() {
           </div>
           <div>
             <span className="text-xxs text-text-muted">P&L </span>
-            <span className={pnlColor}>{formatChange(totalPnl)}</span>
+            <span className={pnlColor}>{formatChange(totalPnl)} ({formatPercent(totalPnlPct)})</span>
           </div>
           <div>
-            <span className={pnlColor}>{formatPercent(totalPnlPct)}</span>
+            <span className="text-xxs text-text-muted">DAY </span>
+            <span className={dayColor}>{formatChange(dayChange)} ({formatPercent(dayChangePct)})</span>
           </div>
         </div>
       )}
@@ -46,7 +119,7 @@ export default function PortfolioPanel() {
       {/* Table header */}
       {positions.length > 0 && (
         <div className="flex items-center px-3 py-1 text-xxs text-text-muted uppercase tracking-wider font-mono border-b border-terminal-border shrink-0">
-          <span className="w-16">Symbol</span>
+          <span className="w-20">Symbol</span>
           <span className="w-16 text-right">Shares</span>
           <span className="w-20 text-right">Avg Cost</span>
           <span className="w-20 text-right">Current</span>
@@ -56,7 +129,7 @@ export default function PortfolioPanel() {
       )}
 
       {/* Rows */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" data-scrollable>
         {positions.length === 0 ? (
           <div className="flex items-center justify-center h-full text-text-muted text-sm font-mono">
             No positions. Click + to add.
@@ -71,7 +144,10 @@ export default function PortfolioPanel() {
 
             return (
               <div key={pos.id} className="group flex items-center px-3 py-1.5 hover:bg-terminal-hover transition-colors">
-                <span className="w-16 text-data font-mono font-medium text-text-primary">{pos.symbol}</span>
+                <span className="w-20 text-data font-mono font-medium text-text-primary flex items-center gap-1.5">
+                  <TickerLogo symbol={pos.symbol} size={18} />
+                  {pos.symbol}
+                </span>
                 <span className="w-16 text-right text-data font-mono text-text-secondary">{pos.shares}</span>
                 <span className="w-20 text-right text-data font-mono text-text-secondary">${formatPrice(pos.avgCost)}</span>
                 <span className="w-20 text-right text-data font-mono text-text-primary">{price > 0 ? `$${formatPrice(price)}` : '-'}</span>
@@ -93,18 +169,27 @@ export default function PortfolioPanel() {
       {/* Add button */}
       <div className="flex items-center px-3 py-1.5 border-t border-terminal-border shrink-0">
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => setShowAddPosition(true)}
           className="text-text-muted hover:text-up text-sm font-mono transition-colors"
         >
           + Add Position
         </button>
       </div>
 
-      {/* Add modal */}
-      {showModal && (
+      {/* Add position modal */}
+      {showAddPosition && (
         <AddPositionModal
-          onClose={() => setShowModal(false)}
-          onAdd={(data) => { addPosition(data); setShowModal(false); }}
+          onClose={() => setShowAddPosition(false)}
+          onAdd={(data) => { addPosition(data); setShowAddPosition(false); }}
+        />
+      )}
+
+      {/* Create portfolio modal */}
+      {showCreateModal && (
+        <CreatePortfolioModal
+          onClose={() => setShowCreateModal(false)}
+          onCreate={(name) => { createPortfolio(name); setShowCreateModal(false); }}
+          existingNames={portfolios.map((p) => p.name)}
         />
       )}
     </div>

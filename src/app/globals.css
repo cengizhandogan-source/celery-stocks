@@ -35,6 +35,61 @@ html, body {
   height: 100vh;
 }
 
+/* Menu slide-in animation */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-menu-in {
+  animation: menu-in 150ms ease-out;
+}
+
+@keyframes menu-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+.animate-menu-out {
+  animation: menu-out 150ms ease-in forwards;
+}
+
+/* Celery thinking bounce */
+@keyframes celery-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-5px) rotate(6deg);
+  }
+}
+.celery-thinking {
+  animation: celery-bounce 1s ease-in-out infinite;
+}
+
+/* Pixel art logo effect */
+.pixel-logo {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
 /* Terminal-style scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -51,52 +106,43 @@ html, body {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* react-grid-layout required CSS */
-.react-grid-layout {
-  position: relative;
-  transition: height 200ms ease;
+
+/* AI Chat markdown prose */
+.ai-prose p { margin: 0.25rem 0; line-height: 1.5; }
+.ai-prose > p:first-child { margin-top: 0; }
+.ai-prose > p:last-child { margin-bottom: 0; }
+.ai-prose ul, .ai-prose ol { margin: 0.25rem 0; padding-left: 1.25rem; }
+.ai-prose li { margin: 0.125rem 0; }
+.ai-prose ul li { list-style-type: disc; }
+.ai-prose ol li { list-style-type: decimal; }
+.ai-prose li::marker { color: #555; }
+.ai-prose strong { color: #eaeaea; font-weight: 600; }
+.ai-prose em { color: #22d3ee; font-style: italic; }
+.ai-prose u { text-decoration: underline; text-underline-offset: 2px; }
+.ai-prose h1, .ai-prose h2, .ai-prose h3 { color: #22d3ee; font-weight: 600; margin: 0.5rem 0 0.25rem; }
+.ai-prose h1 { font-size: 1rem; }
+.ai-prose h2 { font-size: 0.875rem; }
+.ai-prose h3 { font-size: 0.8125rem; }
+.ai-prose hr { border-color: rgba(255,255,255,0.08); margin: 0.5rem 0; }
+.ai-prose blockquote { border-left: 2px solid #22d3ee; padding-left: 0.75rem; color: #888; margin: 0.25rem 0; }
+
+/* KaTeX overrides for terminal theme */
+.ai-prose .katex { color: #e9b86e; font-size: 0.9em; }
+.ai-prose .katex-display { margin: 0.5rem 0; overflow-x: auto; }
+
+/* Recharts tooltip override for dark theme */
+.recharts-default-tooltip {
+  background: #232323 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 4px !important;
 }
-.react-grid-item {
-  transition: all 200ms ease;
-  transition-property: left, top, width, height;
+.recharts-tooltip-label {
+  color: #eaeaea !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 0.75rem !important;
 }
-.react-grid-item.cssTransforms {
-  transition-property: transform, width, height;
-}
-.react-grid-item.resizing {
-  z-index: 1;
-  will-change: width, height;
-  opacity: 0.9;
-}
-.react-grid-item.react-draggable-dragging {
-  transition: none;
-  z-index: 3;
-  will-change: transform;
-  opacity: 0.9;
-}
-.react-grid-placeholder {
-  background: rgba(74, 222, 128, 0.1) !important;
-  border: 1px dashed rgba(74, 222, 128, 0.3) !important;
-  border-radius: 6px;
-  opacity: 1 !important;
-}
-.react-grid-item > .react-resizable-handle {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-}
-.react-grid-item > .react-resizable-handle::after {
-  content: "";
-  position: absolute;
-  right: 3px;
-  bottom: 3px;
-  width: 6px;
-  height: 6px;
-  border-right: 2px solid rgba(255, 255, 255, 0.15);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-}
-.react-grid-item > .react-resizable-handle.react-resizable-handle-se {
-  bottom: 0;
-  right: 0;
-  cursor: se-resize;
+.recharts-tooltip-item {
+  color: #888 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 0.6875rem !important;
 }

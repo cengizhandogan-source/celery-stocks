@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useWatchlistStore } from '@/stores/watchlistStore';
 import { useAppStore } from '@/stores/appStore';
 import { useQuotes } from '@/hooks/useQuotes';
-import { formatPrice, formatVolume, formatPercent, formatChange } from '@/lib/formatters';
+import { formatAssetPrice, formatVolume, formatPercent, formatChange } from '@/lib/formatters';
 import Spinner from '@/components/ui/Spinner';
+import TickerLogo from '@/components/ui/TickerLogo';
 
 export default function WatchlistPanel() {
   const { symbols, addSymbol, removeSymbol } = useWatchlistStore();
@@ -34,7 +35,7 @@ export default function WatchlistPanel() {
       </div>
 
       {/* Rows */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" data-scrollable>
         {loading && symbols.length > 0 && Object.keys(quotes).length === 0 ? (
           <div className="flex items-center justify-center py-8">
             <Spinner size="sm" />
@@ -56,11 +57,12 @@ export default function WatchlistPanel() {
                     : 'border-transparent hover:bg-terminal-hover'
                 }`}
               >
-                <span className="flex-1 min-w-0 text-data font-mono font-medium text-text-primary truncate">
+                <span className="flex-1 min-w-0 text-data font-mono font-medium text-text-primary truncate flex items-center gap-1.5">
+                  <TickerLogo symbol={sym} size={18} />
                   {sym}
                 </span>
                 <span className="w-20 text-right text-data font-mono text-text-primary">
-                  {q ? formatPrice(q.price) : '-'}
+                  {q ? formatAssetPrice(q.price, sym) : '-'}
                 </span>
                 <span className={`w-18 text-right text-data font-mono ${color}`}>
                   {q ? formatChange(q.change) : '-'}

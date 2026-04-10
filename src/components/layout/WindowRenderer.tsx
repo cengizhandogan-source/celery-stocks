@@ -11,6 +11,17 @@ const PortfolioPanel = dynamic(() => import('@/components/panels/PortfolioPanel'
 const MarketOverviewPanel = dynamic(() => import('@/components/panels/MarketOverviewPanel'));
 const StockDetailPanel = dynamic(() => import('@/components/panels/StockDetailPanel'));
 const QuoteMonitorPanel = dynamic(() => import('@/components/panels/QuoteMonitorPanel'));
+const FocusPanel = dynamic(() => import('@/components/panels/FocusPanel'));
+const MostActivePanel = dynamic(() => import('@/components/panels/MostActivePanel'));
+const FinancialsPanel = dynamic(() => import('@/components/panels/FinancialsPanel'));
+const HoldersPanel = dynamic(() => import('@/components/panels/HoldersPanel'));
+const FilingsPanel = dynamic(() => import('@/components/panels/FilingsPanel'));
+const CryptoOverviewPanel = dynamic(() => import('@/components/panels/CryptoOverviewPanel'));
+const ChatroomPanel = dynamic(() => import('@/components/panels/ChatroomPanel'));
+const DirectMessagesPanel = dynamic(() => import('@/components/panels/DirectMessagesPanel'));
+const IdeasPanel = dynamic(() => import('@/components/panels/IdeasPanel'));
+const AiChatPanel = dynamic(() => import('@/components/panels/AiChatPanel'));
+const TextNotePanel = dynamic(() => import('@/components/panels/TextNotePanel'));
 
 export default function WindowRenderer({ config }: { config: WindowConfig }) {
   const activeSymbol = useAppStore((s) => s.activeSymbol);
@@ -26,11 +37,33 @@ export default function WindowRenderer({ config }: { config: WindowConfig }) {
     case 'portfolio':
       return <PortfolioPanel />;
     case 'market-overview':
-      return <MarketOverviewPanel />;
+      return <MarketOverviewPanel symbols={config.symbols} windowId={config.id} />;
     case 'stock-detail':
       return <StockDetailPanel symbol={symbol} />;
     case 'quote-monitor':
-      return <QuoteMonitorPanel />;
+      return <QuoteMonitorPanel symbol={symbol} />;
+    case 'focus':
+      return <FocusPanel symbol={symbol} />;
+    case 'most-active':
+      return <MostActivePanel />;
+    case 'financials':
+      return <FinancialsPanel symbol={symbol} />;
+    case 'holders':
+      return <HoldersPanel symbol={symbol} />;
+    case 'filings':
+      return <FilingsPanel symbol={symbol} />;
+    case 'crypto-overview':
+      return <CryptoOverviewPanel symbols={config.symbols} windowId={config.id} />;
+    case 'chatroom':
+      return <ChatroomPanel chatroomId={config.chatroomId} />;
+    case 'direct-messages':
+      return <DirectMessagesPanel />;
+    case 'ideas':
+      return <IdeasPanel symbol={config.symbol} />;
+    case 'ai-chat':
+      return <AiChatPanel />;
+    case 'text-note':
+      return <TextNotePanel windowId={config.id} content={config.content} />;
     default:
       return (
         <div className="flex items-center justify-center h-full text-text-muted text-sm font-mono">

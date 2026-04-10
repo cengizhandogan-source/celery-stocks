@@ -5,9 +5,10 @@ import { useAppStore } from '@/stores/appStore';
 import { useProfile } from '@/hooks/useProfile';
 import { useKeyStats } from '@/hooks/useKeyStats';
 import { useQuote } from '@/hooks/useQuote';
-import { formatPrice, formatMarketCap, formatVolume } from '@/lib/formatters';
+import { formatAssetPrice, formatMarketCap, formatVolume, isCryptoSymbol } from '@/lib/formatters';
 import PriceChange from '@/components/ui/PriceChange';
 import Spinner from '@/components/ui/Spinner';
+import TickerLogo from '@/components/ui/TickerLogo';
 
 interface StockDetailPanelProps {
   symbol?: string;
@@ -43,8 +44,8 @@ export default function StockDetailPanel({ symbol: propSymbol }: StockDetailPane
     if (stats.pe) statRows.push(['P/E Ratio', stats.pe.toFixed(2)]);
     if (stats.forwardPe) statRows.push(['Forward P/E', stats.forwardPe.toFixed(2)]);
     if (stats.eps) statRows.push(['EPS', `$${stats.eps.toFixed(2)}`]);
-    if (stats.fiftyTwoWeekHigh) statRows.push(['52W High', `$${formatPrice(stats.fiftyTwoWeekHigh)}`]);
-    if (stats.fiftyTwoWeekLow) statRows.push(['52W Low', `$${formatPrice(stats.fiftyTwoWeekLow)}`]);
+    if (stats.fiftyTwoWeekHigh) statRows.push(['52W High', `$${formatAssetPrice(stats.fiftyTwoWeekHigh, symbol)}`]);
+    if (stats.fiftyTwoWeekLow) statRows.push(['52W Low', `$${formatAssetPrice(stats.fiftyTwoWeekLow, symbol)}`]);
     if (stats.dividendYield) statRows.push(['Div Yield', `${(stats.dividendYield * 100).toFixed(2)}%`]);
     if (stats.beta) statRows.push(['Beta', stats.beta.toFixed(2)]);
     if (stats.avgVolume) statRows.push(['Avg Volume', formatVolume(stats.avgVolume)]);
@@ -52,16 +53,22 @@ export default function StockDetailPanel({ symbol: propSymbol }: StockDetailPane
   }
 
   return (
-    <div className="flex flex-col h-full w-full overflow-y-auto">
+    <div className="flex flex-col h-full w-full overflow-y-auto" data-scrollable>
       {/* Company header */}
       <div className="px-3 py-2 border-b border-terminal-border">
-        <div className="text-lg text-text-primary font-medium">{profile?.name || symbol}</div>
+        <div className="flex items-center gap-2">
+          <TickerLogo symbol={symbol} website={profile?.website} size={36} />
+          <div className="text-lg text-text-primary font-medium">{profile?.name || symbol}</div>
+        </div>
         <div className="text-xxs text-text-muted uppercase tracking-wider font-mono">
-          {profile?.exchange} {profile?.industry && `\u00B7 ${profile.industry}`}
+          {profile?.exchange}
+          {isCryptoSymbol(symbol)
+            ? ' \u00B7 Cryptocurrency'
+            : profile?.industry ? ` \u00B7 ${profile.industry}` : ''}
         </div>
         {quote && (
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-mono text-text-primary">${formatPrice(quote.price)}</span>
+            <span className="text-2xl font-mono text-text-primary">${formatAssetPrice(quote.price, symbol)}</span>
             <PriceChange change={quote.change} changePercent={quote.changePercent} />
           </div>
         )}

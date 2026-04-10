@@ -1,7 +1,8 @@
 'use client';
 
 import { TIMEFRAMES } from '@/lib/constants';
-import { formatPrice, formatChange, formatPercent } from '@/lib/formatters';
+import { formatAssetPrice, formatChange, formatPercent } from '@/lib/formatters';
+import TickerLogo from '@/components/ui/TickerLogo';
 
 interface ChartControlsProps {
   symbol: string;
@@ -34,10 +35,11 @@ export default function ChartControls({
   return (
     <div className="flex items-center gap-1 px-3 py-1.5 border-b border-terminal-border bg-terminal-panel-header shrink-0">
       {/* Symbol + price */}
+      <TickerLogo symbol={symbol} size={16} />
       <span className="text-sm text-text-primary font-mono font-medium mr-1">{symbol}</span>
       {price !== null && (
         <>
-          <span className="text-sm font-mono text-text-primary">{formatPrice(price)}</span>
+          <span className="text-sm font-mono text-text-primary">{formatAssetPrice(price, symbol)}</span>
           <span className={`text-xxs font-mono ${changeColor} ml-1`}>
             {formatChange(change ?? 0)} ({formatPercent(changePercent ?? 0)})
           </span>

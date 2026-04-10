@@ -28,7 +28,7 @@ export default function NewsPanel({ query }: NewsPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full w-full overflow-y-auto">
+    <div className="flex flex-col h-full w-full overflow-y-auto" data-scrollable>
       {articles.map((article) => (
         <button
           key={article.id}

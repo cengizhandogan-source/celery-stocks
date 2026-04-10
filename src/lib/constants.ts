@@ -1,7 +1,7 @@
 import { WindowType } from './types';
 
 export const DEFAULT_WATCHLIST_SYMBOLS = [
-  'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'SPY', 'QQQ'
+  'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'SPY', 'QQQ', 'BTC-USD', 'ETH-USD'
 ];
 
 export const INDEX_SYMBOLS = [
@@ -9,6 +9,17 @@ export const INDEX_SYMBOLS = [
   { symbol: 'QQQ', name: 'NASDAQ 100' },
   { symbol: 'DIA', name: 'Dow Jones' },
   { symbol: 'IWM', name: 'Russell 2000' },
+];
+
+export const CRYPTO_SYMBOLS = [
+  { symbol: 'BTC-USD', name: 'Bitcoin' },
+  { symbol: 'ETH-USD', name: 'Ethereum' },
+  { symbol: 'SOL-USD', name: 'Solana' },
+  { symbol: 'XRP-USD', name: 'XRP' },
+  { symbol: 'BNB-USD', name: 'BNB' },
+  { symbol: 'ADA-USD', name: 'Cardano' },
+  { symbol: 'DOGE-USD', name: 'Dogecoin' },
+  { symbol: 'DOT-USD', name: 'Polkadot' },
 ];
 
 export const TIMEFRAMES = [
@@ -28,17 +39,42 @@ export const WINDOW_TYPE_LABELS: Record<WindowType, string> = {
   'market-overview': 'Market Overview',
   'stock-detail': 'Stock Detail',
   'quote-monitor': 'Quote Monitor',
+  'focus': 'Focus',
+  'most-active': 'Most Active',
+  'financials': 'Financials',
+  'holders': 'Holders',
+  'filings': 'SEC Filings',
+  'chatroom': 'Chatroom',
+  'direct-messages': 'Direct Messages',
+  'ideas': 'Ideas Feed',
+  'crypto-overview': 'Crypto Overview',
+  'ai-chat': 'AI Chat',
+  'text-note': 'Text Note',
 };
 
 export const WINDOW_DEFAULTS: Record<WindowType, { w: number; h: number; minW: number; minH: number }> = {
-  'chart': { w: 6, h: 4, minW: 4, minH: 3 },
-  'watchlist': { w: 3, h: 5, minW: 2, minH: 3 },
-  'news': { w: 4, h: 4, minW: 3, minH: 2 },
-  'portfolio': { w: 5, h: 3, minW: 3, minH: 2 },
-  'market-overview': { w: 4, h: 3, minW: 3, minH: 2 },
-  'stock-detail': { w: 3, h: 5, minW: 2, minH: 3 },
-  'quote-monitor': { w: 3, h: 3, minW: 2, minH: 2 },
+  'chart':            { w: 600, h: 400, minW: 400, minH: 280 },
+  'watchlist':        { w: 300, h: 480, minW: 200, minH: 280 },
+  'news':             { w: 400, h: 400, minW: 300, minH: 200 },
+  'portfolio':        { w: 600, h: 480, minW: 300, minH: 280 },
+  'market-overview':  { w: 400, h: 300, minW: 300, minH: 200 },
+  'stock-detail':     { w: 300, h: 480, minW: 200, minH: 280 },
+  'quote-monitor':    { w: 300, h: 300, minW: 200, minH: 200 },
+  'focus':            { w: 200, h: 200, minW: 200, minH: 200 },
+  'most-active':      { w: 400, h: 400, minW: 300, minH: 280 },
+  'financials':       { w: 500, h: 480, minW: 400, minH: 360 },
+  'holders':          { w: 400, h: 400, minW: 300, minH: 280 },
+  'filings':          { w: 400, h: 400, minW: 300, minH: 280 },
+  'chatroom':         { w: 400, h: 480, minW: 300, minH: 280 },
+  'direct-messages':  { w: 400, h: 480, minW: 300, minH: 280 },
+  'ideas':            { w: 500, h: 400, minW: 300, minH: 280 },
+  'crypto-overview':  { w: 400, h: 300, minW: 300, minH: 200 },
+  'ai-chat':          { w: 400, h: 480, minW: 300, minH: 280 },
+  'text-note':        { w: 300, h: 300, minW: 200, minH: 200 },
 };
+
+export const CASCADE_OFFSET = 30;
+export const PANEL_HEADER_HEIGHT = 32;
 
 export const QUOTE_POLL_INTERVAL = 15_000;
 export const NEWS_POLL_INTERVAL = 300_000;

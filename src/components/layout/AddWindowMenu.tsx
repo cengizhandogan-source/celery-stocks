@@ -3,23 +3,25 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { WindowType } from '@/lib/types';
 import { WINDOW_TYPE_LABELS } from '@/lib/constants';
-import { useLayoutStore } from '@/stores/layoutStore';
+import { useLayoutStore, getViewportCenterPosition } from '@/stores/layoutStore';
 import { useAppStore } from '@/stores/appStore';
+import { getShortcutForType, getShortcutLabel } from '@/lib/shortcuts';
 
 const windowTypes = Object.keys(WINDOW_TYPE_LABELS) as WindowType[];
 
 interface AddWindowMenuProps {
   onClose: () => void;
+  closing: boolean;
 }
 
-export default function AddWindowMenu({ onClose }: AddWindowMenuProps) {
+export default function AddWindowMenu({ onClose, closing }: AddWindowMenuProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const addWindow = useLayoutStore((s) => s.addWindow);
   const toggleCommandBar = useAppStore((s) => s.toggleCommandBar);
 
   const handleSelect = useCallback((type: WindowType) => {
-    addWindow(type);
+    addWindow(type, undefined, getViewportCenterPosition());
     onClose();
     if (type === 'chart' || type === 'stock-detail') {
       toggleCommandBar();
@@ -60,7 +62,7 @@ export default function AddWindowMenu({ onClose }: AddWindowMenuProps) {
   return (
     <div
       ref={menuRef}
-      className="absolute top-full right-0 mt-1 w-56 bg-terminal-panel border border-terminal-border-strong rounded-md shadow-2xl z-50 py-1 overflow-hidden"
+      className={`absolute top-full right-0 mt-1 w-72 bg-terminal-panel border border-terminal-border-strong rounded-md shadow-2xl z-50 py-1 overflow-hidden origin-top-right ${closing ? 'animate-menu-out' : 'animate-menu-in'}`}
     >
       {windowTypes.map((type, i) => (
         <button
@@ -73,7 +75,12 @@ export default function AddWindowMenu({ onClose }: AddWindowMenuProps) {
           <span className="w-5 h-5 flex items-center justify-center text-xxs bg-white/5 rounded text-text-muted">
             {WINDOW_TYPE_LABELS[type][0]}
           </span>
-          <span>{WINDOW_TYPE_LABELS[type]}</span>
+          <span className="flex-1">{WINDOW_TYPE_LABELS[type]}</span>
+          {getShortcutForType(type) && (
+            <span className="text-xxs text-text-muted font-mono ml-auto">
+              {getShortcutLabel(getShortcutForType(type)!)}
+            </span>
+          )}
         </button>
       ))}
     </div>

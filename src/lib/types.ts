@@ -71,12 +71,29 @@ export interface KeyStats {
   revenueGrowth?: number;
 }
 
+export interface Portfolio {
+  id: string;
+  user_id: string;
+  name: string;
+  created_at: string;
+}
+
 export interface Position {
   id: string;
+  portfolio_id: string;
   symbol: string;
   shares: number;
   avgCost: number;
   addedAt: string;
+}
+
+export interface PortfolioSnapshot {
+  id: string;
+  portfolio_id: string;
+  date: string;
+  total_value: number;
+  total_cost: number;
+  day_change: number;
 }
 
 export type WindowType =
@@ -86,13 +103,148 @@ export type WindowType =
   | 'portfolio'
   | 'market-overview'
   | 'stock-detail'
-  | 'quote-monitor';
+  | 'quote-monitor'
+  | 'focus'
+  | 'most-active'
+  | 'financials'
+  | 'holders'
+  | 'filings'
+  | 'chatroom'
+  | 'direct-messages'
+  | 'ideas'
+  | 'crypto-overview'
+  | 'ai-chat'
+  | 'text-note';
+
+export interface ScreenerResult {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  marketCap?: number;
+}
+
+export interface FinancialStatements {
+  income: { annual: FinancialRow[]; quarterly: FinancialRow[] };
+  balance: { annual: FinancialRow[]; quarterly: FinancialRow[] };
+  cashflow: { annual: FinancialRow[]; quarterly: FinancialRow[] };
+}
+
+export interface FinancialRow {
+  date: string;
+  [key: string]: string | number | null | undefined;
+}
+
+export interface HoldersData {
+  holders: Holder[];
+  insidersPercent?: number;
+  institutionsPercent?: number;
+  institutionsCount?: number;
+}
+
+export interface Holder {
+  organization: string;
+  pctHeld: number;
+  shares: number;
+  value: number;
+  pctChange?: number;
+  reportDate?: string;
+}
+
+export interface Filing {
+  date: string;
+  type: string;
+  title: string;
+  edgarUrl: string;
+}
 
 export interface WindowConfig {
   id: string;
   type: WindowType;
   title: string;
   symbol?: string;
+  symbols?: string[];
+  chatroomId?: string;
+  content?: string;
+}
+
+// Chat types
+export interface Profile {
+  id: string;
+  display_name: string;
+  avatar_color: string;
+}
+
+export interface Chatroom {
+  id: string;
+  name: string;
+  description: string | null;
+  symbol: string | null;
+  is_default: boolean;
+  created_by: string;
+  created_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  chatroom_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  profile?: Profile;
+}
+
+export interface DirectMessage {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  read: boolean;
+  created_at: string;
+  sender?: Profile;
+  receiver?: Profile;
+}
+
+export interface DMConversation {
+  peer: Profile;
+  lastMessage: DirectMessage;
+  unreadCount: number;
+}
+
+export type Sentiment = 'bullish' | 'bearish' | 'neutral';
+
+export interface Idea {
+  id: string;
+  user_id: string;
+  symbol: string;
+  title: string;
+  content: string;
+  sentiment: Sentiment;
+  created_at: string;
+  profile?: Profile;
+}
+
+export interface AiConversation {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AiChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  toolCalls?: AiToolCallResult[];
+}
+
+export interface AiToolCallResult {
+  name: string;
+  args: Record<string, unknown>;
 }
 
 export interface LayoutItem {
@@ -103,4 +255,5 @@ export interface LayoutItem {
   h: number;
   minW?: number;
   minH?: number;
+  zIndex: number;
 }

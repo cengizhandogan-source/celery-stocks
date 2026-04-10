@@ -1,0 +1,34 @@
+# Celery Stocks
+
+> Professional financial terminal for real-time market data and analysis.
+
+## About
+
+Celery Stocks is a web-based professional financial terminal that provides real-time stock and cryptocurrency quotes, portfolio tracking, SEC filings, financial statement analysis, an AI-powered assistant, and collaborative chatrooms. It uses a terminal-style interface with a customizable dashboard layout.
+
+## Features
+
+- Real-time stock and cryptocurrency price quotes
+- Interactive candlestick and line charts
+- Portfolio tracking with performance analysis
+- SEC filings browser (10-K, 10-Q, 8-K, and more)
+- Financial statement analysis (income statement, balance sheet, cash flow)
+- Institutional and insider holder data
+- Stock screener
+- Market overview and most active stocks
+- Financial news aggregation
+- AI-powered financial assistant for analysis and questions
+- Collaborative chatrooms for discussing trades and ideas
+- Direct messaging between users
+- Customizable terminal dashboard with draggable panels
+- Command palette for quick navigation
+
+## Access
+
+Celery Stocks requires user authentication. Public pages are /login and /signup.
+The application is free to use after creating an account.
+
+## Technology
+
+Built with Next.js, React, TypeScript, Supabase, and Tailwind CSS.
+Market data sourced via Yahoo Finance. AI features powered by OpenAI.
