@@ -1,0 +1,175 @@
+'use client';
+
+import { useState } from 'react';
+import { usePortfolioStore } from '@/stores/portfolioStore';
+import { useQuotes } from '@/hooks/useQuotes';
+import { formatPrice, formatChange, formatPercent } from '@/lib/formatters';
+
+export default function PortfolioPanel() {
+  const { positions, addPosition, removePosition } = usePortfolioStore();
+  const symbols = positions.map(p => p.symbol);
+  const { quotes } = useQuotes(symbols);
+  const [showModal, setShowModal] = useState(false);
+
+  // Summary calculations
+  let totalValue = 0;
+  let totalCost = 0;
+  for (const p of positions) {
+    const q = quotes[p.symbol];
+    const price = q?.price ?? p.avgCost;
+    totalValue += price * p.shares;
+    totalCost += p.avgCost * p.shares;
+  }
+  const totalPnl = totalValue - totalCost;
+  const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
+  const pnlColor = totalPnl > 0 ? 'text-up' : totalPnl < 0 ? 'text-down' : 'text-text-secondary';
+
+  return (
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      {/* Summary */}
+      {positions.length > 0 && (
+        <div className="flex items-center gap-4 px-3 py-2 bg-terminal-bg text-data font-mono border-b border-terminal-border shrink-0">
+          <div>
+            <span className="text-xxs text-text-muted">MKT VAL </span>
+            <span className="text-text-primary">${formatPrice(totalValue)}</span>
+          </div>
+          <div>
+            <span className="text-xxs text-text-muted">P&L </span>
+            <span className={pnlColor}>{formatChange(totalPnl)}</span>
+          </div>
+          <div>
+            <span className={pnlColor}>{formatPercent(totalPnlPct)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Table header */}
+      {positions.length > 0 && (
+        <div className="flex items-center px-3 py-1 text-xxs text-text-muted uppercase tracking-wider font-mono border-b border-terminal-border shrink-0">
+          <span className="w-16">Symbol</span>
+          <span className="w-16 text-right">Shares</span>
+          <span className="w-20 text-right">Avg Cost</span>
+          <span className="w-20 text-right">Current</span>
+          <span className="flex-1 text-right">P&L</span>
+          <span className="w-5" />
+        </div>
+      )}
+
+      {/* Rows */}
+      <div className="flex-1 overflow-y-auto">
+        {positions.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-text-muted text-sm font-mono">
+            No positions. Click + to add.
+          </div>
+        ) : (
+          positions.map((pos) => {
+            const q = quotes[pos.symbol];
+            const price = q?.price ?? 0;
+            const pnl = (price - pos.avgCost) * pos.shares;
+            const pnlPct = pos.avgCost > 0 ? ((price - pos.avgCost) / pos.avgCost) * 100 : 0;
+            const rowColor = pnl > 0 ? 'text-up' : pnl < 0 ? 'text-down' : 'text-text-secondary';
+
+            return (
+              <div key={pos.id} className="group flex items-center px-3 py-1.5 hover:bg-terminal-hover transition-colors">
+                <span className="w-16 text-data font-mono font-medium text-text-primary">{pos.symbol}</span>
+                <span className="w-16 text-right text-data font-mono text-text-secondary">{pos.shares}</span>
+                <span className="w-20 text-right text-data font-mono text-text-secondary">${formatPrice(pos.avgCost)}</span>
+                <span className="w-20 text-right text-data font-mono text-text-primary">{price > 0 ? `$${formatPrice(price)}` : '-'}</span>
+                <span className={`flex-1 text-right text-data font-mono ${rowColor}`}>
+                  {price > 0 ? `${formatChange(pnl)} (${formatPercent(pnlPct)})` : '-'}
+                </span>
+                <button
+                  onClick={() => removePosition(pos.id)}
+                  className="w-5 opacity-0 group-hover:opacity-100 text-text-muted hover:text-down text-xs transition-opacity ml-1"
+                >
+                  X
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Add button */}
+      <div className="flex items-center px-3 py-1.5 border-t border-terminal-border shrink-0">
+        <button
+          onClick={() => setShowModal(true)}
+          className="text-text-muted hover:text-up text-sm font-mono transition-colors"
+        >
+          + Add Position
+        </button>
+      </div>
+
+      {/* Add modal */}
+      {showModal && (
+        <AddPositionModal
+          onClose={() => setShowModal(false)}
+          onAdd={(data) => { addPosition(data); setShowModal(false); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function AddPositionModal({
+  onClose,
+  onAdd,
+}: {
+  onClose: () => void;
+  onAdd: (data: { symbol: string; shares: number; avgCost: number }) => void;
+}) {
+  const [symbol, setSymbol] = useState('');
+  const [shares, setShares] = useState('');
+  const [cost, setCost] = useState('');
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (symbol && shares && cost) {
+      onAdd({ symbol: symbol.toUpperCase(), shares: Number(shares), avgCost: Number(cost) });
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={handleSubmit}
+        className="bg-terminal-panel border border-terminal-border-strong rounded-md p-4 w-72 flex flex-col gap-3"
+        onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      >
+        <div className="text-sm font-mono text-text-primary">Add Position</div>
+        <input
+          type="text"
+          value={symbol}
+          onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+          placeholder="Symbol"
+          className="bg-terminal-bg border border-terminal-border rounded px-3 py-2 font-mono text-sm text-text-primary outline-none focus:border-terminal-border-strong"
+          autoFocus
+        />
+        <input
+          type="number"
+          value={shares}
+          onChange={(e) => setShares(e.target.value)}
+          placeholder="Shares"
+          className="bg-terminal-bg border border-terminal-border rounded px-3 py-2 font-mono text-sm text-text-primary outline-none focus:border-terminal-border-strong"
+        />
+        <input
+          type="number"
+          step="0.01"
+          value={cost}
+          onChange={(e) => setCost(e.target.value)}
+          placeholder="Avg Cost ($)"
+          className="bg-terminal-bg border border-terminal-border rounded px-3 py-2 font-mono text-sm text-text-primary outline-none focus:border-terminal-border-strong"
+        />
+        <div className="flex gap-2 justify-end mt-1">
+          <button type="button" onClick={onClose} className="text-text-muted hover:text-text-secondary text-sm font-mono px-3 py-1.5 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" className="bg-up text-black font-mono text-sm px-4 py-1.5 rounded hover:bg-up/80 transition-colors">
+            Add
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-terminal-bg: #1C1C1C;
+  --color-terminal-panel: #232323;
+  --color-terminal-panel-header: #262626;
+  --color-terminal-hover: #2C2C2C;
+  --color-terminal-input: #1F1F1F;
+  --color-terminal-border: rgba(255,255,255,0.08);
+  --color-terminal-border-strong: rgba(255,255,255,0.12);
+
+  --color-up: #4ade80;
+  --color-up-dim: #166534;
+  --color-down: #f87171;
+  --color-down-dim: #991b1b;
+  --color-amber: #e9b86e;
+  --color-cyan: #22d3ee;
+  --color-text-primary: #eaeaea;
+  --color-text-secondary: #888888;
+  --color-text-muted: #555555;
+
+  --font-mono: var(--font-jetbrains), 'JetBrains Mono', 'Fira Code', monospace;
+  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+
+  --text-xxs: 0.6875rem;
+  --text-xxs--line-height: 1rem;
+  --text-data: 0.8125rem;
+  --text-data--line-height: 1.25rem;
+}
+
+html, body {
+  background: #1C1C1C;
+  color: #eaeaea;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* Terminal-style scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* react-grid-layout required CSS */
+.react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+}
+.react-grid-item.cssTransforms {
+  transition-property: transform, width, height;
+}
+.react-grid-item.resizing {
+  z-index: 1;
+  will-change: width, height;
+  opacity: 0.9;
+}
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+  opacity: 0.9;
+}
+.react-grid-placeholder {
+  background: rgba(74, 222, 128, 0.1) !important;
+  border: 1px dashed rgba(74, 222, 128, 0.3) !important;
+  border-radius: 6px;
+  opacity: 1 !important;
+}
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+}
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+}
+.react-grid-item > .react-resizable-handle.react-resizable-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
