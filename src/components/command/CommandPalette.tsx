@@ -8,6 +8,7 @@ import { getShortcutForType, getShortcutLabel } from '@/lib/shortcuts';
 
 interface CommandEntry {
   cmd: string;
+  shortcut?: string;
   type: WindowType;
   label: string;
   needsSymbol: boolean;
@@ -67,7 +68,7 @@ export default function CommandPalette({
   };
 
   return (
-    <div className="absolute top-full left-0 right-0 max-h-96 overflow-y-auto bg-terminal-panel border border-terminal-border-strong border-t-0 shadow-2xl z-50">
+    <div className="absolute top-full left-0 right-0 max-h-96 overflow-y-auto bg-terminal-panel border border-terminal-border-strong border-t-0 shadow-2xl z-[10001]">
       {isCommandMode ? (
         <>
           {commands.map((c, i) => (
@@ -80,6 +81,9 @@ export default function CommandPalette({
             >
               <Badge text="CMD" variant="cyan" />
               <span className="font-mono text-sm text-cyan font-medium">{c.cmd}</span>
+              {c.shortcut && (
+                <span className="text-xs text-text-muted font-mono">/{c.shortcut}</span>
+              )}
               <span className="text-xs text-text-muted flex-1">{c.label}</span>
               {c.needsSymbol && (
                 <span className="text-xxs text-text-muted font-mono">+ SYMBOL</span>

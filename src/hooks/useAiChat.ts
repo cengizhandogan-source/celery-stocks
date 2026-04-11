@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { AiChatMessage, AiToolCallResult, AiConversation } from '@/lib/types';
+import type { AiChatMessage, AiToolCallResult, AiConversation, AiQuestion } from '@/lib/types';
 import { useAppStore } from '@/stores/appStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
 import { useWatchlistStore } from '@/stores/watchlistStore';
+import { useLayoutStore } from '@/stores/layoutStore';
+import type { WindowType } from '@/lib/types';
 import { useUser } from '@/hooks/useUser';
 import { createClient } from '@/utils/supabase/client';
 
@@ -16,6 +18,42 @@ function generateTitle(content: string): string {
   const cut = trimmed.slice(0, 80);
   const lastSpace = cut.lastIndexOf(' ');
   return (lastSpace > 40 ? cut.slice(0, lastSpace) : cut) + '...';
+}
+
+const CLIENT_TOOL_NAMES = new Set(['open_windows', 'close_windows', 'list_windows', 'set_active_symbol']);
+
+function executeClientTool(name: string, args: Record<string, unknown>): void {
+  const layoutStore = useLayoutStore.getState();
+  const appStore = useAppStore.getState();
+
+  switch (name) {
+    case 'open_windows': {
+      const windows = args.windows as Array<{ type: string; symbol?: string }>;
+      for (const w of windows) {
+        layoutStore.addWindow(w.type as WindowType, w.symbol);
+      }
+      break;
+    }
+    case 'close_windows': {
+      if (args.close_all) {
+        const toClose = layoutStore.windows.filter(w => w.type !== 'ai-chat');
+        for (const w of toClose) {
+          layoutStore.removeWindow(w.id);
+        }
+      } else if (args.types) {
+        const types = args.types as string[];
+        const toClose = layoutStore.windows.filter(w => types.includes(w.type) && w.type !== 'ai-chat');
+        for (const w of toClose) {
+          layoutStore.removeWindow(w.id);
+        }
+      }
+      break;
+    }
+    case 'set_active_symbol': {
+      appStore.setActiveSymbol(args.symbol as string);
+      break;
+    }
+  }
 }
 
 export function useAiChat() {
@@ -70,6 +108,7 @@ export function useAiChat() {
           content: row.content,
           timestamp: new Date(row.created_at).getTime(),
           toolCalls: row.tool_calls ?? undefined,
+          question: row.question ? { ...row.question, answered: true } : undefined,
         }))
       );
     }
@@ -126,6 +165,9 @@ export function useAiChat() {
     const activeSymbol = useAppStore.getState().activeSymbol;
     const watchlist = useWatchlistStore.getState().symbols;
     const { positions, portfolios, activePortfolioId } = usePortfolioStore.getState();
+    const openWindows = useLayoutStore.getState().windows.map(w => ({
+      type: w.type, symbol: w.symbol, title: w.title,
+    }));
     const activePortfolio = portfolios.find((p) => p.id === activePortfolioId);
 
     const historyForApi = [...messages, userMsg].map((m) => ({
@@ -138,6 +180,7 @@ export function useAiChat() {
 
     let finalAssistantContent = '';
     let finalToolCalls: AiToolCallResult[] = [];
+    let finalQuestion: AiQuestion | undefined;
     let streamCompleted = false;
 
     try {
@@ -148,6 +191,7 @@ export function useAiChat() {
           messages: historyForApi,
           activeSymbol,
           watchlist,
+          openWindows,
           portfolioContext: positions.length > 0 ? {
             portfolioName: activePortfolio?.name || 'Portfolio',
             positions: positions.map((p) => ({
@@ -194,6 +238,9 @@ export function useAiChat() {
               });
             } else if (data.type === 'tool_call') {
               const toolCall: AiToolCallResult = { name: data.name, args: data.args };
+              if (CLIENT_TOOL_NAMES.has(data.name)) {
+                executeClientTool(data.name, data.args);
+              }
               finalToolCalls = [...finalToolCalls, toolCall];
               setMessages((prev) => {
                 const updated = [...prev];
@@ -203,6 +250,22 @@ export function useAiChat() {
                     ...last,
                     toolCalls: [...(last.toolCalls || []), toolCall],
                   };
+                }
+                return updated;
+              });
+            } else if (data.type === 'question') {
+              const question: AiQuestion = {
+                type: data.questionType,
+                question: data.question,
+                options: data.options,
+                answered: false,
+              };
+              finalQuestion = question;
+              setMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last.role === 'assistant') {
+                  updated[updated.length - 1] = { ...last, question };
                 }
                 return updated;
               });
@@ -266,6 +329,7 @@ export function useAiChat() {
                 role: 'assistant',
                 content: finalAssistantContent,
                 tool_calls: finalToolCalls.length > 0 ? finalToolCalls : null,
+                question: finalQuestion ?? null,
               },
             ]);
           }
@@ -276,11 +340,23 @@ export function useAiChat() {
     }
   }, [isStreaming, messages, user]);
 
+  const answerQuestion = useCallback((messageId: string, answer: string) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId && m.question
+          ? { ...m, question: { ...m.question, answered: true, selectedOption: answer } }
+          : m
+      )
+    );
+    sendMessage(answer);
+  }, [sendMessage]);
+
   return {
     messages,
     isStreaming,
     error,
     sendMessage,
+    answerQuestion,
     startNewConversation,
     conversations,
     activeConversationId,

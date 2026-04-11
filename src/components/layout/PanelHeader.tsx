@@ -1,7 +1,8 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 import Badge from '@/components/ui/Badge';
+import TickerLogo from '@/components/ui/TickerLogo';
 import SymbolSearch from '@/components/ui/SymbolSearch';
 import { useLayoutStore } from '@/stores/layoutStore';
 
@@ -20,6 +21,7 @@ interface PanelHeaderProps {
 
 export default function PanelHeader({ title, windowId, onClose, actions, symbol, symbolEditable, isMinimized, isPinned, onToggleMinimize, onTogglePin }: PanelHeaderProps) {
   const [editing, setEditing] = useState(false);
+  const closeTimeRef = useRef(0);
   const updateWindowSymbol = useLayoutStore((s) => s.updateWindowSymbol);
 
   return (
@@ -31,11 +33,15 @@ export default function PanelHeader({ title, windowId, onClose, actions, symbol,
         {symbol && symbolEditable ? (
           <div className="relative">
             <button
-              onClick={(e) => { e.stopPropagation(); setEditing(!editing); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (Date.now() - closeTimeRef.current < 200) return;
+                setEditing(!editing);
+              }}
               onMouseDown={(e) => e.stopPropagation()}
               className="cursor-pointer"
             >
-              <Badge text={symbol} variant="cyan" />
+              <TickerLogo symbol={symbol} size={14} />
             </button>
             {editing && (
               <SymbolSearch
@@ -43,13 +49,16 @@ export default function PanelHeader({ title, windowId, onClose, actions, symbol,
                   updateWindowSymbol(windowId, sym);
                   setEditing(false);
                 }}
-                onClose={() => setEditing(false)}
+                onClose={() => {
+                  setEditing(false);
+                  closeTimeRef.current = Date.now();
+                }}
                 placeholder="Change ticker..."
               />
             )}
           </div>
         ) : symbol ? (
-          <Badge text={symbol} variant="cyan" />
+          <TickerLogo symbol={symbol} size={14} />
         ) : null}
       </div>
       <div className="flex items-center gap-1 shrink-0">

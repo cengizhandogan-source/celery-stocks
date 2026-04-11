@@ -25,9 +25,10 @@ const COMMANDS: { cmd: string; shortcut: string; type: WindowType; label: string
   { cmd: '/dm', shortcut: 'dm', type: 'direct-messages', label: 'Direct Messages', needsSymbol: false },
   { cmd: '/ideas', shortcut: 'ida', type: 'ideas', label: 'Ideas Feed', needsSymbol: false },
   { cmd: '/crypto', shortcut: 'cry', type: 'crypto-overview', label: 'Crypto Overview', needsSymbol: false },
+  { cmd: '/ai', shortcut: 'ai', type: 'ai-chat', label: 'AI Chat', needsSymbol: false },
 ];
 
-const SHORTCUT_MAP = new Map(COMMANDS.map((c) => [c.shortcut, c]));
+const SHORTCUT_MAP = new Map(COMMANDS.map((c) => [`/${c.shortcut}`, c]));
 
 function parseCommand(query: string) {
   const parts = query.trim().split(/\s+/);
@@ -47,10 +48,13 @@ export default function CommandBar() {
 
   const COMMANDS_PAGE_ENTRY = { cmd: '/commands', shortcut: 'commands', type: 'commands-page' as WindowType, label: 'Open Commands Reference', needsSymbol: false };
 
+  const parsedCmd = parseCommand(commandQuery).cmd;
   const filteredCommands = isCommandMode
     ? [
-        ...COMMANDS.filter((c) => c.cmd.startsWith(parseCommand(commandQuery).cmd)),
-        ...('/commands'.startsWith(parseCommand(commandQuery).cmd) ? [COMMANDS_PAGE_ENTRY] : []),
+        ...COMMANDS.filter(
+          (c) => c.cmd.startsWith(parsedCmd) || `/${c.shortcut}`.startsWith(parsedCmd)
+        ),
+        ...('/commands'.startsWith(parsedCmd) ? [COMMANDS_PAGE_ENTRY] : []),
       ]
     : [];
 
@@ -90,19 +94,23 @@ export default function CommandBar() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && isCommandMode && parseCommand(commandQuery).cmd === '/commands') {
+    if (e.key === 'Tab' && isCommandMode) {
       e.preventDefault();
-      openCommandsPage();
+      if (filteredCommands.length === 0) return;
+      const { symbol } = parseCommand(commandQuery);
+      const completed = filteredCommands[0].cmd;
+      setCommandQuery(symbol ? `${completed} ${symbol}` : `${completed} `);
       return;
     }
-    if (e.key === 'Enter' && !isCommandMode) {
+    if (e.key === 'Enter' && isCommandMode) {
       const { cmd, symbol } = parseCommand(commandQuery);
-      if (cmd === 'commands') {
+      if (cmd === '/commands') {
         e.preventDefault();
         openCommandsPage();
         return;
       }
-      const matched = SHORTCUT_MAP.get(cmd);
+      const exactCmd = COMMANDS.find((c) => c.cmd === cmd);
+      const matched = exactCmd || SHORTCUT_MAP.get(cmd);
       if (matched) {
         e.preventDefault();
         if (symbol) setActiveSymbol(symbol);

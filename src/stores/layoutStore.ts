@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useState, useEffect } from 'react';
-import { WindowConfig, WindowType, LayoutItem } from '@/lib/types';
+import { WindowConfig, WindowType, LayoutItem, PageData } from '@/lib/types';
 import { WINDOW_DEFAULTS, WINDOW_TYPE_LABELS, CASCADE_OFFSET, PANEL_HEADER_HEIGHT } from '@/lib/constants';
 import { createClient } from '@/utils/supabase/client';
 
@@ -24,24 +24,77 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// --- Supabase helpers ---
+// --- Types ---
 
 interface PersistedLayout {
   windows: WindowConfig[];
   layouts: LayoutItem[];
   maxZIndex: number;
-  canvasOffset: { x: number; y: number };
-  canvasScale: number;
   minimizedWindows: Record<string, { h: number; minH: number }>;
   pinnedWindows: string[];
 }
 
-async function saveLayoutToSupabase(data: PersistedLayout): Promise<void> {
+interface PersistedLayoutV2 {
+  version: 2;
+  activePage: number;
+  pages: PageData[];
+}
+
+// --- Helpers ---
+
+function emptyPage(name: string): PageData {
+  return { name, windows: [], layouts: [], maxZIndex: 0, minimizedWindows: {}, pinnedWindows: [] };
+}
+
+function snapshotPage(state: { windows: WindowConfig[]; layouts: LayoutItem[]; maxZIndex: number; minimizedWindows: Record<string, { h: number; minH: number }>; pinnedWindows: string[]; pages: PageData[]; activePage: number }): PageData {
+  return {
+    name: state.pages[state.activePage]?.name ?? 'Page 1',
+    windows: state.windows,
+    layouts: state.layouts,
+    maxZIndex: state.maxZIndex,
+    minimizedWindows: state.minimizedWindows,
+    pinnedWindows: state.pinnedWindows,
+  };
+}
+
+function buildV2(state: { windows: WindowConfig[]; layouts: LayoutItem[]; maxZIndex: number; minimizedWindows: Record<string, { h: number; minH: number }>; pinnedWindows: string[]; pages: PageData[]; activePage: number }): PersistedLayoutV2 {
+  const pages = state.pages.map((p, i) =>
+    i === state.activePage ? snapshotPage(state) : p
+  );
+  return { version: 2, activePage: state.activePage, pages };
+}
+
+function migrateV1toV2(data: PersistedLayout): PersistedLayoutV2 {
+  return {
+    version: 2,
+    activePage: 0,
+    pages: [{
+      name: 'Page 1',
+      windows: data.windows,
+      layouts: data.layouts,
+      maxZIndex: data.maxZIndex,
+      minimizedWindows: data.minimizedWindows ?? {},
+      pinnedWindows: data.pinnedWindows ?? [],
+    }],
+  };
+}
+
+function isV2(data: unknown): data is PersistedLayoutV2 {
+  return typeof data === 'object' && data !== null && 'version' in data && (data as PersistedLayoutV2).version === 2;
+}
+
+function toV2(data: unknown): PersistedLayoutV2 {
+  if (isV2(data)) return data;
+  return migrateV1toV2(data as PersistedLayout);
+}
+
+// --- Supabase helpers ---
+
+async function saveLayoutToSupabase(data: PersistedLayoutV2): Promise<void> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Keep unload cache fresh
     const { data: { session } } = await supabase.auth.getSession();
     cachedUserId = user.id;
     cachedAccessToken = session?.access_token ?? null;
@@ -57,7 +110,7 @@ async function saveLayoutToSupabase(data: PersistedLayout): Promise<void> {
   }
 }
 
-async function loadLayoutFromSupabase(): Promise<PersistedLayout | null> {
+async function loadLayoutFromSupabase(): Promise<PersistedLayoutV2 | null> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -66,7 +119,8 @@ async function loadLayoutFromSupabase(): Promise<PersistedLayout | null> {
       .select('layout_data')
       .eq('user_id', user.id)
       .single();
-    return data?.layout_data as PersistedLayout | null;
+    if (!data?.layout_data) return null;
+    return toV2(data.layout_data);
   } catch {
     return null;
   }
@@ -100,6 +154,14 @@ function migrateLayoutData(layouts: LayoutItem[]): { layouts: LayoutItem[]; maxZ
   return { layouts: fixed, maxZIndex: Math.max(0, ...fixed.map(l => l.zIndex ?? 0)) };
 }
 
+function migratePages(pages: PageData[]): PageData[] {
+  return pages.map(p => {
+    if (p.layouts.length === 0) return p;
+    const migrated = migrateLayoutData(p.layouts);
+    return { ...p, layouts: migrated.layouts, maxZIndex: migrated.maxZIndex };
+  });
+}
+
 // --- Hydration guard for debounced save ---
 
 let isHydrating = false;
@@ -110,11 +172,13 @@ interface LayoutState {
   windows: WindowConfig[];
   layouts: LayoutItem[];
   maxZIndex: number;
-  canvasOffset: { x: number; y: number };
   viewportSize: { width: number; height: number };
   isDragging: boolean;
   minimizedWindows: Record<string, { h: number; minH: number }>;
   pinnedWindows: string[];
+  preSnapLayouts: Record<string, { x: number; y: number; w: number; h: number }>;
+  activePage: number;
+  pages: PageData[];
   addWindow: (type: WindowType, symbol?: string, position?: { x: number; y: number }) => void;
   removeWindow: (id: string) => void;
   updateWindowPosition: (id: string, x: number, y: number) => void;
@@ -124,17 +188,20 @@ interface LayoutState {
   addWindowSymbol: (id: string, symbol: string, defaults: string[]) => void;
   removeWindowSymbol: (id: string, symbol: string) => void;
   updateWindowContent: (id: string, content: string) => void;
-  canvasScale: number;
-  setCanvasOffset: (offset: { x: number; y: number }) => void;
-  resetCanvasOffset: () => void;
-  setCanvasScale: (scale: number) => void;
   setViewportSize: (size: { width: number; height: number }) => void;
   setIsDragging: (v: boolean) => void;
   toggleMinimize: (id: string) => void;
   togglePin: (id: string) => void;
+  setPreSnapLayout: (id: string, rect: { x: number; y: number; w: number; h: number }) => void;
+  clearPreSnapLayout: (id: string) => void;
+  restorePreSnap: (id: string) => void;
   updateLayout: (layout: Array<{ i: string; x: number; y: number; w: number; h: number }>) => void;
   clearAll: () => void;
   initializeFromSupabase: () => Promise<void>;
+  switchPage: (index: number) => void;
+  addPage: () => void;
+  removePage: (index: number) => void;
+  renamePage: (index: number, name: string) => void;
 }
 
 export const useLayoutStore = create<LayoutState>()(
@@ -143,12 +210,13 @@ export const useLayoutStore = create<LayoutState>()(
       windows: [],
       layouts: [],
       maxZIndex: 0,
-      canvasOffset: { x: 0, y: 0 },
       viewportSize: { width: 0, height: 0 },
-      canvasScale: 1,
       isDragging: false,
       minimizedWindows: {},
       pinnedWindows: [],
+      preSnapLayouts: {},
+      activePage: 0,
+      pages: [emptyPage('Page 1')],
 
       addWindow: (type, symbol, position) => set((state) => {
         const id = crypto.randomUUID();
@@ -157,17 +225,23 @@ export const useLayoutStore = create<LayoutState>()(
           ? `${WINDOW_TYPE_LABELS[type]} — ${symbol}`
           : WINDOW_TYPE_LABELS[type];
 
-        // Center the window on the given position
-        let x = (position?.x ?? 0) - defaults.w / 2;
-        let y = (position?.y ?? 0) - defaults.h / 2;
-        x = Math.max(0, x);
-        y = Math.max(0, y);
+        const { width: vpW, height: vpH } = state.viewportSize;
+        const w = Math.min(defaults.w, vpW || defaults.w);
+        const h = Math.min(defaults.h, vpH || defaults.h);
 
-        // Cascade: offset if another window is near the same position
+        let x = (position?.x ?? 0) - w / 2;
+        let y = (position?.y ?? 0) - h / 2;
+
+        if (vpW > 0) x = Math.max(0, Math.min(x, vpW - w));
+        if (vpH > 0) y = Math.max(0, Math.min(y, vpH - h));
+
         while (state.layouts.some(l => Math.abs(l.x - x) < 10 && Math.abs(l.y - y) < 10)) {
           x += CASCADE_OFFSET;
           y += CASCADE_OFFSET;
         }
+
+        if (vpW > 0) x = Math.max(0, Math.min(x, vpW - w));
+        if (vpH > 0) y = Math.max(0, Math.min(y, vpH - h));
 
         const newZIndex = state.maxZIndex + 1;
         const window: WindowConfig = { id, type, title, symbol };
@@ -175,8 +249,8 @@ export const useLayoutStore = create<LayoutState>()(
           i: id,
           x,
           y,
-          w: defaults.w,
-          h: defaults.h,
+          w,
+          h,
           minW: defaults.minW,
           minH: defaults.minH,
           zIndex: newZIndex,
@@ -290,30 +364,38 @@ export const useLayoutStore = create<LayoutState>()(
           : [...state.pinnedWindows, id],
       })),
 
-      setCanvasOffset: (offset) => set({ canvasOffset: offset }),
-      setCanvasScale: (scale) => set({ canvasScale: Math.min(2, Math.max(0.25, scale)) }),
-      resetCanvasOffset: () => set((state) => {
-        const { layouts, viewportSize } = state;
-        if (layouts.length === 0) return { canvasOffset: { x: 0, y: 0 }, canvasScale: 1 };
+      setPreSnapLayout: (id, rect) => set((state) => ({
+        preSnapLayouts: { ...state.preSnapLayouts, [id]: rect },
+      })),
 
-        let sumX = 0;
-        let sumY = 0;
-        for (const item of layouts) {
-          sumX += item.x + item.w / 2;
-          sumY += item.y + item.h / 2;
-        }
-        const centroidX = sumX / layouts.length;
-        const centroidY = sumY / layouts.length;
+      clearPreSnapLayout: (id) => set((state) => {
+        const { [id]: _, ...rest } = state.preSnapLayouts;
+        return { preSnapLayouts: rest };
+      }),
 
+      restorePreSnap: (id) => set((state) => {
+        const saved = state.preSnapLayouts[id];
+        if (!saved) return {};
+        const { [id]: _, ...rest } = state.preSnapLayouts;
         return {
-          canvasScale: 1,
-          canvasOffset: {
-            x: -(centroidX - viewportSize.width / 2),
-            y: -(centroidY - viewportSize.height / 2),
-          },
+          preSnapLayouts: rest,
+          layouts: state.layouts.map(l =>
+            l.i === id ? { ...l, x: saved.x, y: saved.y, w: saved.w, h: saved.h } : l
+          ),
         };
       }),
-      setViewportSize: (size) => set({ viewportSize: size }),
+
+      setViewportSize: (size) => set((state) => {
+        if (size.width === 0 || size.height === 0) return { viewportSize: size };
+        const layouts = state.layouts.map(l => {
+          const w = Math.min(l.w, size.width);
+          const h = Math.min(l.h, size.height);
+          const x = Math.max(0, Math.min(l.x, size.width - w));
+          const y = Math.max(0, Math.min(l.y, size.height - h));
+          return { ...l, x, y, w, h };
+        });
+        return { viewportSize: size, layouts };
+      }),
       setIsDragging: (v) => set({ isDragging: v }),
 
       updateLayout: (layout) => set((state) => ({
@@ -323,38 +405,115 @@ export const useLayoutStore = create<LayoutState>()(
         }),
       })),
 
-      clearAll: () => set({ windows: [], layouts: [], maxZIndex: 0, canvasOffset: { x: 0, y: 0 }, canvasScale: 1, minimizedWindows: {}, pinnedWindows: [] }),
+      clearAll: () => set({
+        windows: [],
+        layouts: [],
+        maxZIndex: 0,
+        minimizedWindows: {},
+        pinnedWindows: [],
+        preSnapLayouts: {},
+        activePage: 0,
+        pages: [emptyPage('Page 1')],
+      }),
+
+      switchPage: (index) => set((state) => {
+        if (index === state.activePage) return {};
+        if (index < 0 || index >= state.pages.length) return {};
+        // Save current page
+        const updatedPages = state.pages.map((p, i) =>
+          i === state.activePage ? snapshotPage(state) : p
+        );
+        // Load target page
+        const target = updatedPages[index];
+        return {
+          activePage: index,
+          pages: updatedPages,
+          windows: target.windows,
+          layouts: target.layouts,
+          maxZIndex: target.maxZIndex,
+          minimizedWindows: target.minimizedWindows,
+          pinnedWindows: target.pinnedWindows,
+          preSnapLayouts: {},
+        };
+      }),
+
+      addPage: () => set((state) => {
+        if (state.pages.length >= 3) return {};
+        const newName = `Page ${state.pages.length + 1}`;
+        // Save current page before switching
+        const updatedPages = state.pages.map((p, i) =>
+          i === state.activePage ? snapshotPage(state) : p
+        );
+        const newPage = emptyPage(newName);
+        const newIndex = updatedPages.length;
+        return {
+          pages: [...updatedPages, newPage],
+          activePage: newIndex,
+          windows: newPage.windows,
+          layouts: newPage.layouts,
+          maxZIndex: newPage.maxZIndex,
+          minimizedWindows: newPage.minimizedWindows,
+          pinnedWindows: newPage.pinnedWindows,
+          preSnapLayouts: {},
+        };
+      }),
+
+      removePage: (index) => set((state) => {
+        if (state.pages.length <= 1) return {};
+        // Save current page first
+        const updatedPages = state.pages.map((p, i) =>
+          i === state.activePage ? snapshotPage(state) : p
+        );
+        const remaining = updatedPages.filter((_, i) => i !== index);
+        // Determine new active page
+        let newActive = state.activePage;
+        if (index === state.activePage) {
+          newActive = Math.min(index, remaining.length - 1);
+        } else if (index < state.activePage) {
+          newActive = state.activePage - 1;
+        }
+        const target = remaining[newActive];
+        return {
+          pages: remaining,
+          activePage: newActive,
+          windows: target.windows,
+          layouts: target.layouts,
+          maxZIndex: target.maxZIndex,
+          minimizedWindows: target.minimizedWindows,
+          pinnedWindows: target.pinnedWindows,
+          preSnapLayouts: {},
+        };
+      }),
+
+      renamePage: (index, name) => set((state) => ({
+        pages: state.pages.map((p, i) =>
+          i === index ? { ...(i === state.activePage ? snapshotPage(state) : p), name } : p
+        ),
+      })),
 
       initializeFromSupabase: async () => {
         isHydrating = true;
         try {
           const cloudData = await loadLayoutFromSupabase();
-          if (cloudData && cloudData.layouts && cloudData.layouts.length > 0) {
-            // Cloud data exists — apply it (with migration if needed)
-            const migrated = migrateLayoutData(cloudData.layouts);
+          if (cloudData && cloudData.pages.length > 0 && cloudData.pages.some(p => p.layouts.length > 0)) {
+            const migratedPages = migratePages(cloudData.pages);
+            const active = Math.min(cloudData.activePage, migratedPages.length - 1);
+            const target = migratedPages[active];
             set({
-              windows: cloudData.windows,
-              layouts: migrated.layouts,
-              maxZIndex: migrated.maxZIndex,
-              canvasOffset: cloudData.canvasOffset ?? { x: 0, y: 0 },
-              canvasScale: cloudData.canvasScale ?? 1,
-              minimizedWindows: cloudData.minimizedWindows ?? {},
-              pinnedWindows: cloudData.pinnedWindows ?? [],
+              pages: migratedPages,
+              activePage: active,
+              windows: target.windows,
+              layouts: target.layouts,
+              maxZIndex: target.maxZIndex,
+              minimizedWindows: target.minimizedWindows ?? {},
+              pinnedWindows: target.pinnedWindows ?? [],
             });
           } else {
             // No cloud data — migrate current localStorage state up to Supabase
             const state = get();
-            const localData: PersistedLayout = {
-              windows: state.windows,
-              layouts: state.layouts,
-              maxZIndex: state.maxZIndex,
-              canvasOffset: state.canvasOffset,
-              canvasScale: state.canvasScale,
-              minimizedWindows: state.minimizedWindows,
-              pinnedWindows: state.pinnedWindows,
-            };
-            if (localData.windows.length > 0) {
-              await saveLayoutToSupabase(localData);
+            const v2 = buildV2(state);
+            if (state.windows.length > 0) {
+              await saveLayoutToSupabase(v2);
             }
           }
         } finally {
@@ -364,20 +523,43 @@ export const useLayoutStore = create<LayoutState>()(
     }),
     {
       name: 'celery-layout',
-      partialize: (state) => ({
-        windows: state.windows,
-        layouts: state.layouts,
-        maxZIndex: state.maxZIndex,
-        canvasOffset: state.canvasOffset,
-        canvasScale: state.canvasScale,
-        minimizedWindows: state.minimizedWindows,
-        pinnedWindows: state.pinnedWindows,
-      }),
+      partialize: (state) => {
+        const v2 = buildV2(state);
+        return v2 as unknown as Record<string, unknown>;
+      },
       onRehydrateStorage: () => (state) => {
-        if (!state?.layouts || state.layouts.length === 0) return;
-        const migrated = migrateLayoutData(state.layouts);
-        state.layouts = migrated.layouts;
-        state.maxZIndex = migrated.maxZIndex;
+        if (!state) return;
+        // Check if this is V2 data (persisted via partialize)
+        const raw = state as unknown as Record<string, unknown>;
+        if (raw.version === 2 && Array.isArray(raw.pages)) {
+          const v2 = raw as unknown as PersistedLayoutV2;
+          const migratedPages = migratePages(v2.pages);
+          const active = Math.min(v2.activePage, migratedPages.length - 1);
+          const target = migratedPages[active];
+          state.pages = migratedPages;
+          state.activePage = active;
+          state.windows = target.windows;
+          state.layouts = target.layouts;
+          state.maxZIndex = target.maxZIndex;
+          state.minimizedWindows = target.minimizedWindows ?? {};
+          state.pinnedWindows = target.pinnedWindows ?? [];
+        } else {
+          // V1 data — migrate
+          if (state.layouts && state.layouts.length > 0) {
+            const migrated = migrateLayoutData(state.layouts);
+            state.layouts = migrated.layouts;
+            state.maxZIndex = migrated.maxZIndex;
+          }
+          state.pages = [{
+            name: 'Page 1',
+            windows: state.windows,
+            layouts: state.layouts,
+            maxZIndex: state.maxZIndex,
+            minimizedWindows: state.minimizedWindows ?? {},
+            pinnedWindows: state.pinnedWindows ?? [],
+          }];
+          state.activePage = 0;
+        }
       },
     }
   )
@@ -394,15 +576,7 @@ useLayoutStore.subscribe((state) => {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     const s = useLayoutStore.getState();
-    saveLayoutToSupabase({
-      windows: s.windows,
-      layouts: s.layouts,
-      maxZIndex: s.maxZIndex,
-      canvasOffset: s.canvasOffset,
-      canvasScale: s.canvasScale,
-      minimizedWindows: s.minimizedWindows,
-      pinnedWindows: s.pinnedWindows,
-    });
+    saveLayoutToSupabase(buildV2(s));
   }, SAVE_DEBOUNCE_MS);
 });
 
@@ -411,15 +585,7 @@ function flushSaveSync(): void {
   if (!cachedUserId || !cachedAccessToken) return;
 
   const s = useLayoutStore.getState();
-  const data: PersistedLayout = {
-    windows: s.windows,
-    layouts: s.layouts,
-    maxZIndex: s.maxZIndex,
-    canvasOffset: s.canvasOffset,
-    canvasScale: s.canvasScale,
-    minimizedWindows: s.minimizedWindows,
-    pinnedWindows: s.pinnedWindows,
-  };
+  const data = buildV2(s);
 
   const json = JSON.stringify(data);
   if (json === lastSavedJson) return;
@@ -464,16 +630,9 @@ if (typeof window !== 'undefined') {
 // --- Exports ---
 
 export function getViewportCenterPosition(): { x: number; y: number } {
-  const state = useLayoutStore.getState();
-  const { canvasOffset, canvasScale, viewportSize } = state;
+  const { viewportSize } = useLayoutStore.getState();
   const { width, height } = viewportSize;
-
-  if (width === 0 || height === 0) return { x: 0, y: 0 };
-
-  return {
-    x: (width / 2 - canvasOffset.x) / canvasScale,
-    y: (height / 2 - canvasOffset.y) / canvasScale,
-  };
+  return { x: width / 2, y: height / 2 };
 }
 
 export const useLayoutHydrated = () => {

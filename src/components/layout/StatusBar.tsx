@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getMarketStatus, getMarketStatusColor, getNextMarketEvent, type Exchange, type MarketStatus } from '@/lib/formatters';
 import { useUser } from '@/hooks/useUser';
@@ -20,14 +20,19 @@ export default function StatusBar() {
   const { user } = useUser();
   const router = useRouter();
   const unreadDmCount = useChatStore((s) => s.unreadDmCount);
-  const canvasOffset = useLayoutStore((s) => s.canvasOffset);
-  const canvasScale = useLayoutStore((s) => s.canvasScale);
-  const setCanvasScale = useLayoutStore((s) => s.setCanvasScale);
-  const setCanvasOffset = useLayoutStore((s) => s.setCanvasOffset);
-  const resetCanvasOffset = useLayoutStore((s) => s.resetCanvasOffset);
-  const isPanned = canvasOffset.x !== 0 || canvasOffset.y !== 0;
-  const isZoomed = canvasScale !== 1;
-  const zoomPct = Math.round(canvasScale * 100);
+
+  const pages = useLayoutStore((s) => s.pages);
+  const activePage = useLayoutStore((s) => s.activePage);
+  const switchPage = useLayoutStore((s) => s.switchPage);
+  const addPage = useLayoutStore((s) => s.addPage);
+  const removePage = useLayoutStore((s) => s.removePage);
+  const renamePage = useLayoutStore((s) => s.renamePage);
+
+  const [contextMenu, setContextMenu] = useState<{ index: number; x: number; y: number } | null>(null);
+  const [renaming, setRenaming] = useState<number | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const renameInputRef = useRef<HTMLInputElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function update() {
@@ -55,10 +60,54 @@ export default function StatusBar() {
     return () => clearInterval(interval);
   }, []);
 
+  // Close context menu on outside click
+  useEffect(() => {
+    if (!contextMenu) return;
+    function handleClick(e: MouseEvent) {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        setContextMenu(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [contextMenu]);
+
+  // Focus rename input when renaming starts
+  useEffect(() => {
+    if (renaming !== null) {
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+    }
+  }, [renaming]);
+
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.refresh();
+  }
+
+  function handleContextMenu(e: React.MouseEvent, index: number) {
+    e.preventDefault();
+    setContextMenu({ index, x: e.clientX, y: e.clientY });
+  }
+
+  function startRename(index: number) {
+    setRenameValue(pages[index].name);
+    setRenaming(index);
+    setContextMenu(null);
+  }
+
+  function commitRename() {
+    if (renaming !== null && renameValue.trim()) {
+      renamePage(renaming, renameValue.trim());
+    }
+    setRenaming(null);
+  }
+
+  function handleDelete(index: number) {
+    setContextMenu(null);
+    if (pages.length <= 1) return;
+    removePage(index);
   }
 
   return (
@@ -76,57 +125,57 @@ export default function StatusBar() {
             </span>
           );
         })}
-      </div>
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
-        {(isPanned || isZoomed) && (
-          <button
-            onClick={resetCanvasOffset}
-            className="text-xxs font-mono text-text-muted hover:text-up transition-colors uppercase tracking-wider cursor-pointer"
-          >
-            RESET VIEW
-          </button>
-        )}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => {
-              const state = useLayoutStore.getState();
-              const oldScale = state.canvasScale;
-              const newScale = Math.max(0.25, oldScale / 1.2);
-              const { viewportSize, canvasOffset: off } = state;
-              const cx = (viewportSize.width / 2 - off.x) / oldScale;
-              const cy = (viewportSize.height / 2 - off.y) / oldScale;
-              setCanvasScale(newScale);
-              setCanvasOffset({
-                x: viewportSize.width / 2 - cx * newScale,
-                y: viewportSize.height / 2 - cy * newScale,
-              });
-            }}
-            className="text-xxs font-mono text-text-muted hover:text-up transition-colors cursor-pointer px-0.5"
-          >
-            −
-          </button>
-          <span className="text-xxs font-mono text-text-secondary w-8 text-center">{zoomPct}%</span>
-          <button
-            onClick={() => {
-              const state = useLayoutStore.getState();
-              const oldScale = state.canvasScale;
-              const newScale = Math.min(2, oldScale * 1.2);
-              const { viewportSize, canvasOffset: off } = state;
-              const cx = (viewportSize.width / 2 - off.x) / oldScale;
-              const cy = (viewportSize.height / 2 - off.y) / oldScale;
-              setCanvasScale(newScale);
-              setCanvasOffset({
-                x: viewportSize.width / 2 - cx * newScale,
-                y: viewportSize.height / 2 - cy * newScale,
-              });
-            }}
-            className="text-xxs font-mono text-text-muted hover:text-up transition-colors cursor-pointer px-0.5"
-          >
-            +
-          </button>
+
+        <span className="mx-1 text-terminal-border">|</span>
+
+        {/* Page tabs */}
+        <div className="flex items-center gap-0.5">
+          {pages.map((page, i) => (
+            <button
+              key={i}
+              onClick={() => switchPage(i)}
+              onContextMenu={(e) => handleContextMenu(e, i)}
+              onDoubleClick={() => startRename(i)}
+              className={`px-2 py-0.5 rounded-sm transition-colors ${
+                i === activePage
+                  ? 'text-up bg-terminal-bg'
+                  : 'text-text-muted hover:text-text-secondary'
+              }`}
+            >
+              {renaming === i ? (
+                <input
+                  ref={renameInputRef}
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onBlur={commitRename}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commitRename();
+                    if (e.key === 'Escape') setRenaming(null);
+                  }}
+                  className="bg-terminal-bg border border-terminal-border text-text-primary text-xxs font-mono w-16 px-1 outline-none"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                page.name
+              )}
+            </button>
+          ))}
+          {pages.length < 3 && (
+            <button
+              onClick={addPage}
+              className="px-1.5 py-0.5 text-text-muted hover:text-up transition-colors rounded-sm"
+              title="Add page"
+            >
+              +
+            </button>
+          )}
         </div>
+      </div>
+
+      <div className="absolute left-1/2 -translate-x-1/2">
         <span className="text-xxs font-mono text-text-secondary">{time}</span>
       </div>
+
       <div className="flex items-center gap-3 text-xxs font-mono">
         {user && (
           <>
@@ -149,6 +198,29 @@ export default function StatusBar() {
           CELERY STOCKS
         </span>
       </div>
+
+      {/* Context menu */}
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          className="fixed bg-terminal-panel border border-terminal-border-strong rounded-sm shadow-lg z-[9999] py-1"
+          style={{ left: contextMenu.x, top: contextMenu.y - 60 }}
+        >
+          <button
+            onClick={() => startRename(contextMenu.index)}
+            className="block w-full text-left px-3 py-1 text-xxs font-mono text-text-primary hover:bg-terminal-bg transition-colors"
+          >
+            Rename
+          </button>
+          <button
+            onClick={() => handleDelete(contextMenu.index)}
+            disabled={pages.length <= 1}
+            className="block w-full text-left px-3 py-1 text-xxs font-mono text-down hover:bg-terminal-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }

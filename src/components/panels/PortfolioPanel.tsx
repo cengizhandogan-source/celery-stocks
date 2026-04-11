@@ -166,22 +166,21 @@ export default function PortfolioPanel() {
         )}
       </div>
 
-      {/* Add button */}
-      <div className="flex items-center px-3 py-1.5 border-t border-terminal-border shrink-0">
-        <button
-          onClick={() => setShowAddPosition(true)}
-          className="text-text-muted hover:text-up text-sm font-mono transition-colors"
-        >
-          + Add Position
-        </button>
-      </div>
-
-      {/* Add position modal */}
-      {showAddPosition && (
-        <AddPositionModal
+      {/* Add position */}
+      {showAddPosition ? (
+        <AddPositionForm
           onClose={() => setShowAddPosition(false)}
           onAdd={(data) => { addPosition(data); setShowAddPosition(false); }}
         />
+      ) : (
+        <div className="flex items-center px-3 py-1.5 border-t border-terminal-border shrink-0">
+          <button
+            onClick={() => setShowAddPosition(true)}
+            className="text-text-muted hover:text-up text-sm font-mono transition-colors"
+          >
+            + Add Position
+          </button>
+        </div>
       )}
 
       {/* Create portfolio modal */}
@@ -196,7 +195,7 @@ export default function PortfolioPanel() {
   );
 }
 
-function AddPositionModal({
+function AddPositionForm({
   onClose,
   onAdd,
 }: {
@@ -215,20 +214,18 @@ function AddPositionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
-      <form
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={handleSubmit}
-        className="bg-terminal-panel border border-terminal-border-strong rounded-md p-4 w-72 flex flex-col gap-3"
-        onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
-      >
-        <div className="text-sm font-mono text-text-primary">Add Position</div>
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      className="border-t border-terminal-border shrink-0 px-3 py-2 flex flex-col gap-2 bg-terminal-panel"
+    >
+      <div className="flex items-center gap-2">
         <input
           type="text"
           value={symbol}
           onChange={(e) => setSymbol(e.target.value.toUpperCase())}
           placeholder="Symbol"
-          className="bg-terminal-bg border border-terminal-border rounded px-3 py-2 font-mono text-sm text-text-primary outline-none focus:border-terminal-border-strong"
+          className="w-20 bg-terminal-input border border-terminal-border rounded px-2 py-1.5 font-mono text-xs text-text-primary outline-none focus:border-up/40"
           autoFocus
         />
         <input
@@ -236,25 +233,24 @@ function AddPositionModal({
           value={shares}
           onChange={(e) => setShares(e.target.value)}
           placeholder="Shares"
-          className="bg-terminal-bg border border-terminal-border rounded px-3 py-2 font-mono text-sm text-text-primary outline-none focus:border-terminal-border-strong"
+          className="w-20 bg-terminal-input border border-terminal-border rounded px-2 py-1.5 font-mono text-xs text-text-primary outline-none focus:border-up/40"
         />
         <input
           type="number"
           step="0.01"
           value={cost}
           onChange={(e) => setCost(e.target.value)}
-          placeholder="Avg Cost ($)"
-          className="bg-terminal-bg border border-terminal-border rounded px-3 py-2 font-mono text-sm text-text-primary outline-none focus:border-terminal-border-strong"
+          placeholder="Avg Cost"
+          className="w-24 bg-terminal-input border border-terminal-border rounded px-2 py-1.5 font-mono text-xs text-text-primary outline-none focus:border-up/40"
         />
-        <div className="flex gap-2 justify-end mt-1">
-          <button type="button" onClick={onClose} className="text-text-muted hover:text-text-secondary text-sm font-mono px-3 py-1.5 transition-colors">
-            Cancel
-          </button>
-          <button type="submit" className="bg-up text-black font-mono text-sm px-4 py-1.5 rounded hover:bg-up/80 transition-colors">
-            Add
-          </button>
-        </div>
-      </form>
-    </div>
+        <div className="flex-1" />
+        <button type="button" onClick={onClose} className="text-text-muted hover:text-text-secondary text-xs font-mono px-2 py-1.5 transition-colors">
+          Cancel
+        </button>
+        <button type="submit" className="bg-up text-black font-mono text-xs px-3 py-1.5 rounded hover:bg-up/80 transition-colors">
+          Add
+        </button>
+      </div>
+    </form>
   );
 }

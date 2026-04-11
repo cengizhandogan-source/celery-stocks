@@ -240,11 +240,20 @@ export interface AiChatMessage {
   content: string;
   timestamp: number;
   toolCalls?: AiToolCallResult[];
+  question?: AiQuestion;
 }
 
 export interface AiToolCallResult {
   name: string;
   args: Record<string, unknown>;
+}
+
+export interface AiQuestion {
+  type: 'yes_no' | 'multiple_choice';
+  question: string;
+  options?: string[];
+  answered?: boolean;
+  selectedOption?: string;
 }
 
 export interface LayoutItem {
@@ -256,4 +265,13 @@ export interface LayoutItem {
   minW?: number;
   minH?: number;
   zIndex: number;
+}
+
+export interface PageData {
+  name: string;
+  windows: WindowConfig[];
+  layouts: LayoutItem[];
+  maxZIndex: number;
+  minimizedWindows: Record<string, { h: number; minH: number }>;
+  pinnedWindows: string[];
 }

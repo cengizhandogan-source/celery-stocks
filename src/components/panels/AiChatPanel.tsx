@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAiChat } from '@/hooks/useAiChat';
 import MessageInput from '@/components/chat/MessageInput';
-import type { AiChatMessage, AiConversation } from '@/lib/types';
+import type { AiChatMessage, AiConversation, AiQuestion } from '@/lib/types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -19,6 +19,16 @@ import {
 
 const CHART_COLORS = ['#22d3ee', '#4ade80', '#e9b86e', '#f87171', '#a78bfa', '#fb923c'];
 
+/** Replace <t>SYMBOL</t> HTML tags with markdown links before parsing.
+ *  This makes ticker rendering independent of rehype-raw's HTML parsing,
+ *  which can fail in certain markdown contexts (tables, headings, etc.). */
+function preprocessTickers(content: string): string {
+  return content.replace(/<t>([^<]+)<\/t>/gi, (_, sym) => {
+    const symbol = sym.trim();
+    return `[${symbol}](ticker://${encodeURIComponent(symbol)})`;
+  });
+}
+
 const TOOL_LABELS: Record<string, string> = {
   get_quote: 'Quote',
   get_quotes: 'Quotes',
@@ -28,7 +38,9 @@ const TOOL_LABELS: Record<string, string> = {
   get_financials: 'Financials',
   get_holders: 'Holders',
   get_filings: 'Filings',
+  get_candles: 'Candles',
   get_screener: 'Screener',
+  ask_user: 'Question',
 };
 
 function formatToolLabel(name: string, args: Record<string, unknown>): string {
@@ -106,6 +118,44 @@ function InlineChart({ json }: { json: string }) {
   );
 }
 
+function QuestionButtons({
+  question,
+  onAnswer,
+  disabled,
+}: {
+  question: AiQuestion;
+  onAnswer: (answer: string) => void;
+  disabled: boolean;
+}) {
+  const options = question.type === 'yes_no'
+    ? ['Yes', 'No']
+    : (question.options || []);
+
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2">
+      {options.map((opt, i) => {
+        const isSelected = question.selectedOption === opt;
+        return (
+          <button
+            key={i}
+            onClick={() => !disabled && onAnswer(opt)}
+            disabled={disabled}
+            className={`text-xs font-mono px-3 py-1.5 rounded border transition-colors ${
+              isSelected
+                ? 'border-cyan bg-cyan/15 text-cyan'
+                : disabled
+                  ? 'border-terminal-border text-text-muted cursor-default opacity-50'
+                  : 'border-terminal-border text-text-secondary hover:border-cyan/40 hover:text-text-primary'
+            }`}
+          >
+            {question.type === 'multiple_choice' && options.length > 2 ? `${i + 1}. ${opt}` : opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 const markdownComponents = {
   table: ({ children }: { children?: React.ReactNode }) => (
     <div className="overflow-x-auto my-2">
@@ -146,7 +196,17 @@ const markdownComponents = {
   },
   pre: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   t: ({ children }: { children?: React.ReactNode }) => {
-    const symbol = String(children).trim().toUpperCase();
+    const extractText = (node: React.ReactNode): string => {
+      if (typeof node === 'string') return node;
+      if (typeof node === 'number') return String(node);
+      if (Array.isArray(node)) return node.map(extractText).join('');
+      if (node && typeof node === 'object' && 'props' in node) {
+        return extractText((node as React.ReactElement<{ children?: React.ReactNode }>).props.children);
+      }
+      return '';
+    };
+    const symbol = extractText(children).trim().toUpperCase();
+    if (!symbol) return null;
     return (
       <span className="inline-flex items-center gap-1 align-middle">
         <TickerLogo symbol={symbol} size={14} />
@@ -154,16 +214,27 @@ const markdownComponents = {
       </span>
     );
   },
-  a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-cyan underline hover:text-cyan/80"
-    >
-      {children}
-    </a>
-  ),
+  a: ({ href, children }: { href?: string; children?: React.ReactNode }) => {
+    if (href?.startsWith('ticker://')) {
+      const symbol = decodeURIComponent(href.replace('ticker://', '')).toUpperCase();
+      return (
+        <span className="inline-flex items-center gap-1 align-middle">
+          <TickerLogo symbol={symbol} size={14} />
+          <span className="text-cyan font-semibold">{symbol}</span>
+        </span>
+      );
+    }
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-cyan underline hover:text-cyan/80"
+      >
+        {children}
+      </a>
+    );
+  },
 };
 
 const EXAMPLES = [
@@ -197,7 +268,15 @@ function WelcomeState({ onSend }: { onSend: (content: string) => void }) {
   );
 }
 
-function MessageItem({ msg }: { msg: AiChatMessage }) {
+function MessageItem({
+  msg,
+  onAnswer,
+  disabled,
+}: {
+  msg: AiChatMessage;
+  onAnswer: (msgId: string, answer: string) => void;
+  disabled: boolean;
+}) {
   const isUser = msg.role === 'user';
 
   return (
@@ -210,9 +289,9 @@ function MessageItem({ msg }: { msg: AiChatMessage }) {
           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
-      {msg.toolCalls && msg.toolCalls.length > 0 && (
+      {msg.toolCalls && msg.toolCalls.filter(tc => tc.name !== 'ask_user').length > 0 && (
         <div className="flex flex-wrap gap-1 mb-1.5">
-          {msg.toolCalls.map((tc, i) => (
+          {msg.toolCalls.filter(tc => tc.name !== 'ask_user').map((tc, i) => (
             <span
               key={i}
               className="text-xxs font-mono text-cyan/80 bg-cyan/8 px-1.5 py-0.5 rounded"
@@ -227,28 +306,37 @@ function MessageItem({ msg }: { msg: AiChatMessage }) {
           {msg.content}
         </div>
       ) : (
-        <div className="ai-prose text-sm font-mono text-text-primary break-words leading-relaxed">
-          {msg.content ? (
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkMath]}
-              rehypePlugins={[rehypeRaw, rehypeKatex]}
-              components={markdownComponents}
-            >
-              {msg.content}
-            </ReactMarkdown>
-          ) : (
-            <div className="flex items-center gap-2 py-1">
-              <Image
-                src="/icon.png"
-                alt="Thinking"
-                width={24}
-                height={24}
-                className="celery-thinking pixel-logo"
-              />
-              <span className="text-xxs font-mono text-text-muted animate-pulse">Thinking...</span>
-            </div>
+        <>
+          <div className="ai-prose text-sm font-mono text-text-primary break-words leading-relaxed">
+            {msg.content ? (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: true }]]}
+                rehypePlugins={[[rehypeRaw, { passThrough: ['math', 'inlineMath'] }], rehypeKatex]}
+                components={markdownComponents}
+              >
+                {preprocessTickers(msg.content)}
+              </ReactMarkdown>
+            ) : !msg.question ? (
+              <div className="flex items-center gap-2 py-1">
+                <Image
+                  src="/icon.png"
+                  alt="Thinking"
+                  width={24}
+                  height={24}
+                  className="celery-thinking pixel-logo"
+                />
+                <span className="text-xxs font-mono text-text-muted animate-pulse">Thinking...</span>
+              </div>
+            ) : null}
+          </div>
+          {msg.question && (
+            <QuestionButtons
+              question={msg.question}
+              onAnswer={(answer) => onAnswer(msg.id, answer)}
+              disabled={!!msg.question.answered || disabled}
+            />
           )}
-        </div>
+        </>
       )}
     </div>
   );
@@ -338,6 +426,7 @@ export default function AiChatPanel() {
     isStreaming,
     error,
     sendMessage,
+    answerQuestion,
     startNewConversation,
     conversations,
     activeConversationId,
@@ -376,11 +465,19 @@ export default function AiChatPanel() {
   };
 
   const handleSendFromWelcome = (content: string) => {
+    if (content.trim().toLowerCase() === '/clear') {
+      startNewConversation();
+      return;
+    }
     setView('chat');
     sendMessage(content);
   };
 
   const handleSend = (content: string) => {
+    if (content.trim().toLowerCase() === '/clear') {
+      startNewConversation();
+      return;
+    }
     sendMessage(content);
   };
 
@@ -394,6 +491,11 @@ export default function AiChatPanel() {
           onDelete={deleteConversation}
           onNewChat={handleNewChat}
           onSendFromWelcome={handleSendFromWelcome}
+        />
+        <MessageInput
+          onSend={handleSendFromWelcome}
+          placeholder="Ask about stocks, your portfolio..."
+          disabled={isStreaming}
         />
       </div>
     );
@@ -446,7 +548,7 @@ export default function AiChatPanel() {
             data-scrollable
           >
             {messages.map((msg) => (
-              <MessageItem key={msg.id} msg={msg} />
+              <MessageItem key={msg.id} msg={msg} onAnswer={answerQuestion} disabled={isStreaming} />
             ))}
           </div>
         </>
