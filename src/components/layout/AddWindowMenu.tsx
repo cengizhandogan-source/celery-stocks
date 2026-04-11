@@ -21,7 +21,7 @@ export default function AddWindowMenu({ onClose, closing }: AddWindowMenuProps) 
   const toggleCommandBar = useAppStore((s) => s.toggleCommandBar);
 
   const handleSelect = useCallback((type: WindowType) => {
-    addWindow(type, undefined, getViewportCenterPosition());
+    addWindow(type, undefined, undefined, getViewportCenterPosition());
     onClose();
     if (type === 'chart' || type === 'stock-detail') {
       toggleCommandBar();

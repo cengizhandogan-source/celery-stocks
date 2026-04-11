@@ -155,6 +155,7 @@ function ActiveRoom({
               content={msg.content}
               timestamp={msg.created_at}
               isOwn={msg.user_id === user?.id}
+              strategy={msg.strategy}
             />
           ))
         )}

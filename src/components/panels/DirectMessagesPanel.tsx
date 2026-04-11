@@ -146,6 +146,7 @@ function ActiveConversation({
                 content={dm.content}
                 timestamp={dm.created_at}
                 isOwn={isOwn}
+                strategy={dm.strategy}
               />
             );
           })

@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import type { StrategyChipData } from '@/lib/types';
+import StrategyChip from './StrategyChip';
 
 interface MessageBubbleProps {
   displayName: string;
@@ -6,9 +8,10 @@ interface MessageBubbleProps {
   content: string;
   timestamp: string;
   isOwn: boolean;
+  strategy?: StrategyChipData | null;
 }
 
-export default function MessageBubble({ displayName, avatarColor, content, timestamp, isOwn }: MessageBubbleProps) {
+export default function MessageBubble({ displayName, avatarColor, content, timestamp, isOwn, strategy }: MessageBubbleProps) {
   const timeStr = useMemo(() => {
     const d = new Date(timestamp);
     return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -32,6 +35,7 @@ export default function MessageBubble({ displayName, avatarColor, content, times
         <p className="text-sm font-mono text-text-primary break-words whitespace-pre-wrap">
           {content}
         </p>
+        {strategy && <StrategyChip strategy={strategy} />}
       </div>
     </div>
   );

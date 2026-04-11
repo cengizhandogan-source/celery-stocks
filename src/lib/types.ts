@@ -111,10 +111,12 @@ export type WindowType =
   | 'filings'
   | 'chatroom'
   | 'direct-messages'
-  | 'ideas'
+  | 'feed'
   | 'crypto-overview'
   | 'ai-chat'
-  | 'text-note';
+  | 'text-note'
+  | 'strategy-editor'
+  | 'strategy-signals';
 
 export interface ScreenerResult {
   symbol: string;
@@ -168,6 +170,7 @@ export interface WindowConfig {
   symbols?: string[];
   chatroomId?: string;
   content?: string;
+  strategyId?: string;
 }
 
 // Chat types
@@ -194,6 +197,8 @@ export interface ChatMessage {
   content: string;
   created_at: string;
   profile?: Profile;
+  strategy_id?: string;
+  strategy?: StrategyChipData;
 }
 
 export interface DirectMessage {
@@ -205,6 +210,8 @@ export interface DirectMessage {
   created_at: string;
   sender?: Profile;
   receiver?: Profile;
+  strategy_id?: string;
+  strategy?: StrategyChipData;
 }
 
 export interface DMConversation {
@@ -215,13 +222,22 @@ export interface DMConversation {
 
 export type Sentiment = 'bullish' | 'bearish' | 'neutral';
 
-export interface Idea {
+export type PostType = 'text' | 'position' | 'strategy';
+
+export interface Post {
   id: string;
   user_id: string;
-  symbol: string;
-  title: string;
-  content: string;
-  sentiment: Sentiment;
+  post_type: PostType;
+  content: string | null;
+  symbol: string | null;
+  sentiment: Sentiment | null;
+  position_symbol: string | null;
+  position_shares: number | null;
+  position_avg_cost: number | null;
+  strategy_id: string | null;
+  strategy?: StrategyChipData;
+  like_count: number;
+  liked_by_me: boolean;
   created_at: string;
   profile?: Profile;
 }
@@ -274,4 +290,59 @@ export interface PageData {
   maxZIndex: number;
   minimizedWindows: Record<string, { h: number; minH: number }>;
   pinnedWindows: string[];
+}
+
+// Strategy types
+export interface Strategy {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string;
+  code: string;
+  symbols: string[];
+  parameters: Record<string, unknown>;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  profile?: Profile;
+  import_count?: number;
+  backtest?: StrategyBacktestResult;
+}
+
+export interface StrategyBacktestResult {
+  id: string;
+  strategy_id: string;
+  total_return: number;
+  win_rate: number;
+  sharpe_ratio: number;
+  max_drawdown: number;
+  total_trades: number;
+  backtest_range: string;
+  equity_curve: { date: string; value: number }[];
+  computed_at: string;
+}
+
+export interface StrategySignal {
+  id: string;
+  strategy_id: string;
+  user_id: string;
+  symbol: string;
+  signal: 'buy' | 'sell' | 'hold';
+  price: number;
+  confidence: number;
+  reason: string;
+  created_at: string;
+  strategy_name?: string;
+}
+
+export interface StrategyChipData {
+  id: string;
+  name: string;
+  description: string;
+  symbols: string[];
+  code: string;
+  author: Profile;
+  backtest?: StrategyBacktestResult;
+  import_count: number;
+  created_at: string;
 }

@@ -156,9 +156,13 @@ function migrateLayoutData(layouts: LayoutItem[]): { layouts: LayoutItem[]; maxZ
 
 function migratePages(pages: PageData[]): PageData[] {
   return pages.map(p => {
-    if (p.layouts.length === 0) return p;
+    // Rename old window types
+    const windows = p.windows.map(w =>
+      w.type === ('ideas' as string) ? { ...w, type: 'feed' as WindowConfig['type'] } : w
+    );
+    if (p.layouts.length === 0) return { ...p, windows };
     const migrated = migrateLayoutData(p.layouts);
-    return { ...p, layouts: migrated.layouts, maxZIndex: migrated.maxZIndex };
+    return { ...p, windows, layouts: migrated.layouts, maxZIndex: migrated.maxZIndex };
   });
 }
 
@@ -179,7 +183,7 @@ interface LayoutState {
   preSnapLayouts: Record<string, { x: number; y: number; w: number; h: number }>;
   activePage: number;
   pages: PageData[];
-  addWindow: (type: WindowType, symbol?: string, position?: { x: number; y: number }) => void;
+  addWindow: (type: WindowType, symbol?: string, strategyId?: string, position?: { x: number; y: number }) => void;
   removeWindow: (id: string) => void;
   updateWindowPosition: (id: string, x: number, y: number) => void;
   updateWindowSize: (id: string, w: number, h: number) => void;
@@ -218,7 +222,7 @@ export const useLayoutStore = create<LayoutState>()(
       activePage: 0,
       pages: [emptyPage('Page 1')],
 
-      addWindow: (type, symbol, position) => set((state) => {
+      addWindow: (type, symbol, strategyId, position) => set((state) => {
         const id = crypto.randomUUID();
         const defaults = WINDOW_DEFAULTS[type];
         const title = symbol
@@ -244,7 +248,7 @@ export const useLayoutStore = create<LayoutState>()(
         if (vpH > 0) y = Math.max(0, Math.min(y, vpH - h));
 
         const newZIndex = state.maxZIndex + 1;
-        const window: WindowConfig = { id, type, title, symbol };
+        const window: WindowConfig = { id, type, title, symbol, strategyId };
         const layout: LayoutItem = {
           i: id,
           x,

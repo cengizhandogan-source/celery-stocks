@@ -23,7 +23,7 @@ const COMMANDS: { cmd: string; shortcut: string; type: WindowType; label: string
   { cmd: '/filings', shortcut: 'flg', type: 'filings', label: 'SEC Filings', needsSymbol: true },
   { cmd: '/chatroom', shortcut: 'cr', type: 'chatroom', label: 'Chatroom', needsSymbol: false },
   { cmd: '/dm', shortcut: 'dm', type: 'direct-messages', label: 'Direct Messages', needsSymbol: false },
-  { cmd: '/ideas', shortcut: 'ida', type: 'ideas', label: 'Ideas Feed', needsSymbol: false },
+  { cmd: '/feed', shortcut: 'fd', type: 'feed', label: 'Feed', needsSymbol: false },
   { cmd: '/crypto', shortcut: 'cry', type: 'crypto-overview', label: 'Crypto Overview', needsSymbol: false },
   { cmd: '/ai', shortcut: 'ai', type: 'ai-chat', label: 'AI Chat', needsSymbol: false },
 ];
@@ -67,7 +67,7 @@ export default function CommandBar() {
 
   function handleSelect(symbol: string) {
     setActiveSymbol(symbol);
-    addWindow('chart', symbol, getViewportCenterPosition());
+    addWindow('chart', symbol, undefined, getViewportCenterPosition());
     setCommandQuery('');
     setFocused(false);
     inputRef.current?.blur();
@@ -80,7 +80,7 @@ export default function CommandBar() {
     }
     const { symbol } = parseCommand(commandQuery);
     if (symbol) setActiveSymbol(symbol);
-    addWindow(type, symbol || activeSymbol, getViewportCenterPosition());
+    addWindow(type, symbol || activeSymbol, undefined, getViewportCenterPosition());
     setCommandQuery('');
     setFocused(false);
     inputRef.current?.blur();
@@ -114,7 +114,7 @@ export default function CommandBar() {
       if (matched) {
         e.preventDefault();
         if (symbol) setActiveSymbol(symbol);
-        addWindow(matched.type, symbol || (matched.needsSymbol ? activeSymbol : undefined), getViewportCenterPosition());
+        addWindow(matched.type, symbol || (matched.needsSymbol ? activeSymbol : undefined), undefined, getViewportCenterPosition());
         setCommandQuery('');
         setFocused(false);
         inputRef.current?.blur();

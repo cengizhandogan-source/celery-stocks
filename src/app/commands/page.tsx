@@ -15,7 +15,7 @@ const commands = [
   { command: '/filings', code: '/flg', shortcut: 'Ctrl+Shift+G', label: 'SEC Filings', requiresSymbol: true, description: 'Show SEC filings' },
   { command: '/chatroom', code: '/cr', shortcut: 'Ctrl+Shift+R', label: 'Chatroom', requiresSymbol: false, description: 'Open chatroom' },
   { command: '/dm', code: '/dm', shortcut: 'Ctrl+Shift+X', label: 'Direct Messages', requiresSymbol: false, description: 'Open direct messages' },
-  { command: '/ideas', code: '/ida', shortcut: 'Ctrl+Shift+Y', label: 'Ideas Feed', requiresSymbol: false, description: 'Display ideas feed' },
+  { command: '/feed', code: '/fd', shortcut: 'Ctrl+Shift+Y', label: 'Feed', requiresSymbol: false, description: 'Open the feed' },
   { command: '/crypto', code: '/cry', shortcut: 'Ctrl+Shift+K', label: 'Crypto Overview', requiresSymbol: false, description: 'Show cryptocurrency overview' },
 ]
 

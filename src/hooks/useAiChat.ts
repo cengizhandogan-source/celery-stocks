@@ -6,6 +6,7 @@ import { useAppStore } from '@/stores/appStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
 import { useWatchlistStore } from '@/stores/watchlistStore';
 import { useLayoutStore } from '@/stores/layoutStore';
+import { useStrategyStore } from '@/stores/strategyStore';
 import type { WindowType } from '@/lib/types';
 import { useUser } from '@/hooks/useUser';
 import { createClient } from '@/utils/supabase/client';
@@ -20,11 +21,12 @@ function generateTitle(content: string): string {
   return (lastSpace > 40 ? cut.slice(0, lastSpace) : cut) + '...';
 }
 
-const CLIENT_TOOL_NAMES = new Set(['open_windows', 'close_windows', 'list_windows', 'set_active_symbol']);
+const CLIENT_TOOL_NAMES = new Set(['open_windows', 'close_windows', 'list_windows', 'set_active_symbol', 'create_strategy', 'edit_strategy', 'run_strategy']);
 
 function executeClientTool(name: string, args: Record<string, unknown>): void {
   const layoutStore = useLayoutStore.getState();
   const appStore = useAppStore.getState();
+  const strategyStore = useStrategyStore.getState();
 
   switch (name) {
     case 'open_windows': {
@@ -51,6 +53,36 @@ function executeClientTool(name: string, args: Record<string, unknown>): void {
     }
     case 'set_active_symbol': {
       appStore.setActiveSymbol(args.symbol as string);
+      break;
+    }
+    case 'create_strategy': {
+      strategyStore.createStrategy({
+        name: args.name as string,
+        description: args.description as string,
+        code: args.code as string,
+        symbols: args.symbols as string[],
+      }).then((strategy) => {
+        if (strategy) {
+          layoutStore.addWindow('strategy-editor' as WindowType, undefined, strategy.id);
+        }
+      });
+      break;
+    }
+    case 'edit_strategy': {
+      const id = args.strategy_id as string;
+      const code = args.code as string;
+      if (id && code) {
+        strategyStore.updateStrategy(id, { code });
+      }
+      break;
+    }
+    case 'run_strategy': {
+      // Signal to run — the editor panel handles actual execution
+      const stratId = args.strategy_id as string;
+      if (stratId) {
+        // Open the strategy editor for the given strategy
+        layoutStore.addWindow('strategy-editor' as WindowType, undefined, stratId);
+      }
       break;
     }
   }
@@ -169,6 +201,7 @@ export function useAiChat() {
       type: w.type, symbol: w.symbol, title: w.title,
     }));
     const activePortfolio = portfolios.find((p) => p.id === activePortfolioId);
+    const strategies = useStrategyStore.getState().strategies;
 
     const historyForApi = [...messages, userMsg].map((m) => ({
       role: m.role,
@@ -200,6 +233,11 @@ export function useAiChat() {
               avgCost: p.avgCost,
             })),
           } : undefined,
+          strategiesContext: strategies.length > 0 ? strategies.map(s => ({
+            id: s.id,
+            name: s.name,
+            symbols: s.symbols,
+          })) : undefined,
         }),
         signal: abortController.signal,
       });

@@ -23,7 +23,7 @@ export const WINDOW_SHORTCUTS: WindowShortcut[] = [
   { type: 'filings',          label: 'SEC Filings',      needsSymbol: true,                  letterKey: 'g' },
   { type: 'chatroom',         label: 'Chatroom',         needsSymbol: false,                 letterKey: 'r' },
   { type: 'direct-messages',  label: 'Direct Messages',  needsSymbol: false,                 letterKey: 'x' },
-  { type: 'ideas',            label: 'Ideas Feed',       needsSymbol: false,                 letterKey: 'y' },
+  { type: 'feed',             label: 'Feed',             needsSymbol: false,                 letterKey: 'y' },
   { type: 'crypto-overview',  label: 'Crypto Overview',  needsSymbol: false,                 letterKey: 'k' },
   { type: 'ai-chat',          label: 'AI Chat',          needsSymbol: false,                 letterKey: 'i' },
   { type: 'text-note',        label: 'Text Note',        needsSymbol: false,                 letterKey: 'n' },

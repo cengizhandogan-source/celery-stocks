@@ -37,7 +37,7 @@ export function useWindowShortcuts() {
       if (matched) {
         e.preventDefault();
         const symbol = matched.needsSymbol ? activeSymbol : undefined;
-        addWindow(matched.type, symbol, getViewportCenterPosition());
+        addWindow(matched.type, symbol, undefined, getViewportCenterPosition());
       }
     }
 

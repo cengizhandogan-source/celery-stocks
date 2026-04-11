@@ -46,10 +46,12 @@ export const WINDOW_TYPE_LABELS: Record<WindowType, string> = {
   'filings': 'SEC Filings',
   'chatroom': 'Chatroom',
   'direct-messages': 'Direct Messages',
-  'ideas': 'Ideas Feed',
+  'feed': 'Feed',
   'crypto-overview': 'Crypto Overview',
   'ai-chat': 'AI Chat',
   'text-note': 'Text Note',
+  'strategy-editor': 'Strategy Editor',
+  'strategy-signals': 'Strategy Signals',
 };
 
 export const WINDOW_DEFAULTS: Record<WindowType, { w: number; h: number; minW: number; minH: number }> = {
@@ -67,10 +69,12 @@ export const WINDOW_DEFAULTS: Record<WindowType, { w: number; h: number; minW: n
   'filings':          { w: 400, h: 400, minW: 300, minH: 280 },
   'chatroom':         { w: 400, h: 480, minW: 300, minH: 280 },
   'direct-messages':  { w: 400, h: 480, minW: 300, minH: 280 },
-  'ideas':            { w: 500, h: 400, minW: 300, minH: 280 },
+  'feed':             { w: 500, h: 480, minW: 300, minH: 280 },
   'crypto-overview':  { w: 400, h: 300, minW: 300, minH: 200 },
-  'ai-chat':          { w: 400, h: 480, minW: 300, minH: 280 },
-  'text-note':        { w: 300, h: 300, minW: 200, minH: 200 },
+  'ai-chat':              { w: 400, h: 480, minW: 300, minH: 280 },
+  'text-note':            { w: 300, h: 300, minW: 200, minH: 200 },
+  'strategy-editor':      { w: 700, h: 500, minW: 500, minH: 380 },
+  'strategy-signals':     { w: 400, h: 400, minW: 300, minH: 280 },
 };
 
 export const CASCADE_OFFSET = 30;

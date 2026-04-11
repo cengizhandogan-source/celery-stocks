@@ -22,7 +22,7 @@ export default function MostActivePanel() {
 
   function handleClick(symbol: string) {
     setActiveSymbol(symbol);
-    addWindow('chart', symbol, getViewportCenterPosition());
+    addWindow('chart', symbol, undefined, getViewportCenterPosition());
   }
 
   return (
