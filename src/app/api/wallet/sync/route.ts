@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { getAdapter, decrypt } from '@/lib/exchanges';
+import { ExchangeAuthError } from '@/lib/exchanges/types';
 import { getPrices } from '@/lib/coingecko';
 
 const IV_LENGTH = 12;
@@ -65,12 +66,13 @@ export async function POST() {
           .from('exchange_connections')
           .update({ last_synced_at: new Date().toISOString(), updated_at: new Date().toISOString() })
           .eq('id', conn.id);
-      } catch {
-        // Mark connection as invalid if fetch fails
-        await supabase
-          .from('exchange_connections')
-          .update({ is_valid: false, updated_at: new Date().toISOString() })
-          .eq('id', conn.id);
+      } catch (err) {
+        if (err instanceof ExchangeAuthError) {
+          await supabase
+            .from('exchange_connections')
+            .update({ is_valid: false, updated_at: new Date().toISOString() })
+            .eq('id', conn.id);
+        }
       }
     }
 

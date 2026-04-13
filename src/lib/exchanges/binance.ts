@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
 
 const BASE_URL = 'https://api.binance.com';
 
@@ -36,6 +36,9 @@ export class BinanceAdapter implements ExchangeAdapter {
 
     if (!res.ok) {
       const body = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('Binance', res.status, body);
+      }
       throw new Error(`Binance API error ${res.status}: ${body}`);
     }
 

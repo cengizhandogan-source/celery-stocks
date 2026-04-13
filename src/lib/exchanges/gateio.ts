@@ -1,5 +1,5 @@
 import { createHash, createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
 
 const BASE_URL = 'https://api.gateio.ws';
 
@@ -65,6 +65,9 @@ export class GateioAdapter implements ExchangeAdapter {
 
     if (!res.ok) {
       const text = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('Gate.io', res.status, text);
+      }
       throw new Error(`Gate.io API error ${res.status}: ${text}`);
     }
 

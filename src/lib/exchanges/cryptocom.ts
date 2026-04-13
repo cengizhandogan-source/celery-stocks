@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
 
 const BASE_URL = 'https://api.crypto.com/exchange/v1';
 
@@ -78,6 +78,9 @@ export class CryptoComAdapter implements ExchangeAdapter {
 
     if (!res.ok) {
       const text = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('Crypto.com', res.status, text);
+      }
       throw new Error(`Crypto.com API error ${res.status}: ${text}`);
     }
 

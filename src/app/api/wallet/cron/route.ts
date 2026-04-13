@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { getAdapter } from '@/lib/exchanges';
+import { ExchangeAuthError } from '@/lib/exchanges/types';
 import { decrypt } from '@/lib/exchanges/encryption';
 import { getPrices } from '@/lib/coingecko';
 
@@ -75,11 +76,13 @@ export async function GET(request: NextRequest) {
             .eq('id', conn.id);
 
           syncedCount++;
-        } catch {
-          await supabase
-            .from('exchange_connections')
-            .update({ is_valid: false, updated_at: new Date().toISOString() })
-            .eq('id', conn.id);
+        } catch (err) {
+          if (err instanceof ExchangeAuthError) {
+            await supabase
+              .from('exchange_connections')
+              .update({ is_valid: false, updated_at: new Date().toISOString() })
+              .eq('id', conn.id);
+          }
         }
       }
 

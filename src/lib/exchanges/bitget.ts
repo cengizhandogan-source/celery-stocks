@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
 
 const BASE_URL = 'https://api.bitget.com';
 
@@ -69,6 +69,9 @@ export class BitgetAdapter implements ExchangeAdapter {
 
     if (!res.ok) {
       const body = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('Bitget', res.status, body);
+      }
       throw new Error(`Bitget API error ${res.status}: ${body}`);
     }
 

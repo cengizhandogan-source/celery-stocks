@@ -1,5 +1,5 @@
 import { createHash, createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
 
 const BASE_URL = 'https://api.kraken.com';
 
@@ -83,6 +83,9 @@ export class KrakenAdapter implements ExchangeAdapter {
 
     if (!res.ok) {
       const text = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('Kraken', res.status, text);
+      }
       throw new Error(`Kraken API error ${res.status}: ${text}`);
     }
 

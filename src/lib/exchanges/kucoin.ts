@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
 
 const BASE_URL = 'https://api.kucoin.com';
 
@@ -76,6 +76,9 @@ export class KuCoinAdapter implements ExchangeAdapter {
 
     if (!res.ok) {
       const body = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('KuCoin', res.status, body);
+      }
       throw new Error(`KuCoin API error ${res.status}: ${body}`);
     }
 
