@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
+import AuthGateProvider from "@/components/auth/AuthGateProvider";
 import "./globals.css";
 
 const jetbrains = JetBrains_Mono({
@@ -129,7 +130,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="font-mono bg-terminal-bg text-text-primary antialiased">
-        {children}
+        <AuthGateProvider>
+          {children}
+        </AuthGateProvider>
       </body>
     </html>
   );

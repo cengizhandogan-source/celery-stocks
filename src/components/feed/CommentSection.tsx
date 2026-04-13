@@ -6,6 +6,7 @@ import { useUserSearch } from '@/hooks/useUserSearch';
 import UserAvatar from '@/components/ui/UserAvatar';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import NetWorthBadge from '@/components/ui/NetWorthBadge';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import type { Comment, Profile } from '@/lib/types';
 
 function formatTime(iso: string) {
@@ -39,11 +40,13 @@ function CommentRow({
   currentUserId,
   onDelete,
   onReply,
+  onAuthGate,
 }: {
   comment: Comment;
   currentUserId?: string;
   onDelete: (id: string) => void;
   onReply: (comment: Comment) => void;
+  onAuthGate?: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -80,14 +83,15 @@ function CommentRow({
           <span className="text-xxs font-mono text-text-muted">{timeStr}</span>
 
           {/* Reply button */}
-          {currentUserId && (
-            <button
-              onClick={() => onReply(comment)}
-              className="text-xxs font-mono text-text-muted hover:text-cyan transition-colors px-1 leading-none opacity-0 group-hover:opacity-100"
-            >
-              reply
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (!currentUserId) { onAuthGate?.(); return; }
+              onReply(comment);
+            }}
+            className="text-xxs font-mono text-text-muted hover:text-cyan transition-colors px-1 leading-none opacity-0 group-hover:opacity-100"
+          >
+            reply
+          </button>
 
           {isOwner && (
             <div className="relative ml-auto shrink-0" ref={menuRef}>
@@ -171,6 +175,7 @@ export default function CommentSection({
   postId: string;
   currentUserId?: string;
 }) {
+  const { requireAuth } = useAuthGate();
   const { comments, loading, addComment, deleteComment } = useComments(postId);
   const { results: mentionResults, search: mentionSearch, clear: mentionClear } = useUserSearch();
   const [input, setInput] = useState('');
@@ -263,12 +268,13 @@ export default function CommentSection({
             currentUserId={currentUserId}
             onDelete={deleteComment}
             onReply={handleReply}
+            onAuthGate={() => requireAuth('reply to comments')}
           />
         ))}
       </div>
 
       {/* Comment input */}
-      {currentUserId && (
+      {currentUserId ? (
         <div className="relative px-2 py-1.5 border-t border-terminal-border/30">
           {/* Reply indicator */}
           {replyTo && (
@@ -305,6 +311,15 @@ export default function CommentSection({
             placeholder="Add a comment..."
             className="w-full bg-terminal-input text-xxs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-terminal-border focus:border-cyan/40 focus:outline-none transition-colors"
           />
+        </div>
+      ) : (
+        <div className="px-2 py-1.5 border-t border-terminal-border/30">
+          <button
+            onClick={() => requireAuth('leave a comment')}
+            className="w-full text-xxs font-mono text-text-muted hover:text-text-secondary py-1.5 text-left px-2 transition-colors"
+          >
+            Sign in to comment...
+          </button>
         </div>
       )}
     </div>

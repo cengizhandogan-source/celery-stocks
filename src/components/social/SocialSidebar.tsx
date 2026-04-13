@@ -40,7 +40,7 @@ export default function SocialSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-2">
-        {NAV_ITEMS.map(({ href, label, icon }) => {
+        {NAV_ITEMS.filter(({ label }) => label !== 'Messages' || user).map(({ href, label, icon }) => {
           const isActive = href === '/social'
             ? pathname === '/social'
             : pathname.startsWith(href);

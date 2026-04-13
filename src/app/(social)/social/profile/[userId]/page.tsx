@@ -12,6 +12,7 @@ import NetWorthBadge from '@/components/ui/NetWorthBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 import HoldingsTable from '@/components/wallet/HoldingsTable';
 import { useCryptoHoldings } from '@/hooks/useCryptoHoldings';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import { formatNetWorth } from '@/lib/formatters';
 
 function WalletHoldingsSection({ userId, isOwnProfile }: { userId: string; isOwnProfile: boolean }) {
@@ -47,6 +48,7 @@ export default function ProfilePage() {
   const { user } = useUser();
   const { profile, loading: profileLoading, updateProfile } = useSocialProfile(userId);
   const { isFollowing, loading: followLoading, toggleFollow } = useFollow(userId);
+  const { requireAuth } = useAuthGate();
   const { posts, loading: postsLoading, filters, setFilters, toggleLike, deletePost } = useFeed();
   const isOwnProfile = user?.id === userId;
 
@@ -94,7 +96,7 @@ export default function ProfilePage() {
                   <NetWorthBadge netWorth={profile.crypto_net_worth} showNetWorth={profile.show_net_worth} />
                   {!isOwnProfile && (
                     <button
-                      onClick={toggleFollow}
+                      onClick={() => { if (requireAuth('follow this user')) toggleFollow(); }}
                       disabled={followLoading}
                       className={`text-xxs font-mono px-3 py-0.5 rounded border transition-colors ${
                         isFollowing

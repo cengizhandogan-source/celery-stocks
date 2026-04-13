@@ -8,6 +8,7 @@ import PostCard from '@/components/feed/PostCard';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { useUser } from '@/hooks/useUser';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import type { Post, Profile, StrategyChipData } from '@/lib/types';
 
 type SearchTab = 'users' | 'posts';
@@ -16,6 +17,7 @@ export default function SearchPage() {
   const [tab, setTab] = useState<SearchTab>('users');
   const [query, setQuery] = useState('');
   const { user } = useUser();
+  const { requireAuth } = useAuthGate();
 
   // User search
   const { results: userResults, loading: usersLoading, search: searchUsers } = useUserSearch();
@@ -76,7 +78,7 @@ export default function SearchPage() {
 
   const toggleLike = useCallback(
     async (postId: string) => {
-      if (!user) return;
+      if (!requireAuth('like this post') || !user) return;
       const supabase = createClient();
       const isLiked = likedSet.has(postId);
 
@@ -97,7 +99,7 @@ export default function SearchPage() {
         await supabase.from('post_likes').insert({ post_id: postId, user_id: user.id });
       }
     },
-    [user, likedSet]
+    [user, likedSet, requireAuth]
   );
 
   return (

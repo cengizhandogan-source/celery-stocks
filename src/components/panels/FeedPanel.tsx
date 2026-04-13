@@ -5,6 +5,7 @@ import { useFeed } from '@/hooks/useFeed';
 import { useUser } from '@/hooks/useUser';
 import PostCard from '@/components/feed/PostCard';
 import PostComposer from '@/components/feed/PostComposer';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import type { PostType } from '@/lib/types';
 
 const FILTER_TABS: { value: PostType | null; label: string }[] = [
@@ -18,6 +19,7 @@ const FILTER_TABS: { value: PostType | null; label: string }[] = [
 export default function FeedPanel() {
   const { posts, loading, filters, setFilters, postText, postPosition, postTrade, postStrategy, toggleLike, deletePost } = useFeed();
   const { user } = useUser();
+  const { requireAuth } = useAuthGate();
   const [showComposer, setShowComposer] = useState(false);
 
   if (loading) {
@@ -59,7 +61,10 @@ export default function FeedPanel() {
 
         {/* New post button */}
         <button
-          onClick={() => setShowComposer((v) => !v)}
+          onClick={() => {
+            if (!user) { requireAuth('create a post'); return; }
+            setShowComposer((v) => !v);
+          }}
           className={`text-xxs font-mono px-2 py-1 rounded border transition-colors ${
             showComposer
               ? 'text-down border-down/30'
@@ -71,7 +76,7 @@ export default function FeedPanel() {
       </div>
 
       {/* Composer */}
-      {showComposer && (
+      {showComposer && user && (
         <PostComposer
           onPostText={postText}
           onPostPosition={postPosition}

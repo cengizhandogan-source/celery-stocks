@@ -5,6 +5,7 @@ import { useFeed } from '@/hooks/useFeed';
 import { useUser } from '@/hooks/useUser';
 import PostCard from '@/components/feed/PostCard';
 import PostComposer from '@/components/feed/PostComposer';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import type { PostType } from '@/lib/types';
 
 const FILTER_TABS: { value: PostType | null; label: string }[] = [
@@ -17,6 +18,7 @@ const FILTER_TABS: { value: PostType | null; label: string }[] = [
 
 export default function FeedPage() {
   const { user } = useUser();
+  const { requireAuth } = useAuthGate();
   const { posts, loading, filters, setFilters, postText, postPosition, postTrade, postStrategy, toggleLike } = useFeed();
   const [showComposer, setShowComposer] = useState(false);
 
@@ -53,18 +55,19 @@ export default function FeedPage() {
             className="w-20 bg-terminal-input text-xxs font-mono text-text-primary placeholder:text-text-muted px-2 py-1 rounded border border-terminal-border focus:border-up/40 focus:outline-none uppercase"
           />
 
-          {user && (
-            <button
-              onClick={() => setShowComposer((v) => !v)}
-              className={`text-xxs font-mono px-2 py-1 rounded border transition-colors ${
-                showComposer
-                  ? 'text-down border-down/30'
-                  : 'text-up border-up/30 hover:bg-up/10'
-              }`}
-            >
-              {showComposer ? 'Cancel' : '+ Post'}
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (!user) { requireAuth('create a post'); return; }
+              setShowComposer((v) => !v);
+            }}
+            className={`text-xxs font-mono px-2 py-1 rounded border transition-colors ${
+              showComposer
+                ? 'text-down border-down/30'
+                : 'text-up border-up/30 hover:bg-up/10'
+            }`}
+          >
+            {showComposer ? 'Cancel' : '+ Post'}
+          </button>
         </div>
       </div>
 

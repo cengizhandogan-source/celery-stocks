@@ -11,6 +11,7 @@ import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import NetWorthBadge from '@/components/ui/NetWorthBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 import CommentSection from './CommentSection';
+import { useAuthGate } from '@/hooks/useAuthGate';
 import type { Post, Quote } from '@/lib/types';
 
 const TICKER_RE = /\$([A-Z]{1,5})\b/g;
@@ -52,6 +53,7 @@ export default function PostCard({
   onDelete?: (postId: string) => void;
   currentUserId?: string;
 }) {
+  const { requireAuth } = useAuthGate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [currentQuote, setCurrentQuote] = useState<Quote | null>(null);
@@ -172,7 +174,7 @@ export default function PostCard({
       {/* Footer: like + comment buttons */}
       <div className="flex items-center gap-2 mt-2">
         <button
-          onClick={() => onToggleLike(post.id)}
+          onClick={() => { if (requireAuth('like this post')) onToggleLike(post.id); }}
           className={`flex items-center gap-1 text-xxs font-mono px-1.5 py-0.5 rounded transition-colors ${
             post.liked_by_me
               ? 'text-up bg-up/10'

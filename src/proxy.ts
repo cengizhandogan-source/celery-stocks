@@ -6,7 +6,7 @@ const PUBLIC_PATHS = ['/login', '/social', '/social/search', '/commands', '/api/
 
 function isPublicRoute(pathname: string): boolean {
   // Exact matches
-  if (pathname === '/social' || pathname === '/social/search' || pathname === '/' || pathname === '/login' || pathname === '/commands') {
+  if (pathname === '/social' || pathname === '/social/search' || pathname === '/' || pathname === '/login' || pathname === '/signup' || pathname === '/commands') {
     return true;
   }
   // Prefix matches for API, auth, and public profile viewing
