@@ -72,12 +72,21 @@ export async function POST() {
             .from('exchange_connections')
             .update({ is_valid: false, updated_at: new Date().toISOString() })
             .eq('id', conn.id);
+        } else {
+          console.error('[wallet-sync] connection sync failed:', conn.id, err);
         }
       }
     }
 
-    // Get prices for all assets
-    const prices = allAssets.size > 0 ? await getPrices([...allAssets]) : {};
+    // Get prices for all assets (fallback to empty if CoinGecko fails)
+    let prices: Record<string, number> = {};
+    if (allAssets.size > 0) {
+      try {
+        prices = await getPrices([...allAssets]);
+      } catch (err) {
+        console.error('[wallet-sync] price fetch failed, storing with $0:', err);
+      }
+    }
 
     // Upsert holdings for each connection
     for (const { connectionId, balances } of connectionBalances) {

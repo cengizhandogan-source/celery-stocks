@@ -82,12 +82,21 @@ export async function GET(request: NextRequest) {
               .from('exchange_connections')
               .update({ is_valid: false, updated_at: new Date().toISOString() })
               .eq('id', conn.id);
+          } else {
+            console.error('[wallet-cron] connection sync failed:', conn.id, err);
           }
         }
       }
 
-      // Get prices and update holdings
-      const prices = allAssets.size > 0 ? await getPrices([...allAssets]) : {};
+      // Get prices (fallback to empty if CoinGecko fails)
+      let prices: Record<string, number> = {};
+      if (allAssets.size > 0) {
+        try {
+          prices = await getPrices([...allAssets]);
+        } catch (err) {
+          console.error('[wallet-cron] price fetch failed, storing with $0:', err);
+        }
+      }
 
       for (const { connectionId, balances } of connectionBalances) {
         await supabase.from('cached_holdings').delete().eq('connection_id', connectionId);

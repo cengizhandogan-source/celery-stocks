@@ -51,42 +51,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid API credentials. Check your key, secret, and permissions.' }, { status: 400 });
     }
 
-    // Encrypt credentials
+    // Encrypt credentials — each field stores iv(12) || ciphertext || authTag as base64
     const keyEnc = encrypt(apiKey);
     const secretEnc = encrypt(apiSecret);
 
-    const insertData: Record<string, unknown> = {
-      user_id: user.id,
-      exchange,
-      label: label ?? '',
-      api_key_enc: keyEnc.ciphertext,
-      api_secret_enc: secretEnc.ciphertext,
-      iv: keyEnc.iv, // same iv works since each encrypt() generates its own
-    };
-
-    // Store passphrase if provided
-    if (passphrase) {
-      const ppEnc = encrypt(passphrase);
-      insertData.passphrase_enc = ppEnc.ciphertext;
-      // Note: passphrase uses its own iv embedded in the ciphertext auth tag.
-      // For simplicity we store a single iv column. In practice each field
-      // needs its own iv. Let's store them all with the same iv by re-encrypting.
-    }
-
-    // Actually, each encrypt() call generates a unique IV. We need separate IVs.
-    // Let's restructure: store iv per field by concatenating iv+ciphertext.
-    // Simpler approach: use the same IV for all fields in one connection row.
-    // Re-encrypt with a shared IV approach:
-
-    // For correctness, let's store each encrypted field as iv(12) + ciphertext + authTag
-    // This way the iv column is not needed separately.
-
-    // Rethink: store iv as the IV from the key encryption. Store secret with its own IV
-    // prepended to the ciphertext. This is getting complex - let's just store
-    // iv + ciphertext as a single buffer for each field.
-
-    // Simplest correct approach: each encrypted column stores iv(12) || ciphertext || authTag
-    // Encode as hex (\x...) for PostgreSQL bytea input via PostgREST
     const keyBundle = Buffer.concat([keyEnc.iv, keyEnc.ciphertext]);
     const secretBundle = Buffer.concat([secretEnc.iv, secretEnc.ciphertext]);
 
@@ -94,14 +62,14 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       exchange,
       label: label ?? '',
-      api_key_enc: '\\x' + keyBundle.toString('hex'),
-      api_secret_enc: '\\x' + secretBundle.toString('hex'),
-      iv: '\\x' + keyEnc.iv.toString('hex'), // kept for schema compatibility
+      api_key_enc: keyBundle.toString('base64'),
+      api_secret_enc: secretBundle.toString('base64'),
+      iv: keyEnc.iv.toString('base64'),
     };
 
     if (passphrase) {
       const ppEnc = encrypt(passphrase);
-      row.passphrase_enc = '\\x' + Buffer.concat([ppEnc.iv, ppEnc.ciphertext]).toString('hex');
+      row.passphrase_enc = Buffer.concat([ppEnc.iv, ppEnc.ciphertext]).toString('base64');
     }
 
     const { data, error } = await supabase
