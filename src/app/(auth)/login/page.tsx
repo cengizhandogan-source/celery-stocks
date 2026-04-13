@@ -1,10 +1,10 @@
 'use client'
 
-import { useActionState } from 'react'
+import { Suspense, useActionState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { login, type AuthState } from '../actions'
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, formAction, pending] = useActionState(login, { error: null } as AuthState)
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') || '/social'
@@ -59,5 +59,13 @@ export default function LoginPage() {
       </form>
 
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }
