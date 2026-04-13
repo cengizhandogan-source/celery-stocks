@@ -22,10 +22,12 @@ export function formatVolume(vol: number): string {
 }
 
 export function formatMarketCap(cap: number): string {
-  if (cap >= 1_000_000_000_000) return `$${(cap / 1_000_000_000_000).toFixed(2)}T`;
-  if (cap >= 1_000_000_000) return `$${(cap / 1_000_000_000).toFixed(2)}B`;
-  if (cap >= 1_000_000) return `$${(cap / 1_000_000).toFixed(2)}M`;
-  return `$${cap.toLocaleString()}`;
+  const abs = Math.abs(cap);
+  const sign = cap < 0 ? '-' : '';
+  if (abs >= 1_000_000_000_000) return `${sign}$${(abs / 1_000_000_000_000).toFixed(2)}T`;
+  if (abs >= 1_000_000_000) return `${sign}$${(abs / 1_000_000_000).toFixed(2)}B`;
+  if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(2)}M`;
+  return `${sign}$${abs.toLocaleString()}`;
 }
 
 export function formatNumber(n: number): string {
@@ -45,6 +47,14 @@ export function formatCryptoPrice(price: number): string {
 
 export function formatAssetPrice(price: number, symbol: string): string {
   return isCryptoSymbol(symbol) ? formatCryptoPrice(price) : formatPrice(price);
+}
+
+export function formatNetWorth(usd: number): string {
+  if (usd >= 1_000_000_000) return `$${(usd / 1_000_000_000).toFixed(1)}B`;
+  if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(1)}M`;
+  if (usd >= 1_000) return `$${(usd / 1_000).toFixed(1)}K`;
+  if (usd >= 1) return `$${Math.round(usd)}`;
+  return '$0';
 }
 
 export function timeAgo(dateStr: string): string {

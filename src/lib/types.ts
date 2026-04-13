@@ -113,10 +113,11 @@ export type WindowType =
   | 'direct-messages'
   | 'feed'
   | 'crypto-overview'
-  | 'ai-chat'
   | 'text-note'
   | 'strategy-editor'
-  | 'strategy-signals';
+  | 'strategy-signals'
+  | 'crypto-wallet'
+  | 'settings';
 
 export interface ScreenerResult {
   symbol: string;
@@ -176,8 +177,13 @@ export interface WindowConfig {
 // Chat types
 export interface Profile {
   id: string;
+  username: string;
   display_name: string;
   avatar_color: string;
+  avatar_url?: string | null;
+  is_verified: boolean;
+  crypto_net_worth?: number | null;
+  show_net_worth?: boolean;
 }
 
 export interface Chatroom {
@@ -237,39 +243,21 @@ export interface Post {
   strategy_id: string | null;
   strategy?: StrategyChipData;
   like_count: number;
+  comment_count: number;
   liked_by_me: boolean;
   created_at: string;
   profile?: Profile;
 }
 
-export interface AiConversation {
+export interface Comment {
   id: string;
+  post_id: string;
   user_id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface AiChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
   content: string;
-  timestamp: number;
-  toolCalls?: AiToolCallResult[];
-  question?: AiQuestion;
-}
-
-export interface AiToolCallResult {
-  name: string;
-  args: Record<string, unknown>;
-}
-
-export interface AiQuestion {
-  type: 'yes_no' | 'multiple_choice';
-  question: string;
-  options?: string[];
-  answered?: boolean;
-  selectedOption?: string;
+  created_at: string;
+  parent_id?: string | null;
+  parent?: { user_id: string; profile?: Pick<Profile, 'username' | 'display_name' | 'avatar_color'> };
+  profile?: Profile;
 }
 
 export interface LayoutItem {
@@ -345,4 +333,39 @@ export interface StrategyChipData {
   backtest?: StrategyBacktestResult;
   import_count: number;
   created_at: string;
+}
+
+// Crypto wallet types
+export type ExchangeName =
+  | 'binance'
+  | 'coinbase'
+  | 'kraken'
+  | 'bybit'
+  | 'okx'
+  | 'kucoin'
+  | 'bitget'
+  | 'gateio'
+  | 'mexc'
+  | 'cryptocom';
+
+export interface ExchangeConnection {
+  id: string;
+  user_id: string;
+  exchange: ExchangeName;
+  label: string;
+  is_valid: boolean;
+  last_synced_at: string | null;
+  created_at: string;
+}
+
+export interface CryptoHolding {
+  id: string;
+  connection_id: string;
+  user_id: string;
+  asset: string;
+  free_balance: number;
+  locked_balance: number;
+  usd_value: number;
+  price_at_sync: number;
+  synced_at: string;
 }

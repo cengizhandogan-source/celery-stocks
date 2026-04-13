@@ -25,7 +25,7 @@ const COMMANDS: { cmd: string; shortcut: string; type: WindowType; label: string
   { cmd: '/dm', shortcut: 'dm', type: 'direct-messages', label: 'Direct Messages', needsSymbol: false },
   { cmd: '/feed', shortcut: 'fd', type: 'feed', label: 'Feed', needsSymbol: false },
   { cmd: '/crypto', shortcut: 'cry', type: 'crypto-overview', label: 'Crypto Overview', needsSymbol: false },
-  { cmd: '/ai', shortcut: 'ai', type: 'ai-chat', label: 'AI Chat', needsSymbol: false },
+  { cmd: '/settings', shortcut: 'set', type: 'settings', label: 'Settings', needsSymbol: false },
 ];
 
 const SHORTCUT_MAP = new Map(COMMANDS.map((c) => [`/${c.shortcut}`, c]));

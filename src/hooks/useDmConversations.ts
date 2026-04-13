@@ -20,7 +20,7 @@ export function useDmConversations() {
     // Get all DMs involving this user
     const { data: dms } = await supabase
       .from('direct_messages')
-      .select('*, sender:profiles!sender_id(id, display_name, avatar_color), receiver:profiles!receiver_id(id, display_name, avatar_color)')
+      .select('*, sender:profiles!sender_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), receiver:profiles!receiver_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth)')
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
       .order('created_at', { ascending: false });
 

@@ -46,6 +46,14 @@ function emptyPage(name: string): PageData {
   return { name, windows: [], layouts: [], maxZIndex: 0, minimizedWindows: {}, pinnedWindows: [] };
 }
 
+function ensureThreePages(pages: PageData[]): PageData[] {
+  const result = [...pages];
+  while (result.length < 3) {
+    result.push(emptyPage(`Page ${result.length + 1}`));
+  }
+  return result;
+}
+
 function snapshotPage(state: { windows: WindowConfig[]; layouts: LayoutItem[]; maxZIndex: number; minimizedWindows: Record<string, { h: number; minH: number }>; pinnedWindows: string[]; pages: PageData[]; activePage: number }): PageData {
   return {
     name: state.pages[state.activePage]?.name ?? 'Page 1',
@@ -183,7 +191,7 @@ interface LayoutState {
   preSnapLayouts: Record<string, { x: number; y: number; w: number; h: number }>;
   activePage: number;
   pages: PageData[];
-  addWindow: (type: WindowType, symbol?: string, strategyId?: string, position?: { x: number; y: number }) => void;
+  addWindow: (type: WindowType, symbol?: string, strategyId?: string, position?: { x: number; y: number }, meta?: Record<string, unknown>) => void;
   removeWindow: (id: string) => void;
   updateWindowPosition: (id: string, x: number, y: number) => void;
   updateWindowSize: (id: string, w: number, h: number) => void;
@@ -222,12 +230,13 @@ export const useLayoutStore = create<LayoutState>()(
       activePage: 0,
       pages: [emptyPage('Page 1')],
 
-      addWindow: (type, symbol, strategyId, position) => set((state) => {
+      addWindow: (type, symbol, strategyId, position, meta) => set((state) => {
         const id = crypto.randomUUID();
         const defaults = WINDOW_DEFAULTS[type];
+        const label = (meta?.title as string) || WINDOW_TYPE_LABELS[type];
         const title = symbol
-          ? `${WINDOW_TYPE_LABELS[type]} — ${symbol}`
-          : WINDOW_TYPE_LABELS[type];
+          ? `${label} — ${symbol}`
+          : label;
 
         const { width: vpW, height: vpH } = state.viewportSize;
         const w = Math.min(defaults.w, vpW || defaults.w);
@@ -248,7 +257,7 @@ export const useLayoutStore = create<LayoutState>()(
         if (vpH > 0) y = Math.max(0, Math.min(y, vpH - h));
 
         const newZIndex = state.maxZIndex + 1;
-        const window: WindowConfig = { id, type, title, symbol, strategyId };
+        const window: WindowConfig = { id, type, title, symbol, strategyId, ...(meta ? { meta } : {}) };
         const layout: LayoutItem = {
           i: id,
           x,
@@ -500,7 +509,7 @@ export const useLayoutStore = create<LayoutState>()(
         try {
           const cloudData = await loadLayoutFromSupabase();
           if (cloudData && cloudData.pages.length > 0 && cloudData.pages.some(p => p.layouts.length > 0)) {
-            const migratedPages = migratePages(cloudData.pages);
+            const migratedPages = ensureThreePages(migratePages(cloudData.pages));
             const active = Math.min(cloudData.activePage, migratedPages.length - 1);
             const target = migratedPages[active];
             set({
@@ -537,7 +546,7 @@ export const useLayoutStore = create<LayoutState>()(
         const raw = state as unknown as Record<string, unknown>;
         if (raw.version === 2 && Array.isArray(raw.pages)) {
           const v2 = raw as unknown as PersistedLayoutV2;
-          const migratedPages = migratePages(v2.pages);
+          const migratedPages = ensureThreePages(migratePages(v2.pages));
           const active = Math.min(v2.activePage, migratedPages.length - 1);
           const target = migratedPages[active];
           state.pages = migratedPages;
@@ -554,14 +563,14 @@ export const useLayoutStore = create<LayoutState>()(
             state.layouts = migrated.layouts;
             state.maxZIndex = migrated.maxZIndex;
           }
-          state.pages = [{
+          state.pages = ensureThreePages([{
             name: 'Page 1',
             windows: state.windows,
             layouts: state.layouts,
             maxZIndex: state.maxZIndex,
             minimizedWindows: state.minimizedWindows ?? {},
             pinnedWindows: state.pinnedWindows ?? [],
-          }];
+          }]);
           state.activePage = 0;
         }
       },

@@ -7,7 +7,7 @@ import { useLayoutStore, getViewportCenterPosition } from '@/stores/layoutStore'
 import { useAppStore } from '@/stores/appStore';
 import { getShortcutForType, getShortcutLabel } from '@/lib/shortcuts';
 
-const windowTypes = Object.keys(WINDOW_TYPE_LABELS) as WindowType[];
+const windowTypes = (Object.keys(WINDOW_TYPE_LABELS) as WindowType[]).filter(t => t !== 'settings');
 
 interface AddWindowMenuProps {
   onClose: () => void;

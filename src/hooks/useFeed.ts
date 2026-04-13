@@ -9,6 +9,7 @@ import type { Post, PostType, Sentiment, StrategyChipData, Profile } from '@/lib
 export interface FeedFilters {
   postType: PostType | null;
   symbol: string;
+  userId?: string | null;
 }
 
 const FEED_PAGE_SIZE = 50;
@@ -28,10 +29,10 @@ export function useFeed() {
       .from('posts')
       .select(`
         *,
-        profile:profiles!user_id(id, display_name, avatar_color),
+        profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
         strategy:strategies!strategy_id(
           id, name, description, symbols, code, created_at,
-          author:profiles!user_id(id, display_name, avatar_color),
+          author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
           backtest:strategy_backtest_results(
             id, strategy_id, total_return, win_rate, sharpe_ratio,
             max_drawdown, total_trades, backtest_range, equity_curve, computed_at
@@ -46,6 +47,9 @@ export function useFeed() {
     }
     if (filters.symbol) {
       query = query.eq('symbol', filters.symbol.toUpperCase());
+    }
+    if (filters.userId) {
+      query = query.eq('user_id', filters.userId);
     }
 
     const { data } = await query;
@@ -96,7 +100,7 @@ export function useFeed() {
       if (profiles.length) cacheProfiles(profiles);
     }
     setLoading(false);
-  }, [user, filters.postType, filters.symbol, cacheProfiles]);
+  }, [user, filters.postType, filters.symbol, filters.userId, cacheProfiles]);
 
   useEffect(() => {
     fetchPosts();
@@ -117,7 +121,7 @@ export function useFeed() {
 
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, display_name, avatar_color')
+            .select('id, username, display_name, avatar_color, avatar_url, is_verified')
             .eq('id', post.user_id)
             .single();
 
@@ -131,6 +135,14 @@ export function useFeed() {
             if (prev.some((p) => p.id === post.id)) return prev;
             return [post, ...prev];
           });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'posts' },
+        (payload) => {
+          const deletedId = (payload.old as { id: string }).id;
+          setPosts((prev) => prev.filter((p) => p.id !== deletedId));
         }
       )
       .subscribe();
@@ -151,14 +163,14 @@ export function useFeed() {
         { event: 'INSERT', schema: 'public', table: 'post_likes' },
         (payload) => {
           const { post_id, user_id: liker_id } = payload.new as { post_id: string; user_id: string };
+          if (liker_id === user.id) return;
           setPosts((prev) =>
             prev.map((p) =>
               p.id === post_id
-                ? { ...p, like_count: p.like_count + 1, liked_by_me: liker_id === user.id ? true : p.liked_by_me }
+                ? { ...p, like_count: p.like_count + 1 }
                 : p
             )
           );
-          if (liker_id === user.id) likedSetRef.current.add(post_id);
         }
       )
       .on(
@@ -166,14 +178,14 @@ export function useFeed() {
         { event: 'DELETE', schema: 'public', table: 'post_likes' },
         (payload) => {
           const { post_id, user_id: liker_id } = payload.old as { post_id: string; user_id: string };
+          if (liker_id === user.id) return;
           setPosts((prev) =>
             prev.map((p) =>
               p.id === post_id
-                ? { ...p, like_count: Math.max(0, p.like_count - 1), liked_by_me: liker_id === user.id ? false : p.liked_by_me }
+                ? { ...p, like_count: Math.max(0, p.like_count - 1) }
                 : p
             )
           );
-          if (liker_id === user.id) likedSetRef.current.delete(post_id);
         }
       )
       .subscribe();
@@ -182,6 +194,46 @@ export function useFeed() {
       supabase.removeChannel(channel);
     };
   }, [user]);
+
+  // Realtime: comment counts
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel('feed-comments')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'post_comments' },
+        (payload) => {
+          const { post_id } = payload.new as { post_id: string };
+          setPosts((prev) =>
+            prev.map((p) =>
+              p.id === post_id
+                ? { ...p, comment_count: p.comment_count + 1 }
+                : p
+            )
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'post_comments' },
+        (payload) => {
+          const { post_id } = payload.old as { post_id: string };
+          setPosts((prev) =>
+            prev.map((p) =>
+              p.id === post_id
+                ? { ...p, comment_count: Math.max(0, p.comment_count - 1) }
+                : p
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const toggleLike = useCallback(
     async (postId: string) => {
@@ -244,7 +296,7 @@ export function useFeed() {
           symbol: data.symbol?.toUpperCase() || null,
           sentiment: data.sentiment || null,
         })
-        .select('*, profile:profiles!user_id(id, display_name, avatar_color)')
+        .select('*, profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth)')
         .single();
 
       if (inserted) {
@@ -278,7 +330,7 @@ export function useFeed() {
           position_shares: data.shares,
           position_avg_cost: data.avgCost,
         })
-        .select('*, profile:profiles!user_id(id, display_name, avatar_color)')
+        .select('*, profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth)')
         .single();
 
       if (inserted) {
@@ -310,10 +362,10 @@ export function useFeed() {
         })
         .select(`
           *,
-          profile:profiles!user_id(id, display_name, avatar_color),
+          profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
           strategy:strategies!strategy_id(
             id, name, description, symbols, code, created_at,
-            author:profiles!user_id(id, display_name, avatar_color),
+            author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
             backtest:strategy_backtest_results(
               id, strategy_id, total_return, win_rate, sharpe_ratio,
               max_drawdown, total_trades, backtest_range, equity_curve, computed_at
@@ -356,5 +408,22 @@ export function useFeed() {
     [user]
   );
 
-  return { posts, loading, filters, setFilters, postText, postPosition, postStrategy, toggleLike };
+  const deletePost = useCallback(
+    async (postId: string) => {
+      if (!user) return;
+      const supabase = createClient();
+
+      // Optimistic removal
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+
+      const { error } = await supabase.from('posts').delete().eq('id', postId);
+      if (error) {
+        // Re-fetch on failure to restore state
+        fetchPosts();
+      }
+    },
+    [user, fetchPosts]
+  );
+
+  return { posts, loading, filters, setFilters, postText, postPosition, postStrategy, toggleLike, deletePost };
 }

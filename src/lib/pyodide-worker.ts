@@ -23,6 +23,7 @@ declare function importScripts(...urls: string[]): void;
 
 let pyodide: any = null;
 let sdkCode: string = '';
+let sdkLoaded = false;
 
 // Load the celery SDK source code
 async function loadSDK() {
@@ -49,6 +50,12 @@ async function initPyodide() {
   });
 
   await loadSDK();
+
+  // Pre-load SDK into Python namespace so user code runs cleanly
+  if (sdkCode) {
+    pyodide.runPython(sdkCode);
+    sdkLoaded = true;
+  }
 
   self.postMessage({ type: 'ready' });
 }
@@ -86,15 +93,20 @@ async function runWithTimeout(code: string, timeoutMs: number): Promise<void> {
   });
 }
 
+async function ensureSDKLoaded() {
+  if (!sdkLoaded && sdkCode) {
+    pyodide.runPython(sdkCode);
+    sdkLoaded = true;
+  }
+}
+
 async function runStrategy(code: string, data: any) {
   if (!pyodide) throw new Error('Pyodide not initialized');
 
   injectData(data);
+  ensureSDKLoaded();
 
-  // Run SDK setup + user code
-  const fullCode = `${sdkCode}\n\n${code}`;
-
-  await runWithTimeout(fullCode, EXECUTION_TIMEOUT_MS);
+  await runWithTimeout(code, EXECUTION_TIMEOUT_MS);
 
   return collectSignals();
 }
@@ -148,10 +160,10 @@ async function runBacktest(code: string, data: any, historicalCandles: any) {
 
     injectData(sliceData);
 
-    const fullCode = `${sdkCode}\n\n${code}`;
+    ensureSDKLoaded();
 
     try {
-      pyodide.runPython(fullCode);
+      pyodide.runPython(code);
     } catch {
       continue; // Skip errors on individual iterations
     }
@@ -229,7 +241,15 @@ self.onmessage = async (e: MessageEvent) => {
         break;
       }
       case 'set_sdk': {
-        sdkCode = e.data.sdkCode;
+        if (e.data.sdkCode && e.data.sdkCode !== sdkCode) {
+          sdkCode = e.data.sdkCode;
+          if (pyodide) {
+            pyodide.runPython(sdkCode);
+            sdkLoaded = true;
+          } else {
+            sdkLoaded = false;
+          }
+        }
         break;
       }
       case 'run': {

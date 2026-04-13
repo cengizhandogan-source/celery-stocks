@@ -20,10 +20,11 @@ const CryptoOverviewPanel = dynamic(() => import('@/components/panels/CryptoOver
 const ChatroomPanel = dynamic(() => import('@/components/panels/ChatroomPanel'));
 const DirectMessagesPanel = dynamic(() => import('@/components/panels/DirectMessagesPanel'));
 const FeedPanel = dynamic(() => import('@/components/panels/FeedPanel'));
-const AiChatPanel = dynamic(() => import('@/components/panels/AiChatPanel'));
 const TextNotePanel = dynamic(() => import('@/components/panels/TextNotePanel'));
 const StrategyEditorPanel = dynamic(() => import('@/components/panels/StrategyEditorPanel'), { ssr: false });
 const StrategySignalsPanel = dynamic(() => import('@/components/panels/StrategySignalsPanel'));
+const WalletPanel = dynamic(() => import('@/components/panels/WalletPanel'));
+const SettingsPanel = dynamic(() => import('@/components/panels/SettingsPanel'));
 
 export default function WindowRenderer({ config }: { config: WindowConfig }) {
   const activeSymbol = useAppStore((s) => s.activeSymbol);
@@ -62,14 +63,16 @@ export default function WindowRenderer({ config }: { config: WindowConfig }) {
       return <DirectMessagesPanel />;
     case 'feed':
       return <FeedPanel />;
-    case 'ai-chat':
-      return <AiChatPanel />;
     case 'text-note':
       return <TextNotePanel windowId={config.id} content={config.content} />;
     case 'strategy-editor':
       return <StrategyEditorPanel strategyId={config.strategyId} />;
     case 'strategy-signals':
       return <StrategySignalsPanel />;
+    case 'crypto-wallet':
+      return <WalletPanel />;
+    case 'settings':
+      return <SettingsPanel />;
     default:
       return (
         <div className="flex items-center justify-center h-full text-text-muted text-sm font-mono">

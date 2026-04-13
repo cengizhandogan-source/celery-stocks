@@ -15,35 +15,35 @@ const INCOME_FIELDS: [string, string][] = [
   ['totalRevenue', 'Revenue'],
   ['costOfRevenue', 'Cost of Revenue'],
   ['grossProfit', 'Gross Profit'],
-  ['totalOperatingExpenses', 'Operating Expenses'],
+  ['operatingExpense', 'Operating Expenses'],
   ['operatingIncome', 'Operating Income'],
-  ['ebit', 'EBIT'],
+  ['EBIT', 'EBIT'],
   ['interestExpense', 'Interest Expense'],
-  ['incomeBeforeTax', 'Income Before Tax'],
-  ['incomeTaxExpense', 'Income Tax'],
+  ['pretaxIncome', 'Income Before Tax'],
+  ['taxProvision', 'Income Tax'],
   ['netIncome', 'Net Income'],
 ];
 
 const BALANCE_FIELDS: [string, string][] = [
-  ['cash', 'Cash'],
-  ['shortTermInvestments', 'Short-term Investments'],
-  ['netReceivables', 'Receivables'],
+  ['cashAndCashEquivalents', 'Cash'],
+  ['otherShortTermInvestments', 'Short-term Investments'],
+  ['receivables', 'Receivables'],
   ['inventory', 'Inventory'],
-  ['totalCurrentAssets', 'Current Assets'],
+  ['currentAssets', 'Current Assets'],
   ['totalAssets', 'Total Assets'],
-  ['totalCurrentLiabilities', 'Current Liabilities'],
+  ['currentLiabilities', 'Current Liabilities'],
   ['longTermDebt', 'Long-term Debt'],
-  ['totalLiab', 'Total Liabilities'],
-  ['totalStockholderEquity', 'Stockholder Equity'],
+  ['totalLiabilitiesNetMinorityInterest', 'Total Liabilities'],
+  ['stockholdersEquity', 'Stockholder Equity'],
 ];
 
 const CASHFLOW_FIELDS: [string, string][] = [
-  ['totalCashFromOperatingActivities', 'Operating CF'],
-  ['totalCashflowsFromInvestingActivities', 'Investing CF'],
-  ['totalCashFromFinancingActivities', 'Financing CF'],
-  ['capitalExpenditures', 'CapEx'],
+  ['operatingCashFlow', 'Operating CF'],
+  ['investingCashFlow', 'Investing CF'],
+  ['financingCashFlow', 'Financing CF'],
+  ['capitalExpenditure', 'CapEx'],
   ['freeCashFlow', 'Free Cash Flow'],
-  ['changeInCash', 'Change in Cash'],
+  ['changesInCash', 'Change in Cash'],
 ];
 
 const FIELD_MAP: Record<string, [string, string][]> = {
@@ -75,7 +75,8 @@ export default function FinancialsPanel({ symbol }: { symbol: string }) {
 
   const stmtKey = STATEMENT_TABS[tab].key;
   const statements = data[stmtKey as keyof typeof data];
-  const rows = quarterly ? statements.quarterly : statements.annual;
+  const rows = [...(quarterly ? statements.quarterly : statements.annual)]
+    .sort((a, b) => b.date.localeCompare(a.date));
   const fields = FIELD_MAP[stmtKey];
 
   return (
@@ -123,7 +124,10 @@ export default function FinancialsPanel({ symbol }: { symbol: string }) {
             </thead>
             <tbody>
               {fields.map(([key, label]) => (
-                <tr key={key} className="border-b border-terminal-border hover:bg-terminal-hover transition-colors">
+                <tr
+                  key={key}
+                  className="border-b border-terminal-border hover:bg-terminal-hover transition-colors"
+                >
                   <td className="px-3 py-1.5 text-data font-mono text-text-secondary whitespace-nowrap">
                     {label}
                   </td>

@@ -16,7 +16,7 @@ function mapStrategy(s: any): StrategyChipData | undefined {
     description: s.description || '',
     symbols: s.symbols || [],
     code: s.code || '',
-    author: author || { id: '', display_name: 'Unknown', avatar_color: '#888' },
+    author: author || { id: '', username: 'unknown', display_name: 'Unknown', avatar_color: '#888', is_verified: false },
     import_count: 0,
     created_at: s.created_at,
   };
@@ -43,7 +43,7 @@ export function useChatroom(chatroomId: string | null) {
 
     supabase
       .from('messages')
-      .select('*, profile:profiles!user_id(id, display_name, avatar_color), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, display_name, avatar_color))')
+      .select('*, profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth))')
       .eq('chatroom_id', chatroomId)
       .order('created_at', { ascending: false })
       .limit(MESSAGES_PAGE_SIZE)
@@ -73,7 +73,7 @@ export function useChatroom(chatroomId: string | null) {
           // Fetch profile for the new message
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, display_name, avatar_color')
+            .select('id, username, display_name, avatar_color, avatar_url, is_verified')
             .eq('id', msg.user_id)
             .single();
 
@@ -111,7 +111,7 @@ export function useChatroom(chatroomId: string | null) {
       const { data: inserted } = await supabase
         .from('messages')
         .insert(insertData)
-        .select('*, profile:profiles!user_id(id, display_name, avatar_color), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, display_name, avatar_color))')
+        .select('*, profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth))')
         .single();
 
       if (inserted) {
@@ -136,7 +136,7 @@ export function useChatroom(chatroomId: string | null) {
 
     const { data } = await supabase
       .from('messages')
-      .select('*, profile:profiles!user_id(id, display_name, avatar_color), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, display_name, avatar_color))')
+      .select('*, profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth))')
       .eq('chatroom_id', chatroomId)
       .lt('created_at', oldest.created_at)
       .order('created_at', { ascending: false })

@@ -4,6 +4,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import OnlineDot from '@/components/chat/OnlineDot';
+import VerifiedBadge from '@/components/ui/VerifiedBadge';
+import UserAvatar from '@/components/ui/UserAvatar';
 import { useChatStore } from '@/stores/chatStore';
 import type { Profile } from '@/lib/types';
 
@@ -29,7 +31,7 @@ export default function UserSearchInput({ onSelect }: UserSearchInputProps) {
       const supabase = createClient();
       const { data } = await supabase
         .from('profiles')
-        .select('id, display_name, avatar_color')
+        .select('id, username, display_name, avatar_color, avatar_url, is_verified')
         .ilike('display_name', `%${q}%`)
         .neq('id', user.id)
         .limit(10);
@@ -82,10 +84,12 @@ export default function UserSearchInput({ onSelect }: UserSearchInputProps) {
               }}
               className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-terminal-hover transition-colors"
             >
+              <UserAvatar avatarUrl={p.avatar_url} size="sm" />
               <OnlineDot isOnline={onlineUserIds.has(p.id)} />
               <span className="text-xs font-mono" style={{ color: p.avatar_color }}>
                 {p.display_name}
               </span>
+              {p.is_verified && <VerifiedBadge size={10} />}
             </button>
           ))}
         </div>

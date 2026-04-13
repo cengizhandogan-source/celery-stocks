@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLogoUrl } from '@/lib/logoUrl';
 import { isCryptoSymbol } from '@/lib/formatters';
+import { resolveSymbol } from '@/lib/symbolUtils';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import YahooFinance from 'yahoo-finance2';
@@ -21,9 +22,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ url: cached.url });
   }
 
-  // Crypto: resolve immediately from static map
-  if (isCryptoSymbol(symbol)) {
-    const url = getLogoUrl(symbol);
+  // Crypto: resolve immediately from static map (handles both "BTC-USD" and bare "BTC")
+  const resolved = resolveSymbol(symbol);
+  if (isCryptoSymbol(resolved)) {
+    const url = getLogoUrl(resolved);
     cache.set(symbol, { url, expiry: Date.now() + 86_400_000 }); // 24h
     return NextResponse.json({ url });
   }

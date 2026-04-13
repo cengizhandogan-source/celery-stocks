@@ -18,7 +18,7 @@ export function useUserProfile() {
 
     supabase
       .from('profiles')
-      .select('id, display_name, avatar_color')
+      .select('id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth')
       .eq('id', user.id)
       .single()
       .then(async ({ data, error }) => {
@@ -29,10 +29,11 @@ export function useUserProfile() {
         } else if (error?.code === 'PGRST116') {
           // Profile missing (user signed up before migration) — create it
           const displayName = user.email?.split('@')[0] ?? 'user';
+          const username = displayName.toLowerCase() + Math.floor(Math.random() * 9000 + 1000);
           const { data: created } = await supabase
             .from('profiles')
-            .insert({ id: user.id, display_name: displayName })
-            .select('id, display_name, avatar_color')
+            .insert({ id: user.id, display_name: displayName, username })
+            .select('id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth')
             .single();
           if (created) {
             setProfile(created);
@@ -53,7 +54,7 @@ export function useUserProfile() {
         .from('profiles')
         .update({ display_name: displayName, updated_at: new Date().toISOString() })
         .eq('id', user.id)
-        .select('id, display_name, avatar_color')
+        .select('id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth')
         .single();
 
       if (data) {

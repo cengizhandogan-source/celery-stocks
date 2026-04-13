@@ -3,6 +3,7 @@
 import { useStrategyStore } from '@/stores/strategyStore';
 import { useLayoutStore } from '@/stores/layoutStore';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import type { StrategyChipData } from '@/lib/types';
 
 export default function StrategyChip({ strategy }: { strategy: StrategyChipData }) {
@@ -37,6 +38,7 @@ export default function StrategyChip({ strategy }: { strategy: StrategyChipData 
               style={{ backgroundColor: strategy.author.avatar_color }}
             />
             <span className="text-xxs font-mono text-text-muted">{strategy.author.display_name}</span>
+            {strategy.author.is_verified && <VerifiedBadge size={10} />}
           </div>
         )}
       </div>

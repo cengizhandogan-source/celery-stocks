@@ -16,7 +16,7 @@ function mapStrategy(s: any): StrategyChipData | undefined {
     description: s.description || '',
     symbols: s.symbols || [],
     code: s.code || '',
-    author: author || { id: '', display_name: 'Unknown', avatar_color: '#888' },
+    author: author || { id: '', username: 'unknown', display_name: 'Unknown', avatar_color: '#888', is_verified: false },
     import_count: 0,
     created_at: s.created_at,
   };
@@ -42,7 +42,7 @@ export function useDirectMessages(peerId: string | null) {
 
     supabase
       .from('direct_messages')
-      .select('*, sender:profiles!sender_id(id, display_name, avatar_color), receiver:profiles!receiver_id(id, display_name, avatar_color), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, display_name, avatar_color))')
+      .select('*, sender:profiles!sender_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), receiver:profiles!receiver_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified))')
       .or(`and(sender_id.eq.${user.id},receiver_id.eq.${peerId}),and(sender_id.eq.${peerId},receiver_id.eq.${user.id})`)
       .order('created_at', { ascending: false })
       .limit(MESSAGES_PAGE_SIZE)
@@ -87,7 +87,7 @@ export function useDirectMessages(peerId: string | null) {
           // Fetch profiles for the DM
           supabase
             .from('profiles')
-            .select('id, display_name, avatar_color')
+            .select('id, username, display_name, avatar_color, avatar_url, is_verified')
             .in('id', [dm.sender_id, dm.receiver_id])
             .then(({ data: profiles }) => {
               if (profiles) {
@@ -128,7 +128,7 @@ export function useDirectMessages(peerId: string | null) {
       const { data: inserted } = await supabase
         .from('direct_messages')
         .insert(insertData)
-        .select('*, sender:profiles!sender_id(id, display_name, avatar_color), receiver:profiles!receiver_id(id, display_name, avatar_color), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, display_name, avatar_color))')
+        .select('*, sender:profiles!sender_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), receiver:profiles!receiver_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified))')
         .single();
 
       if (inserted) {

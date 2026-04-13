@@ -35,66 +35,73 @@ export function useStrategyRunner() {
   const [error, setError] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const workerRef = useRef<Worker | null>(null);
+  const readyPromiseRef = useRef<Promise<void> | null>(null);
   const pendingResolve = useRef<((value: unknown) => void) | null>(null);
   const pendingReject = useRef<((reason: unknown) => void) | null>(null);
 
   const initWorker = useCallback(async () => {
-    if (workerRef.current) return;
+    if (readyPromiseRef.current) return readyPromiseRef.current;
 
-    const worker = new Worker(
-      new URL('../lib/pyodide-worker.ts', import.meta.url),
-      { type: 'module' }
-    );
+    readyPromiseRef.current = new Promise<void>((resolveReady, rejectReady) => {
+      const worker = new Worker(
+        new URL('../lib/pyodide-worker.ts', import.meta.url),
+        { type: 'module' }
+      );
 
-    worker.onmessage = (e) => {
-      const { type } = e.data;
+      worker.onmessage = (e) => {
+        const { type } = e.data;
 
-      switch (type) {
-        case 'ready':
-          setPyodideReady(true);
-          break;
-        case 'signals':
-          setIsRunning(false);
-          pendingResolve.current?.(e.data.signals);
-          pendingResolve.current = null;
-          pendingReject.current = null;
-          break;
-        case 'backtest_result':
-          setIsBacktesting(false);
-          pendingResolve.current?.(e.data.result);
-          pendingResolve.current = null;
-          pendingReject.current = null;
-          break;
-        case 'error':
-          setIsRunning(false);
-          setIsBacktesting(false);
-          setError(e.data.error);
-          pendingReject.current?.(new Error(e.data.error));
-          pendingResolve.current = null;
-          pendingReject.current = null;
-          break;
-        case 'log':
-          setLogs(prev => [...prev.slice(-99), e.data.message]);
-          break;
-      }
-    };
+        switch (type) {
+          case 'ready':
+            setPyodideReady(true);
+            resolveReady();
+            break;
+          case 'signals':
+            setIsRunning(false);
+            pendingResolve.current?.(e.data.signals);
+            pendingResolve.current = null;
+            pendingReject.current = null;
+            break;
+          case 'backtest_result':
+            setIsBacktesting(false);
+            pendingResolve.current?.(e.data.result);
+            pendingResolve.current = null;
+            pendingReject.current = null;
+            break;
+          case 'error':
+            setIsRunning(false);
+            setIsBacktesting(false);
+            setError(e.data.error);
+            pendingReject.current?.(new Error(e.data.error));
+            pendingResolve.current = null;
+            pendingReject.current = null;
+            break;
+          case 'log':
+            setLogs(prev => [...prev.slice(-99), e.data.message]);
+            break;
+        }
+      };
 
-    worker.onerror = (err) => {
-      setIsRunning(false);
-      setIsBacktesting(false);
-      setError(err.message);
-      pendingReject.current?.(err);
-      pendingResolve.current = null;
-      pendingReject.current = null;
-    };
+      worker.onerror = (err) => {
+        setIsRunning(false);
+        setIsBacktesting(false);
+        setError(err.message);
+        rejectReady(err);
+        pendingReject.current?.(err);
+        pendingResolve.current = null;
+        pendingReject.current = null;
+      };
 
-    workerRef.current = worker;
+      workerRef.current = worker;
 
-    // Load SDK and send to worker
-    const sdkCode = await loadSDKCode();
+      // Load SDK and send to worker
+      loadSDKCode().then((sdkCode) => {
+        worker.postMessage({ type: 'init' });
+        worker.postMessage({ type: 'set_sdk', sdkCode });
+      });
+    });
 
-    worker.postMessage({ type: 'init' });
-    worker.postMessage({ type: 'set_sdk', sdkCode });
+    return readyPromiseRef.current;
   }, []);
 
   const runStrategy = useCallback(async (code: string, data: StrategyRunData): Promise<SignalResult[]> => {
@@ -132,6 +139,7 @@ export function useStrategyRunner() {
     return () => {
       workerRef.current?.terminate();
       workerRef.current = null;
+      readyPromiseRef.current = null;
     };
   }, []);
 

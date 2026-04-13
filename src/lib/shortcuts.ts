@@ -25,7 +25,6 @@ export const WINDOW_SHORTCUTS: WindowShortcut[] = [
   { type: 'direct-messages',  label: 'Direct Messages',  needsSymbol: false,                 letterKey: 'x' },
   { type: 'feed',             label: 'Feed',             needsSymbol: false,                 letterKey: 'y' },
   { type: 'crypto-overview',  label: 'Crypto Overview',  needsSymbol: false,                 letterKey: 'k' },
-  { type: 'ai-chat',          label: 'AI Chat',          needsSymbol: false,                 letterKey: 'i' },
   { type: 'text-note',        label: 'Text Note',        needsSymbol: false,                 letterKey: 'n' },
 ];
 

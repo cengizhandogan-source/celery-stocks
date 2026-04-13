@@ -152,9 +152,13 @@ function ActiveRoom({
               key={msg.id}
               displayName={msg.profile?.display_name ?? 'Unknown'}
               avatarColor={msg.profile?.avatar_color ?? '#888888'}
+              avatarUrl={msg.profile?.avatar_url}
               content={msg.content}
               timestamp={msg.created_at}
               isOwn={msg.user_id === user?.id}
+              isVerified={msg.profile?.is_verified ?? false}
+              netWorth={msg.profile?.crypto_net_worth}
+              showNetWorth={msg.profile?.show_net_worth}
               strategy={msg.strategy}
             />
           ))

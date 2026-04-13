@@ -33,6 +33,10 @@ export async function getQuote(symbol: string) {
     previousClose: (result.regularMarketPreviousClose ?? 0) as number,
     volume: (result.regularMarketVolume ?? 0) as number,
     marketCap: result.marketCap as number | undefined,
+    bid: result.bid as number | undefined,
+    ask: result.ask as number | undefined,
+    bidSize: result.bidSize as number | undefined,
+    askSize: result.askSize as number | undefined,
     timestamp: Date.now(),
   };
   setCache(key, quote, 30_000);
@@ -199,39 +203,36 @@ export async function getFinancials(symbol: string) {
   const cached = getCached(key);
   if (cached) return cached;
 
-  const summary: any = await yahooFinance.quoteSummary(symbol, {
-    modules: [
-      'incomeStatementHistory',
-      'incomeStatementHistoryQuarterly',
-      'balanceSheetHistory',
-      'balanceSheetHistoryQuarterly',
-      'cashflowStatementHistory',
-      'cashflowStatementHistoryQuarterly',
-    ],
-  });
+  const now = new Date();
+  const fiveYearsAgo = new Date(now.getFullYear() - 5, now.getMonth(), now.getDate())
+    .toISOString().split('T')[0];
+  const fetchFTS = (period1: string, type: string, module: string) =>
+    yahooFinance.fundamentalsTimeSeries(symbol, { period1, type, module });
 
-  const mapStatements = (stmts: any[]) =>
-    (stmts || []).map((s: any) => ({
-      date: s.endDate ? new Date(s.endDate).toISOString().split('T')[0] : '',
+  const [incomeA, incomeQ, balanceA, balanceQ, cashflowA, cashflowQ] =
+    await Promise.all([
+      fetchFTS(fiveYearsAgo, 'annual', 'financials'),
+      fetchFTS(fiveYearsAgo, 'quarterly', 'financials'),
+      fetchFTS(fiveYearsAgo, 'annual', 'balance-sheet'),
+      fetchFTS(fiveYearsAgo, 'quarterly', 'balance-sheet'),
+      fetchFTS(fiveYearsAgo, 'annual', 'cash-flow'),
+      fetchFTS(fiveYearsAgo, 'quarterly', 'cash-flow'),
+    ]);
+
+  const mapResults = (results: any[]) =>
+    (results || []).map((r: any) => ({
+      date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : '',
       ...Object.fromEntries(
-        Object.entries(s).filter(([k]) => k !== 'endDate' && k !== 'maxAge')
+        Object.entries(r)
+          .filter(([k]) => !['date', 'TYPE', 'periodType'].includes(k))
           .map(([k, v]) => [k, typeof v === 'number' ? v : null])
       ),
     }));
 
   const financials = {
-    income: {
-      annual: mapStatements(summary.incomeStatementHistory?.incomeStatementHistory),
-      quarterly: mapStatements(summary.incomeStatementHistoryQuarterly?.incomeStatementHistory),
-    },
-    balance: {
-      annual: mapStatements(summary.balanceSheetHistory?.balanceSheetStatements),
-      quarterly: mapStatements(summary.balanceSheetHistoryQuarterly?.balanceSheetStatements),
-    },
-    cashflow: {
-      annual: mapStatements(summary.cashflowStatementHistory?.cashflowStatements),
-      quarterly: mapStatements(summary.cashflowStatementHistoryQuarterly?.cashflowStatements),
-    },
+    income: { annual: mapResults(incomeA), quarterly: mapResults(incomeQ) },
+    balance: { annual: mapResults(balanceA), quarterly: mapResults(balanceQ) },
+    cashflow: { annual: mapResults(cashflowA), quarterly: mapResults(cashflowQ) },
   };
 
   setCache(key, financials, 3600_000);

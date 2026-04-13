@@ -9,6 +9,8 @@ import MessageBubble from '@/components/chat/MessageBubble';
 import MessageInput from '@/components/chat/MessageInput';
 import UserSearchInput from '@/components/chat/UserSearchInput';
 import OnlineDot from '@/components/chat/OnlineDot';
+import VerifiedBadge from '@/components/ui/VerifiedBadge';
+import UserAvatar from '@/components/ui/UserAvatar';
 import type { Profile } from '@/lib/types';
 
 function ConversationList({
@@ -48,6 +50,7 @@ function ConversationList({
                 onClick={() => onSelect(conv.peer)}
                 className="w-full flex items-center gap-2 px-3 py-2.5 border-b border-terminal-border hover:bg-terminal-hover transition-colors text-left"
               >
+                <UserAvatar avatarUrl={conv.peer.avatar_url} size="md" />
                 <OnlineDot isOnline={onlineUserIds.has(conv.peer.id)} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
@@ -57,6 +60,7 @@ function ConversationList({
                     >
                       {conv.peer.display_name}
                     </span>
+                    {conv.peer.is_verified && <VerifiedBadge size={12} />}
                     <span className="text-xxs font-mono text-text-muted shrink-0">{timeStr}</span>
                   </div>
                   <p className="text-xxs font-mono text-text-muted truncate mt-0.5">
@@ -118,10 +122,12 @@ function ActiveConversation({
         >
           &larr;
         </button>
+        <UserAvatar avatarUrl={peer.avatar_url} size="md" />
         <OnlineDot isOnline={onlineUserIds.has(peer.id)} />
         <span className="text-sm font-mono font-medium" style={{ color: peer.avatar_color }}>
           {peer.display_name}
         </span>
+        {peer.is_verified && <VerifiedBadge size={12} />}
       </div>
 
       {/* Messages */}
@@ -143,9 +149,13 @@ function ActiveConversation({
                 key={dm.id}
                 displayName={profile?.display_name ?? 'Unknown'}
                 avatarColor={profile?.avatar_color ?? '#888888'}
+                avatarUrl={profile?.avatar_url}
                 content={dm.content}
                 timestamp={dm.created_at}
                 isOwn={isOwn}
+                isVerified={profile?.is_verified ?? false}
+                netWorth={profile?.crypto_net_worth}
+                showNetWorth={profile?.show_net_worth}
                 strategy={dm.strategy}
               />
             );

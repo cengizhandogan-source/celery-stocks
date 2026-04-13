@@ -31,8 +31,6 @@
 html, body {
   background: #1C1C1C;
   color: #eaeaea;
-  overflow: hidden;
-  height: 100vh;
 }
 
 /* Menu slide-in animation */

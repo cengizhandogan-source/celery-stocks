@@ -1,0 +1,91 @@
+import { createHmac } from 'crypto';
+import { ExchangeAdapter, ExchangeBalance } from './types';
+
+const BASE_URL = 'https://api.bitget.com';
+
+function signMessage(message: string, apiSecret: string): string {
+  return createHmac('sha256', apiSecret).update(message).digest('base64');
+}
+
+function buildHeaders(
+  apiKey: string,
+  apiSecret: string,
+  passphrase: string,
+  method: string,
+  path: string,
+  body: string = '',
+) {
+  const timestamp = new Date().toISOString();
+  const message = `${timestamp}${method}${path}${body}`;
+  const signature = signMessage(message, apiSecret);
+
+  return {
+    'ACCESS-KEY': apiKey,
+    'ACCESS-SIGN': signature,
+    'ACCESS-TIMESTAMP': timestamp,
+    'ACCESS-PASSPHRASE': passphrase,
+    'Content-Type': 'application/json',
+  };
+}
+
+interface BitgetAsset {
+  coin: string;
+  available: string;
+  frozen: string;
+}
+
+interface BitgetResponse {
+  code: string;
+  data: BitgetAsset[];
+}
+
+export class BitgetAdapter implements ExchangeAdapter {
+  name = 'Bitget';
+
+  async validateCredentials(
+    apiKey: string,
+    apiSecret: string,
+    passphrase?: string,
+  ): Promise<boolean> {
+    try {
+      const path = '/api/v2/spot/account/assets';
+      const headers = buildHeaders(apiKey, apiSecret, passphrase ?? '', 'GET', path);
+      const res = await fetch(`${BASE_URL}${path}`, { headers });
+      const data: BitgetResponse = await res.json();
+      return data.code === '00000';
+    } catch {
+      return false;
+    }
+  }
+
+  async fetchBalances(
+    apiKey: string,
+    apiSecret: string,
+    passphrase?: string,
+  ): Promise<ExchangeBalance[]> {
+    const path = '/api/v2/spot/account/assets';
+    const headers = buildHeaders(apiKey, apiSecret, passphrase ?? '', 'GET', path);
+    const res = await fetch(`${BASE_URL}${path}`, { headers });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Bitget API error ${res.status}: ${body}`);
+    }
+
+    const data: BitgetResponse = await res.json();
+
+    if (data.code !== '00000') {
+      throw new Error(`Bitget API error code ${data.code}`);
+    }
+
+    const balances: ExchangeBalance[] = (data.data ?? [])
+      .map((a) => ({
+        asset: a.coin,
+        free: parseFloat(a.available),
+        locked: parseFloat(a.frozen),
+      }))
+      .filter((b) => b.free !== 0 || b.locked !== 0);
+
+    return balances;
+  }
+}

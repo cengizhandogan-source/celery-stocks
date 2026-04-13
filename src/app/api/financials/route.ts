@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(data, {
       headers: { 'Cache-Control': 's-maxage=3600, stale-while-revalidate=600' },
     });
-  } catch {
+  } catch (e) {
+    console.error('financials API error:', e);
     return NextResponse.json(null, { status: 500 });
   }
 }

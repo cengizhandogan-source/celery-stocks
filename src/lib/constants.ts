@@ -1,4 +1,4 @@
-import { WindowType } from './types';
+import type { WindowType, ExchangeName } from './types';
 
 export const DEFAULT_WATCHLIST_SYMBOLS = [
   'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'SPY', 'QQQ', 'BTC-USD', 'ETH-USD'
@@ -48,10 +48,11 @@ export const WINDOW_TYPE_LABELS: Record<WindowType, string> = {
   'direct-messages': 'Direct Messages',
   'feed': 'Feed',
   'crypto-overview': 'Crypto Overview',
-  'ai-chat': 'AI Chat',
   'text-note': 'Text Note',
   'strategy-editor': 'Strategy Editor',
   'strategy-signals': 'Strategy Signals',
+  'crypto-wallet': 'Crypto Wallet',
+  'settings': 'Settings',
 };
 
 export const WINDOW_DEFAULTS: Record<WindowType, { w: number; h: number; minW: number; minH: number }> = {
@@ -71,10 +72,11 @@ export const WINDOW_DEFAULTS: Record<WindowType, { w: number; h: number; minW: n
   'direct-messages':  { w: 400, h: 480, minW: 300, minH: 280 },
   'feed':             { w: 500, h: 480, minW: 300, minH: 280 },
   'crypto-overview':  { w: 400, h: 300, minW: 300, minH: 200 },
-  'ai-chat':              { w: 400, h: 480, minW: 300, minH: 280 },
   'text-note':            { w: 300, h: 300, minW: 200, minH: 200 },
   'strategy-editor':      { w: 700, h: 500, minW: 500, minH: 380 },
   'strategy-signals':     { w: 400, h: 400, minW: 300, minH: 280 },
+  'crypto-wallet':        { w: 500, h: 480, minW: 350, minH: 320 },
+  'settings':             { w: 480, h: 520, minW: 380, minH: 400 },
 };
 
 export const CASCADE_OFFSET = 30;
@@ -82,3 +84,16 @@ export const PANEL_HEADER_HEIGHT = 32;
 
 export const QUOTE_POLL_INTERVAL = 15_000;
 export const NEWS_POLL_INTERVAL = 300_000;
+
+export const EXCHANGE_METADATA: Record<ExchangeName, { displayName: string; requiresPassphrase: boolean }> = {
+  binance:   { displayName: 'Binance',    requiresPassphrase: false },
+  coinbase:  { displayName: 'Coinbase',   requiresPassphrase: true },
+  kraken:    { displayName: 'Kraken',     requiresPassphrase: false },
+  bybit:     { displayName: 'Bybit',      requiresPassphrase: false },
+  okx:       { displayName: 'OKX',        requiresPassphrase: true },
+  kucoin:    { displayName: 'KuCoin',     requiresPassphrase: true },
+  bitget:    { displayName: 'Bitget',     requiresPassphrase: true },
+  gateio:    { displayName: 'Gate.io',    requiresPassphrase: false },
+  mexc:      { displayName: 'MEXC',       requiresPassphrase: false },
+  cryptocom: { displayName: 'Crypto.com', requiresPassphrase: false },
+};

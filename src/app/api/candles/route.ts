@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCandles } from '@/lib/yahoo';
+import { getCandles as yahooGetCandles } from '@/lib/yahoo';
+import { getCandles as cgGetCandles, hasCoinGeckoId } from '@/lib/coingecko';
+import { resolveSymbol } from '@/lib/symbolUtils';
+import { isCryptoSymbol } from '@/lib/formatters';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,8 +14,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'symbol parameter required' }, { status: 400 });
     }
 
-    const candles = await getCandles(symbol.toUpperCase(), interval, range);
-    return NextResponse.json({ candles, symbol: symbol.toUpperCase() }, {
+    const resolved = resolveSymbol(symbol);
+    const candles = isCryptoSymbol(resolved) && hasCoinGeckoId(resolved)
+      ? await cgGetCandles(resolved, interval, range)
+      : await yahooGetCandles(resolved, interval, range);
+
+    return NextResponse.json({ candles, symbol: resolved }, {
       headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' },
     });
   } catch (error) {

@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getQuote, getQuotes } from '@/lib/yahoo';
+import { getQuote as yahooGetQuote, getQuotes as yahooGetQuotes } from '@/lib/yahoo';
+import { getQuote as cgGetQuote, getQuotes as cgGetQuotes, hasCoinGeckoId } from '@/lib/coingecko';
+import { resolveSymbol } from '@/lib/symbolUtils';
+import { isCryptoSymbol } from '@/lib/formatters';
+
+function useCoinGecko(symbol: string): boolean {
+  return isCryptoSymbol(symbol) && hasCoinGeckoId(symbol);
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,15 +14,25 @@ export async function GET(request: NextRequest) {
     const symbols = request.nextUrl.searchParams.get('symbols');
 
     if (symbols) {
-      const list = symbols.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-      const quotes = await getQuotes(list);
-      return NextResponse.json({ quotes }, {
+      const list = symbols.split(',').map(s => resolveSymbol(s)).filter(Boolean);
+      const cryptoSymbols = list.filter(useCoinGecko);
+      const stockSymbols = list.filter(s => !useCoinGecko(s));
+
+      const [cryptoQuotes, stockQuotes] = await Promise.all([
+        cryptoSymbols.length > 0 ? cgGetQuotes(cryptoSymbols) : [],
+        stockSymbols.length > 0 ? yahooGetQuotes(stockSymbols) : [],
+      ]);
+
+      return NextResponse.json({ quotes: [...cryptoQuotes, ...stockQuotes] }, {
         headers: { 'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30' },
       });
     }
 
     if (symbol) {
-      const quote = await getQuote(symbol.toUpperCase());
+      const resolved = resolveSymbol(symbol);
+      const quote = useCoinGecko(resolved)
+        ? await cgGetQuote(resolved)
+        : await yahooGetQuote(resolved);
       return NextResponse.json({ quote }, {
         headers: { 'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=30' },
       });
