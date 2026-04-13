@@ -228,7 +228,7 @@ export interface DMConversation {
 
 export type Sentiment = 'bullish' | 'bearish' | 'neutral';
 
-export type PostType = 'text' | 'position' | 'strategy';
+export type PostType = 'text' | 'position' | 'strategy' | 'trade';
 
 export interface Post {
   id: string;
@@ -242,6 +242,13 @@ export interface Post {
   position_avg_cost: number | null;
   strategy_id: string | null;
   strategy?: StrategyChipData;
+  trade_symbol: string | null;
+  trade_side: 'buy' | 'sell' | null;
+  trade_qty: number | null;
+  trade_price: number | null;
+  trade_quote_qty: number | null;
+  trade_pnl: number | null;
+  trade_executed_at: string | null;
   like_count: number;
   comment_count: number;
   liked_by_me: boolean;
@@ -367,5 +374,23 @@ export interface CryptoHolding {
   locked_balance: number;
   usd_value: number;
   price_at_sync: number;
+  synced_at: string;
+}
+
+export interface CachedTrade {
+  id: string;
+  connection_id: string;
+  user_id: string;
+  exchange_trade_id: string;
+  symbol: string;
+  base_asset: string;
+  quote_asset: string;
+  side: 'buy' | 'sell';
+  quantity: number;
+  price: number;
+  quote_qty: number;
+  fee: number;
+  fee_asset: string | null;
+  executed_at: string;
   synced_at: string;
 }

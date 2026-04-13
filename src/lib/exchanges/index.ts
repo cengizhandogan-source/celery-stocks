@@ -32,4 +32,4 @@ export function getAdapter(exchange: string): ExchangeAdapter {
 }
 
 export { encrypt, decrypt } from './encryption';
-export type { ExchangeAdapter, ExchangeBalance } from './types';
+export type { ExchangeAdapter, ExchangeBalance, ExchangeTrade } from './types';

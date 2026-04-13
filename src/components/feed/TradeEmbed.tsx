@@ -1,0 +1,53 @@
+import type { Post } from '@/lib/types';
+
+export default function TradeEmbed({ post }: { post: Post }) {
+  const isBuy = post.trade_side === 'buy';
+  const pnl = post.trade_pnl;
+  const executedAt = post.trade_executed_at
+    ? new Date(post.trade_executed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null;
+
+  return (
+    <div className="rounded border border-terminal-border bg-terminal-bg/50">
+      <div className="grid grid-cols-3 gap-2 px-2 py-1.5">
+        <div>
+          <div className="text-xxs font-mono text-text-muted leading-tight">Symbol</div>
+          <div className="flex items-center gap-1">
+            <span className="text-xs font-mono font-medium text-cyan">${post.trade_symbol}</span>
+            <span className={`text-xxs font-mono font-medium px-1 rounded ${isBuy ? 'bg-up/10 text-up' : 'bg-down/10 text-down'}`}>
+              {isBuy ? 'BUY' : 'SELL'}
+            </span>
+          </div>
+        </div>
+        <div>
+          <div className="text-xxs font-mono text-text-muted leading-tight">Qty</div>
+          <div className="text-xs font-mono text-text-primary">{Number(post.trade_qty).toLocaleString(undefined, { maximumFractionDigits: 8 })}</div>
+        </div>
+        <div>
+          <div className="text-xxs font-mono text-text-muted leading-tight">Price</div>
+          <div className="text-xs font-mono text-text-primary">${Number(post.trade_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</div>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-2 px-2 py-1.5 border-t border-terminal-border/50">
+        <div>
+          <div className="text-xxs font-mono text-text-muted leading-tight">Total</div>
+          <div className="text-xs font-mono text-text-primary">${Number(post.trade_quote_qty).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        </div>
+        {executedAt && (
+          <div>
+            <div className="text-xxs font-mono text-text-muted leading-tight">Date</div>
+            <div className="text-xs font-mono text-text-primary">{executedAt}</div>
+          </div>
+        )}
+        {pnl != null && (
+          <div>
+            <div className="text-xxs font-mono text-text-muted leading-tight">P&L</div>
+            <div className={`text-xs font-mono font-medium ${pnl >= 0 ? 'text-up' : 'text-down'}`}>
+              {pnl >= 0 ? '+' : ''}{Number(pnl).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError, ExchangeTrade } from './types';
 
 const BASE_URL = 'https://api.kucoin.com';
 
@@ -111,5 +111,63 @@ export class KuCoinAdapter implements ExchangeAdapter {
     }
 
     return balances;
+  }
+
+  async fetchTrades(
+    apiKey: string,
+    apiSecret: string,
+    passphrase?: string,
+    symbols?: string[],
+    since?: Date,
+  ): Promise<ExchangeTrade[]> {
+    let path = '/api/v1/fills?pageSize=100';
+    if (since) {
+      path += `&startAt=${since.getTime()}`;
+    }
+
+    const headers = buildHeaders(apiKey, apiSecret, passphrase ?? '', 'GET', path);
+    const res = await fetch(`${BASE_URL}${path}`, { headers });
+
+    if (!res.ok) {
+      const body = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('KuCoin', res.status, body);
+      }
+      throw new Error(`KuCoin API error ${res.status}: ${body}`);
+    }
+
+    const data: { code: string; data: { items: Array<{
+      tradeId: string;
+      symbol: string;
+      side: string;
+      size: string;
+      price: string;
+      fee: string;
+      feeCurrency: string;
+      createdAt: number;
+    }> } } = await res.json();
+
+    if (data.code !== '200000') {
+      throw new Error(`KuCoin API error code ${data.code}`);
+    }
+
+    return (data.data?.items ?? []).map((t) => {
+      const [baseAsset, quoteAsset] = t.symbol.split('-');
+      const quantity = parseFloat(t.size);
+      const price = parseFloat(t.price);
+      return {
+        tradeId: t.tradeId,
+        symbol: t.symbol,
+        baseAsset,
+        quoteAsset,
+        side: t.side as 'buy' | 'sell',
+        quantity,
+        price,
+        quoteQty: quantity * price,
+        fee: parseFloat(t.fee),
+        feeAsset: t.feeCurrency,
+        executedAt: new Date(t.createdAt),
+      };
+    });
   }
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { formatPrice, formatNetWorth } from '@/lib/formatters';
 import type { CryptoHolding } from '@/lib/types';
+import TickerLogo from '@/components/ui/TickerLogo';
 
 const MAX_VISIBLE = 20;
 
@@ -36,7 +37,10 @@ export default function HoldingsTable({
             key={h.id}
             className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-2 py-1.5 text-xxs font-mono hover:bg-terminal-hover/50 rounded transition-colors"
           >
-            <span className="text-text-primary font-medium truncate">{h.asset}</span>
+            <span className="text-text-primary font-medium truncate flex items-center gap-1.5">
+              <TickerLogo symbol={h.asset} size={16} />
+              {h.asset}
+            </span>
             <span className="text-right text-text-secondary w-20">
               {total < 1 ? total.toFixed(6) : total < 1000 ? total.toFixed(4) : total.toLocaleString('en-US', { maximumFractionDigits: 2 })}
             </span>

@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import { useChatStore } from '@/stores/chatStore';
 import type { Post, PostType, Sentiment, StrategyChipData, Profile } from '@/lib/types';
+import { rankPosts } from '@/lib/feedRanking';
 
 export interface FeedFilters {
   postType: PostType | null;
@@ -95,7 +96,7 @@ export function useFeed() {
           liked_by_me: likedIds.has(p.id),
         };
       });
-      setPosts(mapped);
+      setPosts(rankPosts(mapped));
       const profiles = mapped.map((p) => p.profile).filter(Boolean) as Profile[];
       if (profiles.length) cacheProfiles(profiles);
     }
@@ -133,7 +134,7 @@ export function useFeed() {
 
           setPosts((prev) => {
             if (prev.some((p) => p.id === post.id)) return prev;
-            return [post, ...prev];
+            return rankPosts([post, ...prev]);
           });
         }
       )
@@ -307,7 +308,7 @@ export function useFeed() {
         };
         setPosts((prev) => {
           if (prev.some((p) => p.id === mapped.id)) return prev;
-          return [mapped, ...prev];
+          return rankPosts([mapped, ...prev]);
         });
       }
     },
@@ -329,6 +330,54 @@ export function useFeed() {
           position_symbol: data.symbol.toUpperCase(),
           position_shares: data.shares,
           position_avg_cost: data.avgCost,
+        })
+        .select('*, profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth)')
+        .single();
+
+      if (inserted) {
+        const mapped: Post = {
+          ...inserted,
+          profile: Array.isArray(inserted.profile) ? inserted.profile[0] : inserted.profile,
+          liked_by_me: false,
+        };
+        setPosts((prev) => {
+          if (prev.some((p) => p.id === mapped.id)) return prev;
+          return rankPosts([mapped, ...prev]);
+        });
+      }
+    },
+    [user]
+  );
+
+  const postTrade = useCallback(
+    async (data: {
+      content?: string;
+      symbol: string;
+      side: 'buy' | 'sell';
+      qty: number;
+      price: number;
+      quoteQty: number;
+      pnl?: number;
+      executedAt: string;
+      sentiment?: Sentiment;
+    }) => {
+      if (!user) return;
+      const supabase = createClient();
+      const { data: inserted } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          post_type: 'trade',
+          content: data.content || null,
+          symbol: data.symbol.toUpperCase(),
+          sentiment: data.sentiment || null,
+          trade_symbol: data.symbol.toUpperCase(),
+          trade_side: data.side,
+          trade_qty: data.qty,
+          trade_price: data.price,
+          trade_quote_qty: data.quoteQty,
+          trade_pnl: data.pnl ?? null,
+          trade_executed_at: data.executedAt,
         })
         .select('*, profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth)')
         .single();
@@ -401,7 +450,7 @@ export function useFeed() {
         };
         setPosts((prev) => {
           if (prev.some((p) => p.id === mapped.id)) return prev;
-          return [mapped, ...prev];
+          return rankPosts([mapped, ...prev]);
         });
       }
     },
@@ -425,5 +474,5 @@ export function useFeed() {
     [user, fetchPosts]
   );
 
-  return { posts, loading, filters, setFilters, postText, postPosition, postStrategy, toggleLike, deletePost };
+  return { posts, loading, filters, setFilters, postText, postPosition, postTrade, postStrategy, toggleLike, deletePost };
 }

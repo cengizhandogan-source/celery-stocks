@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError, ExchangeTrade } from './types';
 
 const BASE_URL = 'https://api.bitget.com';
 
@@ -90,5 +90,73 @@ export class BitgetAdapter implements ExchangeAdapter {
       .filter((b) => b.free !== 0 || b.locked !== 0);
 
     return balances;
+  }
+
+  async fetchTrades(
+    apiKey: string,
+    apiSecret: string,
+    passphrase?: string,
+    symbols?: string[],
+    since?: Date,
+  ): Promise<ExchangeTrade[]> {
+    let path = '/api/v2/spot/trade/fills?limit=100';
+    if (since) {
+      path += `&startTime=${since.getTime()}`;
+    }
+
+    const headers = buildHeaders(apiKey, apiSecret, passphrase ?? '', 'GET', path);
+    const res = await fetch(`${BASE_URL}${path}`, { headers });
+
+    if (!res.ok) {
+      const body = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('Bitget', res.status, body);
+      }
+      throw new Error(`Bitget API error ${res.status}: ${body}`);
+    }
+
+    const data: { code: string; data: Array<{
+      tradeId: string;
+      symbol: string;
+      side: string;
+      size: string;
+      priceAvg: string;
+      fee: string;
+      feeCcy: string;
+      cTime: string;
+    }> } = await res.json();
+
+    if (data.code !== '00000') {
+      throw new Error(`Bitget API error code ${data.code}`);
+    }
+
+    const BITGET_QUOTES = ['USDT', 'USDC', 'USD', 'BTC', 'ETH', 'EUR'];
+    function splitSymbol(sym: string): [string, string] {
+      for (const q of BITGET_QUOTES) {
+        if (sym.endsWith(q) && sym.length > q.length) {
+          return [sym.slice(0, -q.length), q];
+        }
+      }
+      return [sym, 'USDT'];
+    }
+
+    return (data.data ?? []).map((t) => {
+      const [baseAsset, quoteAsset] = splitSymbol(t.symbol);
+      const quantity = parseFloat(t.size);
+      const price = parseFloat(t.priceAvg);
+      return {
+        tradeId: t.tradeId,
+        symbol: t.symbol,
+        baseAsset,
+        quoteAsset,
+        side: t.side.toLowerCase() as 'buy' | 'sell',
+        quantity,
+        price,
+        quoteQty: quantity * price,
+        fee: parseFloat(t.fee),
+        feeAsset: t.feeCcy,
+        executedAt: new Date(parseInt(t.cTime, 10)),
+      };
+    });
   }
 }

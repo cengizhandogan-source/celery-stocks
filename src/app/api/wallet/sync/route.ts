@@ -1,23 +1,10 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
-import { getAdapter, decrypt } from '@/lib/exchanges';
+import { getAdapter } from '@/lib/exchanges';
 import { ExchangeAuthError } from '@/lib/exchanges/types';
+import { decryptBundle } from '@/lib/exchanges/decrypt';
 import { getPrices } from '@/lib/coingecko';
-
-const IV_LENGTH = 12;
-
-function decodeBytea(value: string): Buffer {
-  const hex = value.startsWith('\\x') ? value.slice(2) : value;
-  return Buffer.from(hex, 'hex');
-}
-
-function decryptBundle(raw: string): string {
-  const bundle = decodeBytea(raw);
-  const iv = bundle.subarray(0, IV_LENGTH);
-  const ciphertext = bundle.subarray(IV_LENGTH);
-  return decrypt(ciphertext, iv);
-}
 
 export async function POST() {
   try {

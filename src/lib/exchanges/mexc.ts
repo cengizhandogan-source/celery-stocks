@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError, ExchangeTrade } from './types';
 
 const BASE_URL = 'https://api.mexc.com';
 
@@ -52,5 +52,76 @@ export class MexcAdapter implements ExchangeAdapter {
       .filter((b: ExchangeBalance) => b.free !== 0 || b.locked !== 0);
 
     return balances;
+  }
+
+  async fetchTrades(
+    apiKey: string,
+    apiSecret: string,
+    _passphrase?: string,
+    symbols?: string[],
+    since?: Date,
+  ): Promise<ExchangeTrade[]> {
+    const quoteAssets = ['USDT', 'USDC', 'BTC'];
+    const pairs: { base: string; quote: string; symbol: string }[] = [];
+
+    for (const base of symbols ?? []) {
+      for (const quote of quoteAssets) {
+        if (base === quote) continue;
+        pairs.push({ base, quote, symbol: `${base}${quote}` });
+        if (pairs.length >= 20) break;
+      }
+      if (pairs.length >= 20) break;
+    }
+
+    const trades: ExchangeTrade[] = [];
+
+    for (const pair of pairs) {
+      try {
+        const qs =
+          `symbol=${pair.symbol}&limit=100` +
+          (since ? `&startTime=${since.getTime()}` : '') +
+          `&timestamp=${Date.now()}&recvWindow=5000`;
+        const signature = sign(qs, apiSecret);
+        const url = `${BASE_URL}/api/v3/myTrades?${qs}&signature=${signature}`;
+
+        const res = await fetch(url, {
+          headers: { 'X-MEXC-APIKEY': apiKey },
+        });
+
+        if (!res.ok) continue;
+
+        const data: {
+          id: number;
+          symbol: string;
+          isBuyer: boolean;
+          qty: string;
+          price: string;
+          quoteQty: string;
+          commission: string;
+          commissionAsset: string;
+          time: number;
+        }[] = await res.json();
+
+        for (const t of data) {
+          trades.push({
+            tradeId: String(t.id),
+            symbol: t.symbol,
+            baseAsset: pair.base,
+            quoteAsset: pair.quote,
+            side: t.isBuyer ? 'buy' : 'sell',
+            quantity: parseFloat(t.qty),
+            price: parseFloat(t.price),
+            quoteQty: parseFloat(t.quoteQty),
+            fee: parseFloat(t.commission),
+            feeAsset: t.commissionAsset,
+            executedAt: new Date(t.time),
+          });
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return trades;
   }
 }

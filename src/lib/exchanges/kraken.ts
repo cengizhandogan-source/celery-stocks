@@ -1,5 +1,5 @@
 import { createHash, createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError, ExchangeTrade } from './types';
 
 const BASE_URL = 'https://api.kraken.com';
 
@@ -104,5 +104,78 @@ export class KrakenAdapter implements ExchangeAdapter {
       .filter((b) => b.free !== 0);
 
     return balances;
+  }
+
+  async fetchTrades(
+    apiKey: string,
+    apiSecret: string,
+    _passphrase?: string,
+    symbols?: string[],
+    since?: Date,
+  ): Promise<ExchangeTrade[]> {
+    const KRAKEN_QUOTES = ['ZUSD', 'ZEUR', 'ZGBP', 'USDT', 'USDC', 'XBT', 'USD', 'EUR'];
+
+    function splitPair(pair: string): [string, string] {
+      for (const q of KRAKEN_QUOTES) {
+        if (pair.endsWith(q)) {
+          return [normalizeAsset(pair.slice(0, -q.length)), normalizeAsset(q)];
+        }
+      }
+      const mid = Math.floor(pair.length / 2);
+      return [normalizeAsset(pair.slice(0, mid)), normalizeAsset(pair.slice(mid))];
+    }
+
+    const path = '/0/private/TradesHistory';
+    const nonce = Date.now() * 1000;
+    let body = `nonce=${nonce}`;
+    if (since) body += `&start=${Math.floor(since.getTime() / 1000)}`;
+    const signature = sign(path, body, nonce, apiSecret);
+
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method: 'POST',
+      headers: {
+        'API-Key': apiKey,
+        'API-Sign': signature,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body,
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('Kraken', res.status, text);
+      }
+      throw new Error(`Kraken API error ${res.status}: ${text}`);
+    }
+
+    const data = await res.json();
+    if (data.error && data.error.length > 0) {
+      throw new Error(`Kraken API error: ${data.error.join(', ')}`);
+    }
+
+    const rawTrades: Record<
+      string,
+      { pair: string; type: string; vol: string; price: string; fee: string; cost: string; time: number }
+    > = data.result?.trades ?? {};
+
+    const trades: ExchangeTrade[] = Object.entries(rawTrades).map(([tradeId, t]) => {
+      const [baseAsset, quoteAsset] = splitPair(t.pair);
+      return {
+        tradeId,
+        symbol: t.pair,
+        baseAsset,
+        quoteAsset,
+        side: t.type as 'buy' | 'sell',
+        quantity: parseFloat(t.vol),
+        price: parseFloat(t.price),
+        quoteQty: parseFloat(t.cost),
+        fee: parseFloat(t.fee),
+        feeAsset: quoteAsset,
+        executedAt: new Date(t.time * 1000),
+      };
+    });
+
+    return trades;
   }
 }

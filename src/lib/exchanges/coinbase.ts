@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError, ExchangeTrade } from './types';
 
 const BASE_URL = 'https://api.coinbase.com';
 
@@ -78,5 +78,62 @@ export class CoinbaseAdapter implements ExchangeAdapter {
     } while (cursor);
 
     return balances;
+  }
+
+  async fetchTrades(
+    apiKey: string,
+    apiSecret: string,
+    _passphrase?: string,
+    symbols?: string[],
+    since?: Date,
+  ): Promise<ExchangeTrade[]> {
+    const trades: ExchangeTrade[] = [];
+    let cursor: string | undefined;
+    let pages = 0;
+    const MAX_PAGES = 3;
+
+    do {
+      let path = '/api/v3/brokerage/orders/historical/fills?limit=100';
+      if (since) path += `&start_sequence_timestamp=${since.toISOString()}`;
+      if (cursor) path += `&cursor=${cursor}`;
+
+      const headers = buildHeaders(apiKey, apiSecret, 'GET', path);
+      const res = await fetch(`${BASE_URL}${path}`, { headers });
+
+      if (!res.ok) {
+        const body = await res.text();
+        if (res.status === 401 || res.status === 403) {
+          throw new ExchangeAuthError('Coinbase', res.status, body);
+        }
+        throw new Error(`Coinbase API error ${res.status}: ${body}`);
+      }
+
+      const data = await res.json();
+
+      for (const fill of data.fills ?? []) {
+        const [baseAsset, quoteAsset] = (fill.product_id as string).split('-');
+        const quantity = parseFloat(fill.size);
+        const price = parseFloat(fill.price);
+
+        trades.push({
+          tradeId: fill.trade_id,
+          symbol: fill.product_id,
+          baseAsset,
+          quoteAsset,
+          side: (fill.side as string).toLowerCase() as 'buy' | 'sell',
+          quantity,
+          price,
+          quoteQty: quantity * price,
+          fee: parseFloat(fill.commission),
+          feeAsset: quoteAsset,
+          executedAt: new Date(fill.trade_time),
+        });
+      }
+
+      cursor = data.cursor || undefined;
+      pages++;
+    } while (cursor && pages < MAX_PAGES);
+
+    return trades;
   }
 }

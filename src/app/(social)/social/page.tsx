@@ -11,12 +11,13 @@ const FILTER_TABS: { value: PostType | null; label: string }[] = [
   { value: null, label: 'All' },
   { value: 'text', label: 'Text' },
   { value: 'position', label: 'Positions' },
+  { value: 'trade', label: 'Trades' },
   { value: 'strategy', label: 'Strategies' },
 ];
 
 export default function FeedPage() {
   const { user } = useUser();
-  const { posts, loading, filters, setFilters, postText, postPosition, postStrategy, toggleLike } = useFeed();
+  const { posts, loading, filters, setFilters, postText, postPosition, postTrade, postStrategy, toggleLike } = useFeed();
   const [showComposer, setShowComposer] = useState(false);
 
   return (
@@ -72,6 +73,7 @@ export default function FeedPage() {
         <PostComposer
           onPostText={postText}
           onPostPosition={postPosition}
+          onPostTrade={postTrade}
           onPostStrategy={postStrategy}
           onCancel={() => setShowComposer(false)}
         />

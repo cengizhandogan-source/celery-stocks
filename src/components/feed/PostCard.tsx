@@ -1,8 +1,10 @@
 import { useMemo, useEffect, useRef, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import { MessageCircle } from 'lucide-react';
 import { SENTIMENT_COLORS, SENTIMENT_BG } from '@/stores/chatStore';
 import StrategyChip from '@/components/chat/StrategyChip';
 import PositionEmbed from './PositionEmbed';
+import TradeEmbed from './TradeEmbed';
 import MiniStockChart from './MiniStockChart';
 import TickerLogo from '@/components/ui/TickerLogo';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
@@ -43,6 +45,7 @@ const TYPE_STYLES: Record<string, string> = {
   text: 'text-text-muted border-terminal-border',
   position: 'text-cyan border-cyan/30',
   strategy: 'text-violet-400 border-violet-400/30',
+  trade: 'text-amber-400 border-amber-400/30',
 };
 
 export default function PostCard({
@@ -86,13 +89,15 @@ export default function PostCard({
     <div className="px-3 py-3 border-b border-terminal-border transition-colors">
       {/* Header: author + time */}
       <div className="flex items-center gap-1.5 mb-1.5">
-        <UserAvatar avatarUrl={post.profile?.avatar_url} size="sm" />
-        <span
-          className="text-xs font-mono font-medium truncate"
-          style={{ color: post.profile?.avatar_color ?? '#888888' }}
-        >
-          {post.profile?.display_name ?? 'Unknown'}
-        </span>
+        <Link href={`/social/profile/${post.user_id}`} className="flex items-center gap-1.5 min-w-0">
+          <UserAvatar avatarUrl={post.profile?.avatar_url} size="sm" />
+          <span
+            className="text-xs font-mono font-medium truncate hover:underline"
+            style={{ color: post.profile?.avatar_color ?? '#888888' }}
+          >
+            {post.profile?.display_name ?? 'Unknown'}
+          </span>
+        </Link>
         {post.profile?.is_verified && <VerifiedBadge size={12} />}
         <NetWorthBadge netWorth={post.profile?.crypto_net_worth} showNetWorth={post.profile?.show_net_worth} />
         <span className="text-xxs font-mono text-text-muted ml-auto shrink-0">{timeStr}</span>
@@ -146,6 +151,7 @@ export default function PostCard({
       )}
 
       {/* Type-specific content */}
+      {post.post_type === 'trade' && <TradeEmbed post={post} />}
       {post.post_type === 'position' && <PositionEmbed post={post} />}
       {post.post_type === 'strategy' && post.strategy && (
         <StrategyChip strategy={post.strategy} />

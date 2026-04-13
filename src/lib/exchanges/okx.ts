@@ -1,5 +1,5 @@
 import { createHmac } from 'crypto';
-import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError } from './types';
+import { ExchangeAdapter, ExchangeBalance, ExchangeAuthError, ExchangeTrade } from './types';
 
 const BASE_URL = 'https://www.okx.com';
 
@@ -97,5 +97,63 @@ export class OkxAdapter implements ExchangeAdapter {
       .filter((b) => b.free !== 0 || b.locked !== 0);
 
     return balances;
+  }
+
+  async fetchTrades(
+    apiKey: string,
+    apiSecret: string,
+    passphrase?: string,
+    symbols?: string[],
+    since?: Date,
+  ): Promise<ExchangeTrade[]> {
+    let path = '/api/v5/trade/fills-history?instType=SPOT&limit=100';
+    if (since) {
+      path += `&begin=${since.getTime()}`;
+    }
+
+    const headers = buildHeaders(apiKey, apiSecret, passphrase ?? '', 'GET', path);
+    const res = await fetch(`${BASE_URL}${path}`, { headers });
+
+    if (!res.ok) {
+      const text = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new ExchangeAuthError('OKX', res.status, text);
+      }
+      throw new Error(`OKX API error ${res.status}: ${text}`);
+    }
+
+    const data: { code: string; data: Array<{
+      tradeId: string;
+      instId: string;
+      side: string;
+      fillSz: string;
+      fillPx: string;
+      fee: string;
+      feeCcy: string;
+      ts: string;
+    }> } = await res.json();
+
+    if (data.code !== '0') {
+      throw new Error(`OKX API error code ${data.code}`);
+    }
+
+    return (data.data ?? []).map((t) => {
+      const [baseAsset, quoteAsset] = t.instId.split('-');
+      const quantity = parseFloat(t.fillSz);
+      const price = parseFloat(t.fillPx);
+      return {
+        tradeId: t.tradeId,
+        symbol: t.instId,
+        baseAsset,
+        quoteAsset,
+        side: t.side as 'buy' | 'sell',
+        quantity,
+        price,
+        quoteQty: quantity * price,
+        fee: Math.abs(parseFloat(t.fee)),
+        feeAsset: t.feeCcy,
+        executedAt: new Date(parseInt(t.ts, 10)),
+      };
+    });
   }
 }
