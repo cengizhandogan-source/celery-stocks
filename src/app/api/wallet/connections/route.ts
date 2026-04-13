@@ -62,14 +62,14 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       exchange,
       label: label ?? '',
-      api_key_enc: keyBundle.toString('base64'),
-      api_secret_enc: secretBundle.toString('base64'),
-      iv: keyEnc.iv.toString('base64'),
+      api_key_enc: '\\x' + keyBundle.toString('hex'),
+      api_secret_enc: '\\x' + secretBundle.toString('hex'),
+      iv: '\\x' + keyEnc.iv.toString('hex'),
     };
 
     if (passphrase) {
       const ppEnc = encrypt(passphrase);
-      row.passphrase_enc = Buffer.concat([ppEnc.iv, ppEnc.ciphertext]).toString('base64');
+      row.passphrase_enc = '\\x' + Buffer.concat([ppEnc.iv, ppEnc.ciphertext]).toString('hex');
     }
 
     const { data, error } = await supabase

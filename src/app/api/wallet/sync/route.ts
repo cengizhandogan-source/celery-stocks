@@ -7,7 +7,13 @@ import { getPrices } from '@/lib/coingecko';
 
 const IV_LENGTH = 12;
 
-function decryptBundle(bundle: Buffer): string {
+function decodeBytea(value: string): Buffer {
+  const hex = value.startsWith('\\x') ? value.slice(2) : value;
+  return Buffer.from(hex, 'hex');
+}
+
+function decryptBundle(raw: string): string {
+  const bundle = decodeBytea(raw);
   const iv = bundle.subarray(0, IV_LENGTH);
   const ciphertext = bundle.subarray(IV_LENGTH);
   return decrypt(ciphertext, iv);
@@ -51,10 +57,10 @@ export async function POST() {
 
       try {
         const adapter = getAdapter(conn.exchange);
-        const apiKey = decryptBundle(Buffer.from(conn.api_key_enc, 'base64'));
-        const apiSecret = decryptBundle(Buffer.from(conn.api_secret_enc, 'base64'));
+        const apiKey = decryptBundle(conn.api_key_enc);
+        const apiSecret = decryptBundle(conn.api_secret_enc);
         const passphrase = conn.passphrase_enc
-          ? decryptBundle(Buffer.from(conn.passphrase_enc, 'base64'))
+          ? decryptBundle(conn.passphrase_enc)
           : undefined;
 
         const balances = await adapter.fetchBalances(apiKey, apiSecret, passphrase);
