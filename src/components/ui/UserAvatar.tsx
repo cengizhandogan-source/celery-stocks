@@ -3,11 +3,11 @@
 import { useState } from 'react';
 
 const SIZE_CLASSES = {
-  xs: 'w-4 h-4',
-  sm: 'w-5 h-5',
-  md: 'w-6 h-6',
-  lg: 'w-8 h-8',
-  xl: 'w-12 h-12',
+  xs: 'w-5 h-5',
+  sm: 'w-7 h-7',
+  md: 'w-8 h-8',
+  lg: 'w-10 h-10',
+  xl: 'w-16 h-16',
 } as const;
 
 interface UserAvatarProps {

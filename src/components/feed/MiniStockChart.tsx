@@ -7,7 +7,15 @@ import { formatPrice, formatPercent } from '@/lib/formatters';
 import TickerLogo from '@/components/ui/TickerLogo';
 import type { Quote } from '@/lib/types';
 
-export default function MiniStockChart({ symbol }: { symbol: string }) {
+export default function MiniStockChart({
+  symbol,
+  compact = false,
+  onQuoteReady,
+}: {
+  symbol: string;
+  compact?: boolean;
+  onQuoteReady?: (quote: Quote) => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -29,12 +37,20 @@ export default function MiniStockChart({ symbol }: { symbol: string }) {
 
   return (
     <div ref={containerRef} className="mt-2 mb-1">
-      {visible && <MiniStockChartInner symbol={symbol} />}
+      {visible && <MiniStockChartInner symbol={symbol} compact={compact} onQuoteReady={onQuoteReady} />}
     </div>
   );
 }
 
-function MiniStockChartInner({ symbol }: { symbol: string }) {
+function MiniStockChartInner({
+  symbol,
+  compact = false,
+  onQuoteReady,
+}: {
+  symbol: string;
+  compact?: boolean;
+  onQuoteReady?: (quote: Quote) => void;
+}) {
   const { candles, loading: candlesLoading } = useCandles(symbol, '60m', '5d');
   const [quote, setQuote] = useState<Quote | null>(null);
 
@@ -44,7 +60,10 @@ function MiniStockChartInner({ symbol }: { symbol: string }) {
     fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}`)
       .then((r) => r.json())
       .then((data) => {
-        if (!cancelled && data.quote) setQuote(data.quote);
+        if (!cancelled && data.quote) {
+          setQuote(data.quote);
+          onQuoteReady?.(data.quote);
+        }
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -73,6 +92,31 @@ function MiniStockChartInner({ symbol }: { symbol: string }) {
 
   const price = quote?.price ?? last;
   const changePct = quote?.changePercent ?? ((last - first) / first) * 100;
+
+  if (compact) {
+    return (
+      <div className="w-full h-[60px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+            <YAxis domain={domain} hide />
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.[0]) return null;
+                return (
+                  <div className="text-xxs font-mono font-medium text-text-primary bg-terminal-bg border border-terminal-border rounded px-1.5 py-0.5 shadow-lg">
+                    {formatPrice(payload[0].value as number)}
+                  </div>
+                );
+              }}
+              cursor={{ stroke: '#555555', strokeWidth: 1, strokeDasharray: '3 3' }}
+            />
+            <ReferenceLine y={first} stroke="#555555" strokeDasharray="3 3" strokeWidth={1} />
+            <Area type="monotone" dataKey="close" stroke={color} fill="transparent" strokeWidth={1.5} dot={{ r: 1.5, fill: color, strokeWidth: 0 }} isAnimationActive={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
 
   return (
     <div className="border border-terminal-border rounded-lg bg-terminal-bg/80 overflow-hidden px-3.5 py-3">
@@ -119,7 +163,7 @@ function MiniStockChartInner({ symbol }: { symbol: string }) {
                 stroke={color}
                 fill="transparent"
                 strokeWidth={1.5}
-                dot={false}
+                dot={{ r: 1.5, fill: color, strokeWidth: 0 }}
                 isAnimationActive={false}
               />
             </AreaChart>

@@ -1,17 +1,17 @@
-import { useMemo, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import { MessageCircle } from 'lucide-react';
 import { SENTIMENT_COLORS, SENTIMENT_BG } from '@/stores/chatStore';
 import StrategyChip from '@/components/chat/StrategyChip';
-import PositionEmbed from './PositionEmbed';
 import TradeEmbed from './TradeEmbed';
 import MiniStockChart from './MiniStockChart';
+import PnLDisplay from './PnLDisplay';
 import TickerLogo from '@/components/ui/TickerLogo';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import NetWorthBadge from '@/components/ui/NetWorthBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 import CommentSection from './CommentSection';
-import type { Post } from '@/lib/types';
+import type { Post, Quote } from '@/lib/types';
 
 const TICKER_RE = /\$([A-Z]{1,5})\b/g;
 
@@ -41,13 +41,6 @@ function renderContentWithTickers(content: string): ReactNode[] {
   return parts.length > 0 ? parts : [content];
 }
 
-const TYPE_STYLES: Record<string, string> = {
-  text: 'text-text-muted border-terminal-border',
-  position: 'text-cyan border-cyan/30',
-  strategy: 'text-violet-400 border-violet-400/30',
-  trade: 'text-amber-400 border-amber-400/30',
-};
-
 export default function PostCard({
   post,
   onToggleLike,
@@ -61,8 +54,10 @@ export default function PostCard({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [currentQuote, setCurrentQuote] = useState<Quote | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUserId != null && post.user_id === currentUserId;
+  const handleQuoteReady = useCallback((quote: Quote) => setCurrentQuote(quote), []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -124,35 +119,35 @@ export default function PostCard({
         )}
       </div>
 
-      {/* Badges: type + symbol + sentiment */}
-      <div className="flex items-center gap-1.5 mb-2">
-        <span
-          className={`text-xxs font-mono px-1.5 py-0.5 rounded border capitalize ${TYPE_STYLES[post.post_type]}`}
-        >
-          {post.post_type}
-        </span>
-        {post.symbol && (
-          <span className="text-xxs font-mono text-cyan px-1.5 py-0.5 bg-cyan/10 rounded">
-            ${post.symbol}
-          </span>
-        )}
-        {post.sentiment && (
-          <span
-            className={`text-xxs font-mono px-1.5 py-0.5 rounded capitalize ${SENTIMENT_COLORS[post.sentiment]} ${SENTIMENT_BG[post.sentiment]}`}
-          >
-            {post.sentiment}
-          </span>
-        )}
-      </div>
+      {/* PnL display for position/trade posts */}
+      {post.post_type === 'position' && post.position_avg_cost != null && post.position_shares != null && (
+        <PnLDisplay
+          symbol={post.position_symbol!}
+          pnlDollars={currentQuote ? (currentQuote.price - post.position_avg_cost) * post.position_shares : null}
+          pnlPercent={currentQuote ? ((currentQuote.price - post.position_avg_cost) / post.position_avg_cost) * 100 : null}
+          currentPrice={currentQuote?.price}
+          shares={post.position_shares}
+          avgCost={post.position_avg_cost}
+          chart={<MiniStockChart symbol={post.position_symbol!} compact onQuoteReady={handleQuoteReady} />}
+        />
+      )}
+      {post.post_type === 'trade' && post.trade_pnl != null && (
+        <PnLDisplay
+          symbol={post.trade_symbol!}
+          pnlDollars={post.trade_pnl}
+          pnlPercent={post.trade_price && post.trade_qty ? (post.trade_pnl / (post.trade_price * post.trade_qty)) * 100 : null}
+          currentPrice={currentQuote?.price}
+          chart={post.trade_symbol ? <MiniStockChart symbol={post.trade_symbol} compact /> : undefined}
+        />
+      )}
 
-      {/* Mini stock chart */}
-      {(post.symbol || post.position_symbol) && (
+      {/* Chart: full size for text/strategy posts only */}
+      {post.post_type !== 'position' && post.post_type !== 'trade' && (post.symbol || post.position_symbol) && (
         <MiniStockChart symbol={(post.symbol || post.position_symbol)!} />
       )}
 
-      {/* Type-specific content */}
-      {post.post_type === 'trade' && <TradeEmbed post={post} />}
-      {post.post_type === 'position' && <PositionEmbed post={post} />}
+      {/* Type-specific embeds */}
+      {post.post_type === 'trade' && <TradeEmbed post={post} hidePnl />}
       {post.post_type === 'strategy' && post.strategy && (
         <StrategyChip strategy={post.strategy} />
       )}
@@ -162,10 +157,15 @@ export default function PostCard({
         </div>
       )}
 
-      {/* Text content */}
-      {post.content && (
+      {/* Text content with inline sentiment */}
+      {(post.content || post.sentiment) && (
         <p className={`text-xs font-mono text-text-secondary leading-relaxed whitespace-pre-wrap ${post.post_type !== 'text' ? 'mt-2' : ''}`}>
-          {renderContentWithTickers(post.content)}
+          {post.sentiment && (
+            <span className={`inline-flex text-xxs font-mono px-1.5 py-0.5 rounded capitalize mr-1.5 align-middle ${SENTIMENT_COLORS[post.sentiment]} ${SENTIMENT_BG[post.sentiment]}`}>
+              {post.sentiment}
+            </span>
+          )}
+          {post.content && renderContentWithTickers(post.content)}
         </p>
       )}
 

@@ -46,7 +46,6 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [selectedPositionId, setSelectedPositionId] = useState('');
   const [selectedTradeId, setSelectedTradeId] = useState('');
-  const [tradePnl, setTradePnl] = useState('');
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -146,7 +145,6 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
               qty: selected.qty,
               price: selected.price,
               quoteQty: selected.quoteQty,
-              pnl: tradePnl ? parseFloat(tradePnl) : undefined,
               executedAt: selected.executedAt,
               sentiment: sentiment ?? undefined,
             });
@@ -166,12 +164,11 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
       setSentiment(null);
       setSelectedPositionId('');
       setSelectedTradeId('');
-      setTradePnl('');
       setSelectedStrategyId('');
       setLoading(false);
       onCancel();
     },
-    [postType, content, symbol, sentiment, selectedPositionId, selectedTradeId, tradePnl, selectedStrategyId, selectablePositions, selectableTrades, loading, onPostText, onPostPosition, onPostTrade, onPostStrategy, onCancel]
+    [postType, content, symbol, sentiment, selectedPositionId, selectedTradeId, selectedStrategyId, selectablePositions, selectableTrades, loading, onPostText, onPostPosition, onPostTrade, onPostStrategy, onCancel]
   );
 
   return (
@@ -251,14 +248,6 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
               No trades found. Click Sync to fetch from your exchanges.
             </p>
           )}
-          <input
-            value={tradePnl}
-            onChange={(e) => setTradePnl(e.target.value)}
-            placeholder="P&L (optional, e.g. 150.00)"
-            type="number"
-            step="any"
-            className="w-full bg-terminal-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none mb-2"
-          />
         </>
       )}
 

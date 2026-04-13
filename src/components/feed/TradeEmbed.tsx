@@ -1,6 +1,6 @@
 import type { Post } from '@/lib/types';
 
-export default function TradeEmbed({ post }: { post: Post }) {
+export default function TradeEmbed({ post, hidePnl = false }: { post: Post; hidePnl?: boolean }) {
   const isBuy = post.trade_side === 'buy';
   const pnl = post.trade_pnl;
   const executedAt = post.trade_executed_at
@@ -39,7 +39,7 @@ export default function TradeEmbed({ post }: { post: Post }) {
             <div className="text-xs font-mono text-text-primary">{executedAt}</div>
           </div>
         )}
-        {pnl != null && (
+        {!hidePnl && pnl != null && (
           <div>
             <div className="text-xxs font-mono text-text-muted leading-tight">P&L</div>
             <div className={`text-xs font-mono font-medium ${pnl >= 0 ? 'text-up' : 'text-down'}`}>
