@@ -4,13 +4,12 @@ const commands = [
   { command: '/chart', code: '/cht', shortcut: 'Ctrl+1', label: 'Chart', requiresSymbol: true, description: 'Display stock chart with technical analysis' },
   { command: '/watchlist', code: '/wtl', shortcut: 'Ctrl+2', label: 'Watchlist', requiresSymbol: false, description: 'Open watchlist panel' },
   { command: '/news', code: '/nws', shortcut: 'Ctrl+3', label: 'News Feed', requiresSymbol: false, description: 'Display financial news feed' },
-  { command: '/portfolio', code: '/prt', shortcut: 'Ctrl+4', label: 'Portfolio', requiresSymbol: false, description: 'Display portfolio overview' },
-  { command: '/market', code: '/mkt', shortcut: 'Ctrl+5', label: 'Market Overview', requiresSymbol: false, description: 'Display market overview indices' },
-  { command: '/detail', code: '/dtl', shortcut: 'Ctrl+6', label: 'Stock Detail', requiresSymbol: true, description: 'Show detailed stock information' },
-  { command: '/monitor', code: '/qm', shortcut: 'Ctrl+7', label: 'Quote Monitor', requiresSymbol: false, description: 'Monitor multiple stock quotes' },
-  { command: '/focus', code: '/fcs', shortcut: 'Ctrl+8', label: 'Focus View', requiresSymbol: true, description: 'Focused view for a single symbol' },
-  { command: '/most', code: '/mst', shortcut: 'Ctrl+9', label: 'Most Active', requiresSymbol: false, description: 'Display most active stocks' },
-  { command: '/financials', code: '/fin', shortcut: 'Ctrl+0', label: 'Financials', requiresSymbol: true, description: 'Show financial statements' },
+  { command: '/market', code: '/mkt', shortcut: 'Ctrl+4', label: 'Market Overview', requiresSymbol: false, description: 'Display market overview indices' },
+  { command: '/detail', code: '/dtl', shortcut: 'Ctrl+5', label: 'Stock Detail', requiresSymbol: true, description: 'Show detailed stock information' },
+  { command: '/monitor', code: '/qm', shortcut: 'Ctrl+6', label: 'Quote Monitor', requiresSymbol: false, description: 'Monitor multiple stock quotes' },
+  { command: '/focus', code: '/fcs', shortcut: 'Ctrl+7', label: 'Focus View', requiresSymbol: true, description: 'Focused view for a single symbol' },
+  { command: '/most', code: '/mst', shortcut: 'Ctrl+8', label: 'Most Active', requiresSymbol: false, description: 'Display most active stocks' },
+  { command: '/financials', code: '/fin', shortcut: 'Ctrl+9', label: 'Financials', requiresSymbol: true, description: 'Show financial statements' },
   { command: '/holders', code: '/hld', shortcut: 'Ctrl+Shift+H', label: 'Holders', requiresSymbol: true, description: 'Display major stock holders' },
   { command: '/filings', code: '/flg', shortcut: 'Ctrl+Shift+G', label: 'SEC Filings', requiresSymbol: true, description: 'Show SEC filings' },
   { command: '/chatroom', code: '/cr', shortcut: 'Ctrl+Shift+R', label: 'Chatroom', requiresSymbol: false, description: 'Open chatroom' },
@@ -91,13 +90,12 @@ export default function CommandsPage() {
                 <Row shortcut="Ctrl+1" label="Chart" />
                 <Row shortcut="Ctrl+2" label="Watchlist" />
                 <Row shortcut="Ctrl+3" label="News Feed" />
-                <Row shortcut="Ctrl+4" label="Portfolio" />
-                <Row shortcut="Ctrl+5" label="Market Overview" />
-                <Row shortcut="Ctrl+6" label="Stock Detail" />
-                <Row shortcut="Ctrl+7" label="Quote Monitor" />
-                <Row shortcut="Ctrl+8" label="Focus View" />
-                <Row shortcut="Ctrl+9" label="Most Active" />
-                <Row shortcut="Ctrl+0" label="Financials" />
+                <Row shortcut="Ctrl+4" label="Market Overview" />
+                <Row shortcut="Ctrl+5" label="Stock Detail" />
+                <Row shortcut="Ctrl+6" label="Quote Monitor" />
+                <Row shortcut="Ctrl+7" label="Focus View" />
+                <Row shortcut="Ctrl+8" label="Most Active" />
+                <Row shortcut="Ctrl+9" label="Financials" />
               </div>
             </div>
             <div className="bg-terminal-panel border border-terminal-border rounded-md p-4">

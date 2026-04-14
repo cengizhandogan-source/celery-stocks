@@ -5,7 +5,6 @@ import Editor, { OnMount } from '@monaco-editor/react';
 import { useStrategyStore } from '@/stores/strategyStore';
 import { useStrategyRunner } from '@/hooks/useStrategyRunner';
 import { useWatchlistStore } from '@/stores/watchlistStore';
-import { usePortfolioStore } from '@/stores/portfolioStore';
 import type { Strategy, StrategySignal } from '@/lib/types';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
@@ -21,7 +20,6 @@ export default function StrategyEditorPanel({ strategyId }: { strategyId?: strin
   const loading = useStrategyStore((s) => s.loading);
 
   const watchlist = useWatchlistStore((s) => s.symbols);
-  const positions = usePortfolioStore((s) => s.positions);
 
   const { isRunning, isBacktesting, error: runError, logs, runStrategy, runBacktest, clearLogs } = useStrategyRunner();
 
@@ -148,7 +146,7 @@ export default function StrategyEditorPanel({ strategyId }: { strategyId?: strin
       const data = {
         quotes,
         candles,
-        portfolio: positions.map(p => ({ symbol: p.symbol, shares: p.shares, avgCost: p.avgCost })),
+        portfolio: [],
         watchlist,
       };
 
@@ -168,7 +166,7 @@ export default function StrategyEditorPanel({ strategyId }: { strategyId?: strin
     } catch (err) {
       setRunError2(err instanceof Error ? err.message : String(err));
     }
-  }, [selectedId, code, symbols, watchlist, positions, runStrategy, clearLogs]);
+  }, [selectedId, code, symbols, watchlist, runStrategy, clearLogs]);
 
   const handleBacktest = useCallback(async () => {
     if (!selectedId || !code) return;
@@ -191,7 +189,7 @@ export default function StrategyEditorPanel({ strategyId }: { strategyId?: strin
       const data = {
         quotes: {},
         candles: {},
-        portfolio: positions.map(p => ({ symbol: p.symbol, shares: p.shares, avgCost: p.avgCost })),
+        portfolio: [],
         watchlist,
         symbol,
       };
@@ -202,7 +200,7 @@ export default function StrategyEditorPanel({ strategyId }: { strategyId?: strin
     } catch (err) {
       setRunError2(err instanceof Error ? err.message : String(err));
     }
-  }, [selectedId, code, symbols, positions, watchlist, runBacktest, saveBacktestResult, clearLogs]);
+  }, [selectedId, code, symbols, watchlist, runBacktest, saveBacktestResult, clearLogs]);
 
   const handleEditorMount: OnMount = (editor, monaco) => {
     // Register celery_sdk autocomplete

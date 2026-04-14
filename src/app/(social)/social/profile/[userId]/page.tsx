@@ -11,12 +11,15 @@ import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import NetWorthBadge from '@/components/ui/NetWorthBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 import HoldingsTable from '@/components/wallet/HoldingsTable';
+import NetWorthChart from '@/components/wallet/NetWorthChart';
 import { useCryptoHoldings } from '@/hooks/useCryptoHoldings';
+import { useNetWorthHistory } from '@/hooks/useNetWorthHistory';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import { formatNetWorth } from '@/lib/formatters';
 
 function WalletHoldingsSection({ userId, isOwnProfile }: { userId: string; isOwnProfile: boolean }) {
   const { holdings, totalNetWorth, loading } = useCryptoHoldings(userId);
+  const { snapshots } = useNetWorthHistory(userId);
 
   if (loading) {
     return (
@@ -34,6 +37,11 @@ function WalletHoldingsSection({ userId, isOwnProfile }: { userId: string; isOwn
         <h2 className="text-xs font-mono font-bold text-text-primary">Wallet Holdings</h2>
         <span className="text-xs font-mono text-amber-400 font-bold">{formatNetWorth(totalNetWorth)}</span>
       </div>
+      {snapshots.length >= 2 && (
+        <div className="mb-3">
+          <NetWorthChart snapshots={snapshots} currentValue={totalNetWorth} />
+        </div>
+      )}
       {holdings.length > 0 ? (
         <HoldingsTable holdings={holdings} totalNetWorth={totalNetWorth} />
       ) : (

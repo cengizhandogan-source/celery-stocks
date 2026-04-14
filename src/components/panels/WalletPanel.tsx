@@ -9,12 +9,15 @@ import { formatNetWorth } from '@/lib/formatters';
 import { timeAgo } from '@/lib/formatters';
 import HoldingsTable from '@/components/wallet/HoldingsTable';
 import ConnectExchangeModal from '@/components/wallet/ConnectExchangeModal';
+import NetWorthChart from '@/components/wallet/NetWorthChart';
+import { useNetWorthHistory } from '@/hooks/useNetWorthHistory';
 import type { ExchangeName } from '@/lib/types';
 
 export default function WalletPanel() {
   const { connections, loading: connLoading, addConnection, removeConnection } = useWalletConnections();
   const { holdings, totalNetWorth, loading: holdingsLoading, refetch } = useCryptoHoldings();
   const { syncing, lastSyncedAt, triggerSync } = useWalletSync();
+  const { snapshots } = useNetWorthHistory();
   const [showConnect, setShowConnect] = useState(false);
 
   const loading = connLoading || holdingsLoading;
@@ -99,6 +102,13 @@ export default function WalletPanel() {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
+        {/* Net Worth Chart */}
+        {snapshots.length >= 2 && (
+          <div className="px-3 py-2 border-b border-terminal-border">
+            <NetWorthChart snapshots={snapshots} currentValue={totalNetWorth} />
+          </div>
+        )}
+
         {/* Connections */}
         <div className="px-3 py-2 border-b border-terminal-border">
           <div className="flex items-center justify-between mb-2">

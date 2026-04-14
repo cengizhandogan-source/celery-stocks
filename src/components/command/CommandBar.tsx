@@ -13,7 +13,6 @@ const COMMANDS: { cmd: string; shortcut: string; type: WindowType; label: string
   { cmd: '/focus', shortcut: 'fcs', type: 'focus', label: 'Focus View', needsSymbol: true },
   { cmd: '/news', shortcut: 'nws', type: 'news', label: 'News Feed', needsSymbol: false },
   { cmd: '/watchlist', shortcut: 'wtl', type: 'watchlist', label: 'Watchlist', needsSymbol: false },
-  { cmd: '/portfolio', shortcut: 'prt', type: 'portfolio', label: 'Portfolio', needsSymbol: false },
   { cmd: '/market', shortcut: 'mkt', type: 'market-overview', label: 'Market Overview', needsSymbol: false },
   { cmd: '/detail', shortcut: 'dtl', type: 'stock-detail', label: 'Stock Detail', needsSymbol: true },
   { cmd: '/monitor', shortcut: 'qm', type: 'quote-monitor', label: 'Quote Monitor', needsSymbol: false },

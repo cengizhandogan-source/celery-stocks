@@ -10,13 +10,12 @@ import {
   type UTCTimestamp,
   type MouseEventParams,
 } from 'lightweight-charts';
-import type { PortfolioSnapshot } from '@/lib/types';
-import { formatPrice, formatChange, formatPercent } from '@/lib/formatters';
+import type { NetWorthSnapshot } from '@/lib/types';
+import { formatNetWorth } from '@/lib/formatters';
 
-interface PerformanceChartProps {
-  snapshots: PortfolioSnapshot[];
-  currentValue: number;
-  totalCost: number;
+interface NetWorthChartProps {
+  snapshots: NetWorthSnapshot[];
+  currentValue?: number;
 }
 
 const TIME_RANGES = [
@@ -27,28 +26,14 @@ const TIME_RANGES = [
   { label: 'ALL', days: Infinity },
 ] as const;
 
-export default function PerformanceChart({ snapshots, currentValue, totalCost }: PerformanceChartProps) {
+export default function NetWorthChart({ snapshots, currentValue }: NetWorthChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
   const [range, setRange] = useState<string>('ALL');
-  const [hoverValue, setHoverValue] = useState<{ value: number; date: string } | null>(null);
+  const [tooltip, setTooltip] = useState<{ value: number; date: string; x: number; y: number } | null>(null);
 
-  const totalPnl = currentValue - totalCost;
-  const totalPnlPct = totalCost > 0 ? (totalPnl / totalCost) * 100 : 0;
-  const isUp = totalPnl >= 0;
-
-  const displayValue = hoverValue?.value ?? currentValue;
-  const displayPnl = hoverValue ? hoverValue.value - totalCost : totalPnl;
-  const displayPnlPct = totalCost > 0 ? (displayPnl / totalCost) * 100 : 0;
-  const displayIsUp = displayPnl >= 0;
-
-  const lineColor = isUp ? '#4ade80' : '#f87171';
-  const topGradient = isUp ? 'rgba(74,222,128,0.24)' : 'rgba(248,113,113,0.24)';
-  const bottomGradient = isUp ? 'rgba(74,222,128,0.01)' : 'rgba(248,113,113,0.01)';
-
-  // Filter snapshots by time range
   const filteredSnapshots = (() => {
     const selected = TIME_RANGES.find((r) => r.label === range);
     if (!selected || selected.days === Infinity) return snapshots;
@@ -58,15 +43,28 @@ export default function PerformanceChart({ snapshots, currentValue, totalCost }:
     return snapshots.filter((s) => s.date >= cutoffStr);
   })();
 
+  const first = filteredSnapshots[0]?.total_usd ?? 0;
+  const last = currentValue ?? filteredSnapshots[filteredSnapshots.length - 1]?.total_usd ?? 0;
+  const isUp = last >= first;
+
+  const lineColor = isUp ? '#4ade80' : '#f87171';
+  const topGradient = isUp ? 'rgba(74,222,128,0.28)' : 'rgba(248,113,113,0.28)';
+  const bottomGradient = isUp ? 'rgba(74,222,128,0.02)' : 'rgba(248,113,113,0.02)';
+
   const handleCrosshairMove = useCallback((param: MouseEventParams) => {
-    if (!param.time || !seriesRef.current) {
-      setHoverValue(null);
+    if (!param.time || !seriesRef.current || !param.point) {
+      setTooltip(null);
       return;
     }
     const data = param.seriesData.get(seriesRef.current);
     if (data && 'value' in data) {
       const timeStr = typeof param.time === 'string' ? param.time : '';
-      setHoverValue({ value: (data as { value: number }).value, date: timeStr });
+      setTooltip({
+        value: (data as { value: number }).value,
+        date: timeStr,
+        x: param.point.x,
+        y: param.point.y,
+      });
     }
   }, []);
 
@@ -99,9 +97,7 @@ export default function PerformanceChart({ snapshots, currentValue, totalCost }:
           labelVisible: false,
         },
       },
-      rightPriceScale: {
-        visible: false,
-      },
+      rightPriceScale: { visible: false },
       timeScale: {
         borderVisible: false,
         fixLeftEdge: true,
@@ -140,7 +136,7 @@ export default function PerformanceChart({ snapshots, currentValue, totalCost }:
       seriesRef.current = null;
     }
 
-    if (filteredSnapshots.length === 0) return;
+    if (filteredSnapshots.length < 2) return;
 
     const series = chart.addSeries(AreaSeries, {
       topColor: topGradient,
@@ -157,7 +153,7 @@ export default function PerformanceChart({ snapshots, currentValue, totalCost }:
 
     const data = filteredSnapshots.map((s) => ({
       time: s.date as unknown as UTCTimestamp,
-      value: s.total_value,
+      value: s.total_usd,
     }));
 
     series.setData(data);
@@ -165,31 +161,32 @@ export default function PerformanceChart({ snapshots, currentValue, totalCost }:
     chart.timeScale().fitContent();
   }, [filteredSnapshots, lineColor, topGradient, bottomGradient]);
 
-  if (snapshots.length === 0 && currentValue === 0) {
-    return null;
+  if (filteredSnapshots.length < 2) {
+    return (
+      <div className="w-full h-[100px] flex items-center justify-center">
+        <span className="text-xxs text-text-muted font-mono">Chart builds as snapshots are recorded</span>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col px-3 py-2 border-b border-terminal-border">
-      {/* Value header */}
-      <div className="mb-1">
-        <div className="text-lg font-mono font-medium text-text-primary leading-tight">
-          ${formatPrice(displayValue)}
-        </div>
-        <div className={`text-xs font-mono ${displayIsUp ? 'text-up' : 'text-down'}`}>
-          {formatChange(displayPnl)} ({formatPercent(displayPnlPct)})
-          {hoverValue && <span className="text-text-muted ml-1.5">{hoverValue.date}</span>}
-        </div>
-      </div>
-
+    <div>
       {/* Chart */}
-      {filteredSnapshots.length > 1 ? (
+      <div className="relative">
         <div ref={containerRef} className="w-full h-[100px]" />
-      ) : (
-        <div className="w-full h-[100px] flex items-center justify-center">
-          <span className="text-xxs text-text-muted font-mono">Chart builds as snapshots are recorded</span>
-        </div>
-      )}
+        {tooltip && (
+          <div
+            className="absolute pointer-events-none bg-[#2C2C2C] border border-terminal-border rounded px-1.5 py-0.5 text-xxs font-mono whitespace-nowrap z-10"
+            style={{
+              left: Math.min(tooltip.x, (containerRef.current?.clientWidth ?? 200) - 100),
+              top: Math.max(0, tooltip.y - 28),
+            }}
+          >
+            <span className="text-amber-400">{formatNetWorth(tooltip.value)}</span>
+            <span className="text-text-muted ml-1.5">{tooltip.date}</span>
+          </div>
+        )}
+      </div>
 
       {/* Time range selector */}
       <div className="flex gap-1 mt-1">

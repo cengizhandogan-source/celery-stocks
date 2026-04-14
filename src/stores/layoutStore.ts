@@ -199,7 +199,6 @@ interface LayoutState {
   updateWindowSymbol: (id: string, symbol: string) => void;
   addWindowSymbol: (id: string, symbol: string, defaults: string[]) => void;
   removeWindowSymbol: (id: string, symbol: string) => void;
-  updateWindowContent: (id: string, content: string) => void;
   setViewportSize: (size: { width: number; height: number }) => void;
   setIsDragging: (v: boolean) => void;
   toggleMinimize: (id: string) => void;
@@ -337,12 +336,6 @@ export const useLayoutStore = create<LayoutState>()(
           if (!w.symbols) return w;
           return { ...w, symbols: w.symbols.filter(s => s !== symbol) };
         }),
-      })),
-
-      updateWindowContent: (id, content) => set((state) => ({
-        windows: state.windows.map(w =>
-          w.id === id ? { ...w, content } : w
-        ),
       })),
 
       toggleMinimize: (id) => set((state) => {

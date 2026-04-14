@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
-import { usePortfolioStore } from '@/stores/portfolioStore';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useCryptoHoldings } from '@/hooks/useCryptoHoldings';
 import { useCachedTrades } from '@/hooks/useCachedTrades';
 import { useStrategyStore } from '@/stores/strategyStore';
@@ -49,22 +48,19 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
   const [selectedStrategyId, setSelectedStrategyId] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const positions = usePortfolioStore((s) => s.positions);
   const { holdings } = useCryptoHoldings();
   const { trades, syncing, syncTrades } = useCachedTrades();
   const strategies = useStrategyStore((s) => s.strategies);
+  const initialize = useStrategyStore((s) => s.initialize);
+
+  useEffect(() => {
+    if (postType === 'strategy') {
+      initialize();
+    }
+  }, [postType, initialize]);
 
   const selectablePositions = useMemo(() => {
-    const fromPortfolio = positions.map((p) => ({
-      id: `pos_${p.id}`,
-      label: `${p.symbol} - ${p.shares} shares @ $${p.avgCost.toFixed(2)}`,
-      symbol: p.symbol,
-      shares: p.shares,
-      avgCost: p.avgCost,
-      source: 'portfolio' as const,
-    }));
-
-    const fromWallet = holdings
+    return holdings
       .filter((h) => h.usd_value > 0)
       .map((h) => ({
         id: `wallet_${h.id}`,
@@ -72,11 +68,8 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         symbol: h.asset,
         shares: h.free_balance + h.locked_balance,
         avgCost: h.price_at_sync,
-        source: 'wallet' as const,
       }));
-
-    return [...fromWallet, ...fromPortfolio];
-  }, [positions, holdings]);
+  }, [holdings]);
 
   const selectableTrades = useMemo(() => {
     return trades.map((t) => {
@@ -199,24 +192,9 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
           className="w-full bg-terminal-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none mb-2"
         >
           <option value="">Select a position...</option>
-          {selectablePositions.some((p) => p.source === 'wallet') && (
-            <optgroup label="Wallet Holdings">
-              {selectablePositions
-                .filter((p) => p.source === 'wallet')
-                .map((p) => (
-                  <option key={p.id} value={p.id}>{p.label}</option>
-                ))}
-            </optgroup>
-          )}
-          {selectablePositions.some((p) => p.source === 'portfolio') && (
-            <optgroup label="Manual Positions">
-              {selectablePositions
-                .filter((p) => p.source === 'portfolio')
-                .map((p) => (
-                  <option key={p.id} value={p.id}>{p.label}</option>
-                ))}
-            </optgroup>
-          )}
+          {selectablePositions.map((p) => (
+            <option key={p.id} value={p.id}>{p.label}</option>
+          ))}
         </select>
       )}
 

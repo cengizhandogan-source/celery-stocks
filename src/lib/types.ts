@@ -71,36 +71,10 @@ export interface KeyStats {
   revenueGrowth?: number;
 }
 
-export interface Portfolio {
-  id: string;
-  user_id: string;
-  name: string;
-  created_at: string;
-}
-
-export interface Position {
-  id: string;
-  portfolio_id: string;
-  symbol: string;
-  shares: number;
-  avgCost: number;
-  addedAt: string;
-}
-
-export interface PortfolioSnapshot {
-  id: string;
-  portfolio_id: string;
-  date: string;
-  total_value: number;
-  total_cost: number;
-  day_change: number;
-}
-
 export type WindowType =
   | 'chart'
   | 'watchlist'
   | 'news'
-  | 'portfolio'
   | 'market-overview'
   | 'stock-detail'
   | 'quote-monitor'
@@ -113,7 +87,6 @@ export type WindowType =
   | 'direct-messages'
   | 'feed'
   | 'crypto-overview'
-  | 'text-note'
   | 'strategy-editor'
   | 'strategy-signals'
   | 'crypto-wallet'
@@ -170,7 +143,6 @@ export interface WindowConfig {
   symbol?: string;
   symbols?: string[];
   chatroomId?: string;
-  content?: string;
   strategyId?: string;
 }
 
@@ -393,4 +365,9 @@ export interface CachedTrade {
   fee_asset: string | null;
   executed_at: string;
   synced_at: string;
+}
+
+export interface NetWorthSnapshot {
+  date: string;
+  total_usd: number;
 }

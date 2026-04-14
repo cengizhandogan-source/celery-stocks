@@ -9,6 +9,7 @@ import EmptyState from '@/components/layout/EmptyState';
 import PanelHeader from '@/components/layout/PanelHeader';
 import WindowRenderer from '@/components/layout/WindowRenderer';
 import AddWindowMenu from '@/components/layout/AddWindowMenu';
+import PanelErrorBoundary from '@/components/layout/PanelErrorBoundary';
 import SnapPreview from '@/components/layout/SnapPreview';
 import { useWindowShortcuts } from '@/hooks/useWindowShortcuts';
 import { usePresence } from '@/hooks/usePresence';
@@ -330,7 +331,9 @@ export default function TerminalShell() {
                   />
                   {!isMinimized && (
                     <div className="flex-1 overflow-hidden">
-                      <WindowRenderer config={win} />
+                      <PanelErrorBoundary windowId={win.id}>
+                        <WindowRenderer config={win} />
+                      </PanelErrorBoundary>
                     </div>
                   )}
                   {/* Resize handle */}
