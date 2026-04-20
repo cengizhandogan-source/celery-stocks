@@ -2,18 +2,18 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Celery Stocks — Professional Financial Terminal",
-    short_name: "Celery Stocks",
+    name: "Coinly — Trade. Verify. Share.",
+    short_name: "Coinly",
     description:
-      "Real-time stock and crypto quotes, portfolio tracking, financial analysis, and AI-powered insights.",
+      "The social network for crypto traders. Share verified trades from connected exchanges, follow other traders, and chat in real time.",
     start_url: "/",
     display: "standalone",
-    background_color: "#1C1C1C",
-    theme_color: "#1C1C1C",
+    background_color: "#0B0B0F",
+    theme_color: "#0B0B0F",
     icons: [
       {
         src: "/icon.png",
-        sizes: "1563x1563",
+        sizes: "500x500",
         type: "image/png",
       },
     ],

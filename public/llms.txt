@@ -1,34 +1,29 @@
-# Celery Stocks
+# Coinly
 
-> Professional financial terminal for real-time market data and analysis.
+> The social network for crypto traders. Share verified trades, follow other traders, and chat in real time.
 
 ## About
 
-Celery Stocks is a web-based professional financial terminal that provides real-time stock and cryptocurrency quotes, portfolio tracking, SEC filings, financial statement analysis, an AI-powered assistant, and collaborative chatrooms. It uses a terminal-style interface with a customizable dashboard layout.
+Coinly is a social web app for crypto traders. Users connect their exchange accounts (e.g., Binance) so their trades and positions can be shared as verified posts. Followers see a feed of trade and position posts with P&L, can like and comment, and can direct-message one another.
 
 ## Features
 
-- Real-time stock and cryptocurrency price quotes
-- Interactive candlestick and line charts
-- Portfolio tracking with performance analysis
-- SEC filings browser (10-K, 10-Q, 8-K, and more)
-- Financial statement analysis (income statement, balance sheet, cash flow)
-- Institutional and insider holder data
-- Stock screener
-- Market overview and most active stocks
-- Financial news aggregation
-- AI-powered financial assistant for analysis and questions
-- Collaborative chatrooms for discussing trades and ideas
-- Direct messaging between users
-- Customizable terminal dashboard with draggable panels
-- Command palette for quick navigation
+- Social feed of trade and position posts from followed traders
+- Connect crypto exchanges to share trades and positions automatically (verification)
+- Public profiles with portfolio net worth history
+- Trade and position embeds with P&L (profit/loss) display
+- Follow other traders
+- Real-time direct messages
+- In-feed commentary with sentiment (bullish, bearish, neutral)
+- Verified-badge system for API-synced trades
 
 ## Access
 
-Celery Stocks requires user authentication. Public pages are /login and /signup.
-The application is free to use after creating an account.
+Coinly requires user authentication to post, like, comment, or message.
+The public feed is browsable without an account. Sign up at `/signup`.
+The application is free to use.
 
 ## Technology
 
 Built with Next.js, React, TypeScript, Supabase, and Tailwind CSS.
-Market data sourced via Yahoo Finance. AI features powered by OpenAI.
+Exchange integrations via public broker APIs. Charts via lightweight-charts.

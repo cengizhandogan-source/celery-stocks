@@ -1,15 +1,15 @@
-# GTM Strategy: Celery Tokens — Solo Reddit Guerrilla Marketing
+# GTM Strategy: Coinly — Solo Reddit Guerrilla Marketing
 
 ## Context
 
-Solo founder with 2 Reddit accounts (1 aged with karma, 1 new). Drive organic curiosity about Celery Tokens among Turkish crypto retail investors via Reddit gain/loss screenshots. Screenshots are manufactured using seeded database data (`scripts/seed-demo-data.sql`). All content (titles, captions, comment scripts) is ready to copy-paste.
+Solo founder with 2 Reddit accounts (1 aged with karma, 1 new). Drive organic curiosity about Coinly among Turkish crypto retail investors via Reddit gain/loss screenshots. Screenshots are manufactured using seeded database data (`scripts/seed-demo-data.sql`). All content (titles, captions, comment scripts) is ready to copy-paste.
 
 ---
 
 ## Step 1: Screenshot Manufacturing
 
 ### How to Create Convincing Screenshots
-Seed the Celery Tokens database with fake portfolio data, then screenshot the terminal UI. Authentic-looking screenshots because they're from the real app.
+Seed the Coinly database with fake portfolio data, then screenshot the terminal UI. Authentic-looking screenshots because they're from the real app.
 
 **Workflow:**
 1. Open Supabase SQL Editor
@@ -62,7 +62,7 @@ Seed the Celery Tokens database with fake portfolio data, then screenshot the te
 Account A posts screenshot → Wait 2-6 hours →
 Random real users comment → Wait 1-2 hours →
 Account B comments "what app/site is this?" → Wait →
-Account A replies casually: "celery tokens, it's free"
+Account A replies casually: "coinly, it's free"
 ```
 
 **Important:** Only use Account B for the "what is this?" play once every 2 weeks max. Most of the time, real people will ask. If nobody asks after 24h, Account B can step in.
@@ -97,7 +97,7 @@ Account A replies casually: "celery tokens, it's free"
 | Subreddit | Why | Best Content Type |
 |-----------|-----|-------------------|
 | r/solana | If posting SOL gains | SOL-specific gains |
-| r/binance | Celery supports Binance sync | Portfolio/wallet screenshots |
+| r/binance | Coinly supports Binance sync | Portfolio/wallet screenshots |
 | r/ethtrader | Active engagement culture | ETH position posts |
 
 ### Strategic Note on Dormant Turkish Subs
@@ -217,11 +217,11 @@ Use sparingly — max once every 2 weeks:
 - `is this a custom dashboard or an actual app?`
 
 ### Casual Responses (Account A — When Asked About the App)
-- `it's called celery tokens, it's free. found it a few months ago`
-- `celery tokens. some crypto terminal app. the PnL tracking is the main reason i use it`
-- `celerytoken or something like that, just google it. free app`
-- `Celery Tokens. Turkish app actually, pretty solid for tracking`
-- For Turkish: `celery tokens diye bi uygulama, bedava. pnl takibi cok iyi`
+- `it's called coinly, it's free. found it a few months ago`
+- `coinly. some crypto terminal app. the PnL tracking is the main reason i use it`
+- `coinly or something like that, just google it. free app`
+- `Coinly. Turkish app actually, pretty solid for tracking`
+- For Turkish: `coinly diye bi uygulama, bedava. pnl takibi cok iyi`
 
 ### Deflection If Accused of Shilling
 - `lol bro I posted my gains and you're calling me a shill? ok`
@@ -266,8 +266,8 @@ Then rotate — never repeat the same screenshot within 6 weeks.
 |--------|-------------|
 | Post upvotes | Reddit directly |
 | "What app?" comments | Count manually |
-| Celery Tokens signups | Supabase dashboard — filter by date |
-| Google Trends "celery tokens" | trends.google.com, filter Turkey |
+| Coinly signups | Supabase dashboard — filter by date |
+| Google Trends "coinly" | trends.google.com, filter Turkey |
 
 ### Signals to Double Down
 - A post gets 100+ upvotes → make more content in that style
@@ -287,7 +287,7 @@ Then rotate — never repeat the same screenshot within 6 weeks.
 - Never use the same IP for both accounts (use residential proxy or mobile data for Account B)
 - Space out posts — no more than 1 post per sub per week from the same account
 - Maintain genuine engagement history on both accounts (comment on unrelated topics)
-- Never reference Celery Tokens from both accounts in the same thread
+- Never reference Coinly from both accounts in the same thread
 
 ### If Called Out as Spam
 - Don't get defensive, don't delete the post

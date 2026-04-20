@@ -33,8 +33,8 @@ export default function SocialSidebar() {
       {/* Logo */}
       <div className="px-4 py-4 border-b border-terminal-border">
         <Link href="/social" className="flex items-center gap-2 text-sm font-mono font-bold text-up tracking-wider">
-          <img src="/celery-logo.png" alt="Celery" className="h-5 w-5" />
-          Celery
+          <img src="/coinly-logo.png" alt="Coinly" className="h-5 w-5" />
+          Coinly
         </Link>
       </div>
 
@@ -81,15 +81,6 @@ export default function SocialSidebar() {
           </Link>
         )}
 
-        <div className="my-2 mx-4 border-t border-terminal-border" />
-
-        <Link
-          href="/terminal"
-          className="flex items-center gap-3 px-4 py-2.5 font-mono text-sm text-text-muted hover:text-cyan hover:bg-terminal-hover transition-colors"
-        >
-          <span className="w-5 text-center text-xs opacity-60">#</span>
-          <span>Terminal</span>
-        </Link>
       </nav>
 
       {/* User section */}

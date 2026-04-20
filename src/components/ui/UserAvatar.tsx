@@ -18,7 +18,7 @@ interface UserAvatarProps {
 
 export default function UserAvatar({ avatarUrl, size = 'sm', className = '' }: UserAvatarProps) {
   const [errored, setErrored] = useState(false);
-  const src = avatarUrl && !errored ? avatarUrl : '/celery-logo.png';
+  const src = avatarUrl && !errored ? avatarUrl : '/coinly-logo.png';
 
   return (
     <img

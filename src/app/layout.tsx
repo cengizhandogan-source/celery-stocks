@@ -15,32 +15,30 @@ const inter = Inter({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://celery-stocks.cengizhan-dogan.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coinly.club";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Celery Stocks — Professional Financial Terminal",
-    template: "%s | Celery Stocks",
+    default: "Coinly — Trade. Verify. Share.",
+    template: "%s | Coinly",
   },
   description:
-    "Real-time stock and crypto quotes, portfolio tracking, SEC filings, financial analysis, AI assistant, and collaborative chatrooms in a professional terminal interface.",
+    "The social network for crypto traders. Share verified trades and positions from your connected exchanges, follow other traders, and chat in real time.",
   keywords: [
-    "stock terminal",
-    "financial terminal",
-    "stock quotes",
-    "crypto quotes",
-    "portfolio tracker",
-    "SEC filings",
-    "financial analysis",
-    "stock screener",
-    "market data",
-    "AI financial assistant",
+    "crypto social",
+    "verified trades",
+    "trader feed",
+    "share trades",
+    "share positions",
+    "crypto portfolio",
+    "trader community",
+    "crypto chat",
   ],
-  authors: [{ name: "Celery Stocks" }],
-  creator: "Celery Stocks",
-  publisher: "Celery Stocks",
-  applicationName: "Celery Stocks",
+  authors: [{ name: "Coinly" }],
+  creator: "Coinly",
+  publisher: "Coinly",
+  applicationName: "Coinly",
   referrer: "origin-when-cross-origin",
   formatDetection: {
     email: false,
@@ -49,18 +47,18 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "Celery Stocks",
-    title: "Celery Stocks — Professional Financial Terminal",
+    siteName: "Coinly",
+    title: "Coinly — Trade. Verify. Share.",
     description:
-      "Real-time stock and crypto quotes, portfolio tracking, SEC filings, financial analysis, and AI-powered insights in a terminal-style interface.",
+      "The social network for crypto traders. Share verified trades from connected exchanges, follow traders, and chat in real time.",
     url: siteUrl,
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Celery Stocks — Professional Financial Terminal",
+    title: "Coinly — Trade. Verify. Share.",
     description:
-      "Real-time stock and crypto quotes, portfolio tracking, SEC filings, and AI-powered financial analysis.",
+      "The social network for crypto traders. Share verified trades from connected exchanges, follow traders, and chat in real time.",
   },
   robots: {
     index: true,
@@ -88,10 +86,10 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "WebApplication",
-      name: "Celery Stocks",
+      name: "Coinly",
       url: siteUrl,
       description:
-        "Professional financial terminal with real-time stock and crypto quotes, portfolio tracking, SEC filings, financial analysis, AI assistant, and collaborative chatrooms.",
+        "Social network for crypto traders: share verified trades and positions from connected exchanges, follow other traders, and chat in real time.",
       applicationCategory: "FinanceApplication",
       operatingSystem: "Web",
       offers: {
@@ -100,22 +98,18 @@ const jsonLd = {
         priceCurrency: "USD",
       },
       featureList: [
-        "Real-time stock and cryptocurrency quotes",
-        "Portfolio tracking and performance analysis",
-        "SEC filings browser",
-        "Financial statement analysis",
-        "AI-powered financial assistant",
-        "Collaborative chatrooms",
-        "Stock screener",
-        "Customizable terminal dashboard",
-        "Market overview and most active stocks",
+        "Social feed of verified trade and position posts",
+        "Connect crypto exchanges to share trades automatically",
+        "Public profiles with portfolio net worth",
+        "Real-time direct messages and chatrooms",
+        "Follow other traders",
       ],
     },
     {
       "@type": "Organization",
-      name: "Celery Stocks",
+      name: "Coinly",
       url: siteUrl,
-      logo: `${siteUrl}/celery-logo.png`,
+      logo: `${siteUrl}/coinly-logo.png`,
     },
   ],
 };

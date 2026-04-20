@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Sign In",
   description:
-    "Sign in to Celery Stocks to access real-time stock quotes, portfolio tracking, financial analysis, and your personalized terminal dashboard.",
+    "Sign in to Coinly to share verified trades, follow other crypto traders, track your net worth, and chat in real time.",
   openGraph: {
-    title: "Sign In to Celery Stocks",
+    title: "Sign In to Coinly",
     description:
-      "Access your professional financial terminal with real-time market data and AI-powered analysis.",
+      "The social network for crypto traders. Share verified trades, follow traders, and chat in real time.",
   },
 };
 

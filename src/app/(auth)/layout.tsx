@@ -3,9 +3,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen bg-terminal-bg flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <img src="/celery-logo.png" alt="" width={24} height={24} className="opacity-60" />
+          <img src="/coinly-logo.png" alt="" width={24} height={24} className="opacity-60" />
           <span className="text-sm font-mono text-text-muted tracking-widest uppercase">
-            Celery Stocks
+            Coinly
           </span>
         </div>
         <p className="text-center text-xs font-mono text-text-muted mb-6">

@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Celery Stocks — Professional Financial Terminal";
+export const alt = "Coinly — Trade. Verify. Share.";
 export const size = {
   width: 1200,
   height: 630,
@@ -12,57 +12,54 @@ export default async function Image() {
     (
       <div
         style={{
-          background: "#1C1C1C",
+          background: "#0B0B0F",
           width: "100%",
           height: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: "monospace",
+          fontFamily: "Inter, system-ui, sans-serif",
         }}
       >
         <div
           style={{
-            fontSize: 56,
+            fontSize: 96,
             fontWeight: 700,
-            color: "#eaeaea",
-            letterSpacing: "0.05em",
+            color: "#FFD76A",
+            letterSpacing: "-0.02em",
           }}
         >
-          CELERY STOCKS
+          Coinly
         </div>
         <div
           style={{
-            fontSize: 24,
-            color: "#888888",
-            marginTop: 16,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
+            fontSize: 28,
+            color: "#A1A1AA",
+            marginTop: 20,
+            letterSpacing: "0.04em",
           }}
         >
-          Professional Financial Terminal
+          Trade. Verify. Share.
         </div>
         <div
           style={{
             display: "flex",
             gap: 32,
-            marginTop: 48,
+            marginTop: 56,
             fontSize: 16,
-            color: "#4ade80",
-            letterSpacing: "0.08em",
+            color: "#F5C542",
+            letterSpacing: "0.12em",
             textTransform: "uppercase",
           }}
         >
-          <span>Stocks</span>
-          <span style={{ color: "#555" }}>|</span>
-          <span>Crypto</span>
-          <span style={{ color: "#555" }}>|</span>
-          <span>Portfolio</span>
-          <span style={{ color: "#555" }}>|</span>
-          <span>SEC Filings</span>
-          <span style={{ color: "#555" }}>|</span>
-          <span>AI Assistant</span>
+          <span>Trades</span>
+          <span style={{ color: "#52525B" }}>·</span>
+          <span>Positions</span>
+          <span style={{ color: "#52525B" }}>·</span>
+          <span>Wallets</span>
+          <span style={{ color: "#52525B" }}>·</span>
+          <span>Chat</span>
         </div>
       </div>
     ),
