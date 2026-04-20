@@ -1,5 +1,6 @@
 'use client';
 
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
@@ -8,7 +9,7 @@ import { useChatStore } from '@/stores/chatStore';
 import { createClient } from '@/utils/supabase/client';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
-import { Home, Search, MessageCircle, Settings, LogOut, type LucideIcon } from 'lucide-react';
+import { Home, Search, MessageCircle, Settings, LogOut, Plus, type LucideIcon } from 'lucide-react';
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: '/social', label: 'Feed', icon: Home },
@@ -49,26 +50,36 @@ export default function SocialSidebar() {
             : pathname.startsWith(href);
 
           return (
-            <Link
-              key={href}
-              href={href}
-              className={`relative flex items-center gap-3 px-5 py-2.5 font-sans text-sm transition-all duration-150 ease-[var(--ease-snap)] ${
-                isActive
-                  ? 'text-gold bg-gold/5'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-hover'
-              }`}
-            >
-              {isActive && (
-                <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r bg-gold" aria-hidden />
+            <Fragment key={href}>
+              {label === 'Search' && user && (
+                <Link
+                  href="/social?compose=1"
+                  className="flex items-center gap-3 px-5 py-2.5 font-sans text-sm text-text-secondary hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
+                >
+                  <Plus size={18} strokeWidth={1.75} />
+                  <span>Post</span>
+                </Link>
               )}
-              <Icon size={18} strokeWidth={1.75} />
-              <span>{label}</span>
-              {label === 'Messages' && unreadDmCount > 0 && (
-                <span className="ml-auto text-[10px] font-mono font-semibold bg-gold text-base rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
-                  {unreadDmCount}
-                </span>
-              )}
-            </Link>
+              <Link
+                href={href}
+                className={`relative flex items-center gap-3 px-5 py-2.5 font-sans text-sm transition-all duration-150 ease-[var(--ease-snap)] ${
+                  isActive
+                    ? 'text-gold bg-gold/5'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-hover'
+                }`}
+              >
+                {isActive && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r bg-gold" aria-hidden />
+                )}
+                <Icon size={18} strokeWidth={1.75} />
+                <span>{label}</span>
+                {label === 'Messages' && unreadDmCount > 0 && (
+                  <span className="ml-auto text-[10px] font-mono font-semibold bg-gold text-base rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center">
+                    {unreadDmCount}
+                  </span>
+                )}
+              </Link>
+            </Fragment>
           );
         })}
 
@@ -85,7 +96,7 @@ export default function SocialSidebar() {
               <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r bg-gold" aria-hidden />
             )}
             <UserAvatar avatarUrl={profile.avatar_url} size="xs" />
-            <span className="truncate text-text-primary">{profile.display_name}</span>
+            <span className="truncate text-text-primary">@{profile.username}</span>
             {profile.is_verified && <VerifiedBadge size={13} pulse={false} />}
           </Link>
         )}
@@ -93,16 +104,11 @@ export default function SocialSidebar() {
 
       {/* User section */}
       <div className="px-4 py-3 border-t border-border">
-        {user && profile ? (
-          <div className="flex items-center gap-2">
-            <UserAvatar avatarUrl={profile.avatar_url} size="sm" />
-            <span className="text-xs font-sans font-medium text-text-primary truncate">
-              {profile.display_name}
-            </span>
-            {profile.is_verified && <VerifiedBadge size={13} pulse={false} />}
+        {user ? (
+          <div className="flex items-center justify-end gap-3">
             <Link
               href="/social/settings"
-              className={`ml-auto transition-colors duration-150 ${
+              className={`transition-colors duration-150 ${
                 pathname.startsWith('/social/settings')
                   ? 'text-gold'
                   : 'text-text-muted hover:text-text-secondary'

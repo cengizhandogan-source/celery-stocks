@@ -6,7 +6,7 @@ import NetWorthBadge from '@/components/ui/NetWorthBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 
 interface MessageBubbleProps {
-  displayName: string;
+  username: string;
   avatarColor: string;
   avatarUrl?: string | null;
   content: string | null;
@@ -18,7 +18,7 @@ interface MessageBubbleProps {
   post?: Post | null;
 }
 
-export default function MessageBubble({ displayName, avatarColor, avatarUrl, content, timestamp, isOwn, isVerified, netWorth, showNetWorth, post }: MessageBubbleProps) {
+export default function MessageBubble({ username, avatarColor, avatarUrl, content, timestamp, isOwn, isVerified, netWorth, showNetWorth, post }: MessageBubbleProps) {
   const timeStr = useMemo(() => {
     const d = new Date(timestamp);
     return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -30,7 +30,7 @@ export default function MessageBubble({ displayName, avatarColor, avatarUrl, con
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="text-sm font-sans font-semibold text-text-primary">
-            {displayName}
+            @{username}
           </span>
           {isVerified && <VerifiedBadge size={14} />}
           <NetWorthBadge netWorth={netWorth} showNetWorth={showNetWorth} />

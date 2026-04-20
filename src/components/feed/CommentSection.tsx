@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { Heart, MessageCircle } from 'lucide-react';
 import { useComments } from '@/hooks/useComments';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -40,12 +41,14 @@ function CommentRow({
   currentUserId,
   onDelete,
   onReply,
+  onToggleLike,
   onAuthGate,
 }: {
   comment: Comment;
   currentUserId?: string;
   onDelete: (id: string) => void;
   onReply: (comment: Comment) => void;
+  onToggleLike: (id: string) => void;
   onAuthGate?: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,28 +70,23 @@ function CommentRow({
     return () => document.removeEventListener('mousedown', handleClick);
   }, [menuOpen]);
 
+  const likeClass = comment.liked_by_me
+    ? 'text-text-primary'
+    : 'text-text-muted hover:text-text-primary';
+  const likeTitle = currentUserId ? (comment.liked_by_me ? 'Unlike' : 'Like') : 'Sign in to like';
+  const replyTitle = currentUserId ? 'Reply' : 'Sign in to reply';
+
   return (
     <div className="group flex items-start gap-1.5 py-1.5 px-2 hover:bg-hover/50 rounded transition-colors">
       <UserAvatar avatarUrl={comment.profile?.avatar_url} size="xs" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-xxs font-mono font-medium truncate text-text-primary">
-            {comment.profile?.display_name ?? 'Unknown'}
+            {comment.profile?.username ? `@${comment.profile.username}` : 'Unknown'}
           </span>
           {comment.profile?.is_verified && <VerifiedBadge size={12} />}
           <NetWorthBadge netWorth={comment.profile?.crypto_net_worth} showNetWorth={comment.profile?.show_net_worth} />
           <span className="text-xxs font-mono text-text-muted">{timeStr}</span>
-
-          {/* Reply button */}
-          <button
-            onClick={() => {
-              if (!currentUserId) { onAuthGate?.(); return; }
-              onReply(comment);
-            }}
-            className="text-xxs font-mono text-text-muted hover:text-info transition-colors px-1 leading-none opacity-0 group-hover:opacity-100"
-          >
-            reply
-          </button>
 
           {isOwner && (
             <div className="relative ml-auto shrink-0" ref={menuRef}>
@@ -119,7 +117,6 @@ function CommentRow({
           )}
         </div>
 
-        {/* Reply indicator */}
         {parentUsername && (
           <span className="text-xxs font-mono text-text-muted">
             ↳{' '}
@@ -130,6 +127,37 @@ function CommentRow({
         )}
 
         <CommentContent content={comment.content} />
+
+        <div className="flex items-center gap-2 mt-0.5">
+          <button
+            type="button"
+            title={likeTitle}
+            onClick={() => {
+              if (!currentUserId) { onAuthGate?.(); return; }
+              onToggleLike(comment.id);
+            }}
+            className={`flex items-center gap-1 text-xxs font-mono transition-colors ${likeClass}`}
+          >
+            <Heart
+              size={12}
+              fill={comment.liked_by_me ? 'currentColor' : 'none'}
+              strokeWidth={comment.liked_by_me ? 0 : 2}
+            />
+            {comment.like_count > 0 && <span>{comment.like_count}</span>}
+          </button>
+          <button
+            type="button"
+            title={replyTitle}
+            onClick={() => {
+              if (!currentUserId) { onAuthGate?.(); return; }
+              onReply(comment);
+            }}
+            className="flex items-center gap-1 text-xxs font-mono text-text-muted hover:text-info transition-colors"
+          >
+            <MessageCircle size={12} />
+            <span>Reply</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -154,15 +182,52 @@ function MentionDropdown({
         >
           <UserAvatar avatarUrl={p.avatar_url} size="xs" />
           <span className="text-xxs font-mono text-text-primary">@{p.username}</span>
-          <span className="text-xxs font-mono text-text-primary">
-            {p.display_name}
-          </span>
           {p.is_verified && <VerifiedBadge size={12} />}
           <NetWorthBadge netWorth={p.crypto_net_worth} showNetWorth={p.show_net_worth} />
         </button>
       ))}
     </div>
   );
+}
+
+/**
+ * Group comments into top-level threads. Any descendant (reply, reply-to-reply, …)
+ * is gathered under the top-level ancestor it traces back to, sorted chronologically.
+ */
+function buildThreads(comments: Comment[]): Array<{ top: Comment; descendants: Comment[] }> {
+  const byId = new Map<string, Comment>();
+  for (const c of comments) byId.set(c.id, c);
+
+  const rootOf = new Map<string, string>();
+  function findRoot(id: string): string {
+    if (rootOf.has(id)) return rootOf.get(id)!;
+    const c = byId.get(id);
+    if (!c || !c.parent_id) {
+      rootOf.set(id, id);
+      return id;
+    }
+    const root = findRoot(c.parent_id);
+    rootOf.set(id, root);
+    return root;
+  }
+
+  const topLevel = comments.filter((c) => !c.parent_id);
+  const descendantsByRoot = new Map<string, Comment[]>();
+  for (const c of comments) {
+    if (!c.parent_id) continue;
+    const root = findRoot(c.id);
+    if (!byId.has(root)) continue;
+    if (!descendantsByRoot.has(root)) descendantsByRoot.set(root, []);
+    descendantsByRoot.get(root)!.push(c);
+  }
+  for (const arr of descendantsByRoot.values()) {
+    arr.sort((a, b) => a.created_at.localeCompare(b.created_at));
+  }
+
+  return topLevel.map((top) => ({
+    top,
+    descendants: descendantsByRoot.get(top.id) ?? [],
+  }));
 }
 
 export default function CommentSection({
@@ -173,7 +238,16 @@ export default function CommentSection({
   currentUserId?: string;
 }) {
   const { requireAuth } = useAuthGate();
-  const { comments, loading, addComment, deleteComment } = useComments(postId);
+  const {
+    comments,
+    loading,
+    hasMore,
+    loadingMore,
+    loadMore,
+    addComment,
+    deleteComment,
+    toggleCommentLike,
+  } = useComments(postId);
   const { results: mentionResults, search: mentionSearch, clear: mentionClear } = useUserSearch();
   const [input, setInput] = useState('');
   const [replyTo, setReplyTo] = useState<{ commentId: string; username: string } | null>(null);
@@ -181,11 +255,24 @@ export default function CommentSection({
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const mentionTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const wasAtBottomRef = useRef(true);
+  const prevLenRef = useRef(0);
 
-  // Auto-scroll to bottom when new comments arrive
+  const threads = useMemo(() => buildThreads(comments), [comments]);
+
+  const handleScroll = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    wasAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 8;
+  }, []);
+
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
+    const el = listRef.current;
+    if (!el) return;
+    const grew = comments.length > prevLenRef.current;
+    prevLenRef.current = comments.length;
+    if (grew && wasAtBottomRef.current) {
+      el.scrollTop = el.scrollHeight;
     }
   }, [comments.length]);
 
@@ -201,12 +288,10 @@ export default function CommentSection({
     setInput('');
   }, []);
 
-  // Detect @mention trigger in input
   const handleInputChange = useCallback(
     (value: string) => {
       setInput(value);
 
-      // Find the last @ that isn't followed by a space yet (active mention query)
       const match = value.match(/@(\w*)$/);
       if (match) {
         const query = match[1];
@@ -227,7 +312,6 @@ export default function CommentSection({
 
   const handleMentionSelect = useCallback(
     (profile: Profile) => {
-      // Replace the @query with @username
       const before = input.replace(/@\w*$/, '');
       setInput(`${before}@${profile.username} `);
       setMentionQuery(null);
@@ -245,35 +329,59 @@ export default function CommentSection({
     setReplyTo(null);
     setMentionQuery(null);
     mentionClear();
+    wasAtBottomRef.current = true;
     await addComment(text, parentId);
   };
 
   return (
     <div className="border-t border-border/50 ml-3 border-l-2 border-l-border/30">
-      {/* Comment list */}
-      <div ref={listRef} className="max-h-60 overflow-y-auto">
+      <div ref={listRef} onScroll={handleScroll} className="max-h-80 overflow-y-auto">
         {loading && comments.length === 0 && (
           <div className="px-3 py-2 text-xxs font-mono text-text-muted">Loading...</div>
         )}
         {!loading && comments.length === 0 && (
           <div className="px-3 py-2 text-xxs font-mono text-text-muted">No comments yet</div>
         )}
-        {comments.map((c) => (
-          <CommentRow
-            key={c.id}
-            comment={c}
-            currentUserId={currentUserId}
-            onDelete={deleteComment}
-            onReply={handleReply}
-            onAuthGate={() => requireAuth('reply to comments')}
-          />
+        {threads.map(({ top, descendants }) => (
+          <div key={top.id}>
+            <CommentRow
+              comment={top}
+              currentUserId={currentUserId}
+              onDelete={deleteComment}
+              onReply={handleReply}
+              onToggleLike={toggleCommentLike}
+              onAuthGate={() => requireAuth('interact with comments')}
+            />
+            {descendants.length > 0 && (
+              <div className="ml-4 pl-2 border-l-2 border-l-border/40">
+                {descendants.map((r) => (
+                  <CommentRow
+                    key={r.id}
+                    comment={r}
+                    currentUserId={currentUserId}
+                    onDelete={deleteComment}
+                    onReply={handleReply}
+                    onToggleLike={toggleCommentLike}
+                    onAuthGate={() => requireAuth('interact with comments')}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         ))}
+        {hasMore && (
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="w-full text-xxs font-mono text-text-muted hover:text-text-primary py-1.5 transition-colors disabled:opacity-50"
+          >
+            {loadingMore ? 'Loading...' : 'Show more comments'}
+          </button>
+        )}
       </div>
 
-      {/* Comment input */}
       {currentUserId ? (
         <div className="relative px-2 py-1.5 border-t border-border/30">
-          {/* Reply indicator */}
           {replyTo && (
             <div className="flex items-center gap-1.5 px-2 pb-1">
               <span className="text-xxs font-mono text-text-muted">
@@ -288,7 +396,6 @@ export default function CommentSection({
             </div>
           )}
 
-          {/* Mention autocomplete */}
           {mentionQuery !== null && <MentionDropdown results={mentionResults} onSelect={handleMentionSelect} />}
 
           <input

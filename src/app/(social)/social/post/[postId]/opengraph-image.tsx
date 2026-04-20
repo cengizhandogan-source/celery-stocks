@@ -17,12 +17,12 @@ export default async function Image({ params }: { params: Promise<{ postId: stri
   const supabase = createClient(await cookies());
   const { data } = await supabase
     .from('posts')
-    .select('content, post_type, symbol, position_symbol, trade_symbol, profile:profiles!user_id(display_name, avatar_color)')
+    .select('content, post_type, symbol, position_symbol, trade_symbol, profile:profiles!user_id(username, avatar_color)')
     .eq('id', postId)
     .single();
 
   const profile = data && (Array.isArray(data.profile) ? data.profile[0] : data.profile);
-  const authorName = profile?.display_name ?? 'Unknown';
+  const authorName = profile?.username ? `@${profile.username}` : 'Unknown';
   const authorColor = profile?.avatar_color ?? '#00FFA3';
   const symbol = data?.symbol ?? data?.position_symbol ?? data?.trade_symbol;
   const content = (data?.content ?? '').slice(0, 280);

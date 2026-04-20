@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
-import { MessageCircle, Share2, Heart } from 'lucide-react';
+import { MessageCircle, Send, Heart } from 'lucide-react';
 import TradeEmbed from './TradeEmbed';
 import MiniStockChart from './MiniStockChart';
 import PnLDisplay from './PnLDisplay';
@@ -26,7 +26,7 @@ function renderContentWithTickers(content: string): ReactNode[] {
       parts.push(content.slice(lastIndex, start));
     }
     parts.push(
-      <span key={start} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-gold/10 text-gold font-mono align-middle">
+      <span key={start} className="inline-flex items-center gap-0.5 font-mono align-middle">
         <TickerLogo symbol={symbol} size={14} />
         <span>${symbol}</span>
       </span>
@@ -91,7 +91,7 @@ export default function PostCard({
         <Link href={`/social/profile/${post.user_id}`} className="flex items-center gap-1.5 min-w-0">
           <UserAvatar avatarUrl={post.profile?.avatar_url} size="sm" />
           <span className="text-sm font-sans font-semibold truncate hover:underline text-text-primary">
-            {post.profile?.display_name ?? 'Unknown'}
+            {post.profile?.username ? `@${post.profile.username}` : 'Unknown'}
           </span>
         </Link>
         {post.profile?.is_verified && <VerifiedBadge size={14} />}
@@ -162,7 +162,7 @@ export default function PostCard({
           onClick={() => { if (requireAuth('like this post')) onToggleLike(post.id); }}
           className={`flex items-center gap-1.5 text-xs font-sans px-2 py-1 rounded-md transition-all duration-150 ease-[var(--ease-snap)] ${
             post.liked_by_me
-              ? 'text-profit bg-profit/10'
+              ? 'text-text-primary hover:bg-hover'
               : 'text-text-muted hover:text-text-primary hover:bg-hover'
           }`}
           aria-label={post.liked_by_me ? 'Unlike' : 'Like'}
@@ -188,7 +188,7 @@ export default function PostCard({
           title="Share"
           aria-label="Share post"
         >
-          <Share2 size={14} strokeWidth={1.75} />
+          <Send size={14} strokeWidth={1.75} />
         </button>
       </div>
 

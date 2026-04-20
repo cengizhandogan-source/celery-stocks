@@ -82,6 +82,8 @@ export interface Comment {
   parent_id?: string | null;
   parent?: { user_id: string; profile?: Pick<Profile, 'username' | 'display_name' | 'avatar_color'> };
   profile?: Profile;
+  like_count: number;
+  liked_by_me: boolean;
 }
 
 // Market-data types (used by the feed mini chart + symbol search)

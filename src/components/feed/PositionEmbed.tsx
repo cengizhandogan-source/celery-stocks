@@ -5,7 +5,7 @@ export default function PositionEmbed({ post }: { post: Post }) {
     <div className="grid grid-cols-3 gap-2 px-2 py-1.5 rounded border border-border bg-base/50">
       <div>
         <div className="text-xxs font-mono text-text-muted leading-tight">Symbol</div>
-        <div className="text-xs font-mono font-medium text-info">${post.position_symbol}</div>
+        <div className="text-xs font-mono font-medium text-text-primary">${post.position_symbol}</div>
       </div>
       <div>
         <div className="text-xxs font-mono text-text-muted leading-tight">Shares</div>

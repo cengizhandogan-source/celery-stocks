@@ -113,6 +113,9 @@ export default function ProfilePage() {
                     </button>
                   )}
                 </div>
+                <p className="text-xs font-mono text-text-muted mt-0.5">
+                  @{profile.username}
+                </p>
                 {profile.bio && (
                   <p className="text-xs font-mono text-text-secondary mt-1 leading-relaxed">
                     {profile.bio}

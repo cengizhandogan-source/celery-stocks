@@ -35,7 +35,7 @@ export async function generateMetadata({
   const post = await fetchPost(postId);
   if (!post) return { title: 'Post not found' };
 
-  const author = post.profile?.display_name ?? 'Unknown';
+  const author = post.profile?.username ? `@${post.profile.username}` : 'Unknown';
   const title = `${author} on Coinly`;
   const description = (post.content ?? `${post.post_type} post${post.symbol ? ` — $${post.symbol}` : ''}`).slice(0, 160);
   const url = `${SITE_URL}/social/post/${postId}`;

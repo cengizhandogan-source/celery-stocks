@@ -56,7 +56,7 @@ export default function MessagesPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-mono font-medium truncate text-text-primary">
-                    {conv.peer.display_name}
+                    @{conv.peer.username}
                   </span>
                   {conv.peer.is_verified && <VerifiedBadge size={14} />}
                   <span className="text-xxs font-mono text-text-muted shrink-0">{timeStr}</span>

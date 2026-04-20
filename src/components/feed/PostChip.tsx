@@ -23,7 +23,7 @@ export default function PostChip({ post }: { post: Post }) {
       <div className="flex items-center gap-1.5 mb-1">
         <UserAvatar avatarUrl={author?.avatar_url} size="sm" />
         <span className="text-xxs font-mono font-medium truncate text-text-primary">
-          {author?.display_name ?? 'Unknown'}
+          {author?.username ? `@${author.username}` : 'Unknown'}
         </span>
         {author?.is_verified && <VerifiedBadge size={12} />}
         <span className="text-xxs font-mono text-text-muted ml-auto uppercase tracking-wider">
@@ -33,7 +33,7 @@ export default function PostChip({ post }: { post: Post }) {
 
       {symbol && (
         <div className="flex items-center gap-1 mb-1">
-          <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-info/10 text-info text-xxs font-mono">
+          <span className="inline-flex items-center gap-0.5 text-xxs font-mono">
             <TickerLogo symbol={symbol} size={12} />
             <span>${symbol}</span>
           </span>

@@ -70,7 +70,7 @@ export default function ConversationPage() {
             <UserAvatar avatarUrl={peer.avatar_url} size="md" />
             <OnlineDot isOnline={onlineUserIds.has(peer.id)} />
             <span className="text-lg font-mono font-medium text-text-primary">
-              {peer.display_name}
+              @{peer.username}
             </span>
             {peer.is_verified && <VerifiedBadge size={14} />}
           </>
@@ -93,7 +93,7 @@ export default function ConversationPage() {
             return (
               <MessageBubble
                 key={dm.id}
-                displayName={dm.sender?.display_name ?? 'Unknown'}
+                username={dm.sender?.username ?? 'unknown'}
                 avatarColor={dm.sender?.avatar_color ?? '#A1A1AA'}
                 avatarUrl={dm.sender?.avatar_url}
                 content={dm.content}
@@ -112,7 +112,7 @@ export default function ConversationPage() {
 
       {/* Input */}
       <div className="border-t border-border shrink-0">
-        <MessageInput onSend={sendDm} placeholder={peer ? `Message ${peer.display_name}...` : 'Message...'} />
+        <MessageInput onSend={sendDm} placeholder={peer ? `Message @${peer.username}...` : 'Message...'} />
       </div>
     </div>
   );

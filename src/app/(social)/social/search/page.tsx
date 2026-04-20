@@ -157,7 +157,7 @@ export default function SearchPage() {
             >
               <UserAvatar avatarUrl={u.avatar_url} size="lg" />
               <span className="text-sm font-mono font-medium truncate text-text-primary">
-                {u.display_name}
+                @{u.username}
               </span>
               {u.is_verified && <VerifiedBadge size={14} />}
             </Link>

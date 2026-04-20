@@ -13,7 +13,7 @@ export default function TradeEmbed({ post, hidePnl = false }: { post: Post; hide
         <div>
           <div className="text-xxs font-mono text-text-muted leading-tight">Symbol</div>
           <div className="flex items-center gap-1">
-            <span className="text-xs font-mono font-medium text-info">${post.trade_symbol}</span>
+            <span className="text-xs font-mono font-medium text-text-primary">${post.trade_symbol}</span>
             <span className={`text-xxs font-mono font-medium px-1 rounded ${isBuy ? 'bg-profit/10 text-profit' : 'bg-loss/10 text-loss'}`}>
               {isBuy ? 'BUY' : 'SELL'}
             </span>

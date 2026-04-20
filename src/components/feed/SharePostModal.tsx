@@ -57,7 +57,7 @@ export default function SharePostModal({ post, onClose }: { post: Post; onClose:
     });
     setSending(false);
     if (!error) {
-      setSentTo(recipient.display_name);
+      setSentTo(recipient.username);
       setRecipient(null);
       setMessage('');
       setTimeout(() => {
@@ -128,13 +128,13 @@ export default function SharePostModal({ post, onClose }: { post: Post; onClose:
 
           {sentTo ? (
             <p className="text-xs font-mono text-profit py-2">
-              Sent to {sentTo}
+              Sent to @{sentTo}
             </p>
           ) : recipient ? (
             <div className="flex items-center gap-2 px-2 py-1.5 rounded border border-border bg-base/50 mb-2">
               <UserAvatar avatarUrl={recipient.avatar_url} size="sm" />
               <span className="text-xs font-mono font-medium truncate text-text-primary">
-                {recipient.display_name}
+                @{recipient.username}
               </span>
               {recipient.is_verified && <VerifiedBadge size={12} />}
               <button

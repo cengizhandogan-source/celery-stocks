@@ -32,7 +32,7 @@ export default function UserSearchInput({ onSelect }: UserSearchInputProps) {
       const { data } = await supabase
         .from('profiles')
         .select('id, username, display_name, avatar_color, avatar_url, is_verified')
-        .ilike('display_name', `%${q}%`)
+        .or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
         .neq('id', user.id)
         .limit(10);
 
@@ -87,7 +87,7 @@ export default function UserSearchInput({ onSelect }: UserSearchInputProps) {
               <UserAvatar avatarUrl={p.avatar_url} size="sm" />
               <OnlineDot isOnline={onlineUserIds.has(p.id)} />
               <span className="text-xs font-mono text-text-primary">
-                {p.display_name}
+                @{p.username}
               </span>
               {p.is_verified && <VerifiedBadge size={10} />}
             </button>

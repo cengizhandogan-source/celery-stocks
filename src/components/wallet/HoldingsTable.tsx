@@ -5,7 +5,7 @@ import { formatPrice, formatNetWorth } from '@/lib/formatters';
 import type { CryptoHolding } from '@/lib/types';
 import TickerLogo from '@/components/ui/TickerLogo';
 
-const MAX_VISIBLE = 20;
+const MAX_VISIBLE = 5;
 
 export default function HoldingsTable({
   holdings,
