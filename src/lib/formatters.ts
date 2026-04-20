@@ -164,9 +164,9 @@ export function getMarketStatus(exchange: Exchange): MarketStatus {
 
 export function getMarketStatusColor(status: MarketStatus): { dot: string; text: string } {
   switch (status) {
-    case 'open': return { dot: 'bg-up', text: 'text-up' };
-    case 'extended': return { dot: 'bg-amber', text: 'text-amber' };
-    case 'closed': return { dot: 'bg-down', text: 'text-down' };
+    case 'open': return { dot: 'bg-profit', text: 'text-profit' };
+    case 'extended': return { dot: 'bg-gold', text: 'text-gold' };
+    case 'closed': return { dot: 'bg-loss', text: 'text-loss' };
   }
 }
 

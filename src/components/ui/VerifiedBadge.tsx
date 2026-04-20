@@ -3,7 +3,7 @@ interface VerifiedBadgeProps {
   className?: string;
 }
 
-export default function VerifiedBadge({ size = 12, className = 'text-up' }: VerifiedBadgeProps) {
+export default function VerifiedBadge({ size = 12, className = 'text-profit' }: VerifiedBadgeProps) {
   return (
     <svg
       width={size}

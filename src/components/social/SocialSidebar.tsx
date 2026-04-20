@@ -29,10 +29,10 @@ export default function SocialSidebar() {
   };
 
   return (
-    <aside className="w-[240px] h-screen fixed top-0 left-0 flex flex-col border-r border-terminal-border bg-terminal-panel z-40">
+    <aside className="w-[240px] h-screen fixed top-0 left-0 flex flex-col border-r border-border bg-surface z-40">
       {/* Logo */}
-      <div className="px-4 py-4 border-b border-terminal-border">
-        <Link href="/social" className="flex items-center gap-2 text-sm font-mono font-bold text-up tracking-wider">
+      <div className="px-4 py-4 border-b border-border">
+        <Link href="/social" className="flex items-center gap-2 text-sm font-mono font-bold text-profit tracking-wider">
           <img src="/coinly-logo.png" alt="Coinly" className="h-5 w-5" />
           Coinly
         </Link>
@@ -51,14 +51,14 @@ export default function SocialSidebar() {
               href={href}
               className={`flex items-center gap-3 px-4 py-2.5 font-mono text-sm transition-colors ${
                 isActive
-                  ? 'text-up bg-up/5 border-r-2 border-up'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-terminal-hover'
+                  ? 'text-profit bg-profit/5 border-r-2 border-profit'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-hover'
               }`}
             >
               <span className="w-5 text-center text-xs opacity-60">{icon}</span>
               <span>{label}</span>
               {label === 'Messages' && unreadDmCount > 0 && (
-                <span className="ml-auto text-xxs font-mono bg-up text-terminal-bg rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="ml-auto text-xxs font-mono bg-profit text-base rounded-full w-4 h-4 flex items-center justify-center">
                   {unreadDmCount}
                 </span>
               )}
@@ -71,8 +71,8 @@ export default function SocialSidebar() {
             href={`/social/profile/${user.id}`}
             className={`flex items-center gap-3 px-4 py-2.5 font-mono text-sm transition-colors ${
               pathname.startsWith('/social/profile')
-                ? 'text-up bg-up/5 border-r-2 border-up'
-                : 'text-text-secondary hover:text-text-primary hover:bg-terminal-hover'
+                ? 'text-profit bg-profit/5 border-r-2 border-profit'
+                : 'text-text-secondary hover:text-text-primary hover:bg-hover'
             }`}
           >
             <UserAvatar avatarUrl={profile.avatar_url} size="sm" className="ml-1" />
@@ -84,7 +84,7 @@ export default function SocialSidebar() {
       </nav>
 
       {/* User section */}
-      <div className="px-4 py-3 border-t border-terminal-border">
+      <div className="px-4 py-3 border-t border-border">
         {user && profile ? (
           <div className="flex items-center gap-2">
             <UserAvatar avatarUrl={profile.avatar_url} size="sm" />
@@ -94,7 +94,7 @@ export default function SocialSidebar() {
             {profile.is_verified && <VerifiedBadge size={10} />}
             <button
               onClick={handleSignOut}
-              className="text-xxs font-mono text-text-muted hover:text-down transition-colors"
+              className="text-xxs font-mono text-text-muted hover:text-loss transition-colors"
             >
               out
             </button>
@@ -102,7 +102,7 @@ export default function SocialSidebar() {
               href="/social/settings"
               className={`ml-auto transition-colors ${
                 pathname.startsWith('/social/settings')
-                  ? 'text-up'
+                  ? 'text-profit'
                   : 'text-text-muted hover:text-text-secondary'
               }`}
             >
@@ -112,7 +112,7 @@ export default function SocialSidebar() {
         ) : (
           <Link
             href="/login"
-            className="text-xs font-mono text-text-muted hover:text-up transition-colors"
+            className="text-xs font-mono text-text-muted hover:text-profit transition-colors"
           >
             Sign In
           </Link>

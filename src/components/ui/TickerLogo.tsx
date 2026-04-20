@@ -85,7 +85,7 @@ export default function TickerLogo({ symbol, website, size = 20, className = '' 
     const label = symbol.replace(/-.*$/, '').slice(0, 2);
     return (
       <span
-        className={`flex items-center justify-center rounded bg-terminal-hover text-text-muted font-mono font-bold shrink-0 ${className}`}
+        className={`flex items-center justify-center rounded bg-hover text-text-muted font-mono font-bold shrink-0 ${className}`}
         style={{ width: size, height: size, fontSize: size * 0.4 }}
       >
         {label}
@@ -100,7 +100,7 @@ export default function TickerLogo({ symbol, website, size = 20, className = '' 
       alt={symbol}
       width={size}
       height={size}
-      className={`pixel-logo rounded shrink-0 bg-terminal-hover ${className}`}
+      className={`pixel-logo rounded shrink-0 bg-hover ${className}`}
       onError={() => setImgError(true)}
     />
   );

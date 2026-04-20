@@ -55,8 +55,8 @@ export default function SymbolSearch({ onSelect, onClose, placeholder = 'Search 
   }
 
   return (
-    <div ref={containerRef} className="absolute top-full left-0 mt-1 w-64 bg-terminal-panel border border-terminal-border rounded shadow-lg z-50">
-      <div className="flex items-center px-2 py-1.5 border-b border-terminal-border">
+    <div ref={containerRef} className="absolute top-full left-0 mt-1 w-64 bg-surface border border-border rounded shadow-lg z-50">
+      <div className="flex items-center px-2 py-1.5 border-b border-border">
         <input
           ref={inputRef}
           type="text"
@@ -76,10 +76,10 @@ export default function SymbolSearch({ onSelect, onClose, placeholder = 'Search 
               onMouseDown={(e) => { e.preventDefault(); onSelect(r.symbol); }}
               onMouseEnter={() => setHighlightIdx(i)}
               className={`w-full flex items-center gap-2 px-2 py-1.5 text-left transition-colors ${
-                i === highlightIdx ? 'bg-terminal-hover' : ''
+                i === highlightIdx ? 'bg-hover' : ''
               }`}
             >
-              <span className="text-data font-mono font-medium text-cyan">{r.symbol}</span>
+              <span className="text-data font-mono font-medium text-info">{r.symbol}</span>
               <span className="text-xxs font-mono text-text-muted truncate">{r.name}</span>
             </button>
           ))}

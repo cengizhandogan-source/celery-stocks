@@ -58,7 +58,7 @@ export default function ConversationPage() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-terminal-border shrink-0 sticky top-0 bg-terminal-bg/80 backdrop-blur-sm z-10">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0 sticky top-0 bg-base/80 backdrop-blur-sm z-10">
         <button
           onClick={() => router.push('/social/messages')}
           className="text-text-muted hover:text-text-primary transition-colors text-sm font-mono"
@@ -94,7 +94,7 @@ export default function ConversationPage() {
               <MessageBubble
                 key={dm.id}
                 displayName={dm.sender?.display_name ?? 'Unknown'}
-                avatarColor={dm.sender?.avatar_color ?? '#888888'}
+                avatarColor={dm.sender?.avatar_color ?? '#A1A1AA'}
                 avatarUrl={dm.sender?.avatar_url}
                 content={dm.content}
                 timestamp={dm.created_at}
@@ -102,7 +102,7 @@ export default function ConversationPage() {
                 isVerified={dm.sender?.is_verified ?? false}
                 netWorth={dm.sender?.crypto_net_worth}
                 showNetWorth={dm.sender?.show_net_worth}
-                strategy={dm.strategy}
+                post={dm.post}
               />
             );
           })
@@ -111,7 +111,7 @@ export default function ConversationPage() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-terminal-border shrink-0">
+      <div className="border-t border-border shrink-0">
         <MessageInput onSend={sendDm} placeholder={peer ? `Message ${peer.display_name}...` : 'Message...'} />
       </div>
     </div>

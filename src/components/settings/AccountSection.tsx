@@ -15,7 +15,7 @@ export default function AccountSection() {
         <h3 className="text-xxs font-mono text-text-muted uppercase tracking-wider mb-3">Session</h3>
         <button
           onClick={handleSignOut}
-          className="text-xs font-mono text-down border border-down/30 hover:bg-down/10 px-4 py-1.5 rounded transition-colors"
+          className="text-xs font-mono text-loss border border-loss/30 hover:bg-loss/10 px-4 py-1.5 rounded transition-colors"
         >
           Sign Out
         </button>

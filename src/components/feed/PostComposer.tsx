@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useCryptoHoldings } from '@/hooks/useCryptoHoldings';
 import { useCachedTrades } from '@/hooks/useCachedTrades';
-import { useStrategyStore } from '@/stores/strategyStore';
 import type { Sentiment, PostType } from '@/lib/types';
 
 interface PostComposerProps {
@@ -20,44 +19,33 @@ interface PostComposerProps {
     executedAt: string;
     sentiment?: Sentiment;
   }) => Promise<void>;
-  onPostStrategy: (data: { content?: string; strategyId: string }) => Promise<void>;
   onCancel: () => void;
 }
 
 const sentiments: Sentiment[] = ['bullish', 'bearish', 'neutral'];
 const sentimentStyles: Record<Sentiment, string> = {
-  bullish: 'border-up/50 bg-up/10 text-up',
-  bearish: 'border-down/50 bg-down/10 text-down',
-  neutral: 'border-amber/50 bg-amber/10 text-amber',
+  bullish: 'border-profit/50 bg-profit/10 text-profit',
+  bearish: 'border-loss/50 bg-loss/10 text-loss',
+  neutral: 'border-gold/50 bg-gold/10 text-gold',
 };
 
 const typeLabels: { type: PostType; label: string }[] = [
   { type: 'text', label: 'Text' },
   { type: 'position', label: 'Position' },
   { type: 'trade', label: 'Trade' },
-  { type: 'strategy', label: 'Strategy' },
 ];
 
-export default function PostComposer({ onPostText, onPostPosition, onPostTrade, onPostStrategy, onCancel }: PostComposerProps) {
+export default function PostComposer({ onPostText, onPostPosition, onPostTrade, onCancel }: PostComposerProps) {
   const [postType, setPostType] = useState<PostType>('text');
   const [content, setContent] = useState('');
   const [symbol, setSymbol] = useState('');
   const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [selectedPositionId, setSelectedPositionId] = useState('');
   const [selectedTradeId, setSelectedTradeId] = useState('');
-  const [selectedStrategyId, setSelectedStrategyId] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { holdings } = useCryptoHoldings();
   const { trades, syncing, syncTrades } = useCachedTrades();
-  const strategies = useStrategyStore((s) => s.strategies);
-  const initialize = useStrategyStore((s) => s.initialize);
-
-  useEffect(() => {
-    if (postType === 'strategy') {
-      initialize();
-    }
-  }, [postType, initialize]);
 
   const selectablePositions = useMemo(() => {
     return holdings
@@ -96,8 +84,6 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         return selectedPositionId !== '';
       case 'trade':
         return selectedTradeId !== '';
-      case 'strategy':
-        return selectedStrategyId !== '';
     }
   };
 
@@ -144,12 +130,6 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
           }
           break;
         }
-        case 'strategy':
-          await onPostStrategy({
-            content: content.trim() || undefined,
-            strategyId: selectedStrategyId,
-          });
-          break;
       }
 
       setContent('');
@@ -157,15 +137,14 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
       setSentiment(null);
       setSelectedPositionId('');
       setSelectedTradeId('');
-      setSelectedStrategyId('');
       setLoading(false);
       onCancel();
     },
-    [postType, content, symbol, sentiment, selectedPositionId, selectedTradeId, selectedStrategyId, selectablePositions, selectableTrades, loading, onPostText, onPostPosition, onPostTrade, onPostStrategy, onCancel]
+    [postType, content, symbol, sentiment, selectedPositionId, selectedTradeId, selectablePositions, selectableTrades, loading, onPostText, onPostPosition, onPostTrade, onCancel]
   );
 
   return (
-    <form onSubmit={handleSubmit} className="px-3 py-3 border-b border-terminal-border bg-white/[0.02]">
+    <form onSubmit={handleSubmit} className="px-3 py-3 border-b border-border bg-white/[0.02]">
       {/* Post type selector */}
       <div className="flex gap-1 mb-2">
         {typeLabels.map(({ type, label }) => (
@@ -175,8 +154,8 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
             onClick={() => setPostType(type)}
             className={`text-xxs font-mono px-2 py-1 rounded border capitalize transition-colors ${
               postType === type
-                ? 'border-up/50 bg-up/10 text-up'
-                : 'border-terminal-border text-text-muted hover:text-text-secondary'
+                ? 'border-profit/50 bg-profit/10 text-profit'
+                : 'border-border text-text-muted hover:text-text-secondary'
             }`}
           >
             {label}
@@ -189,7 +168,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         <select
           value={selectedPositionId}
           onChange={(e) => setSelectedPositionId(e.target.value)}
-          className="w-full bg-terminal-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none mb-2"
+          className="w-full bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none mb-2"
         >
           <option value="">Select a position...</option>
           {selectablePositions.map((p) => (
@@ -205,7 +184,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
             <select
               value={selectedTradeId}
               onChange={(e) => setSelectedTradeId(e.target.value)}
-              className="flex-1 bg-terminal-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none"
+              className="flex-1 bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
             >
               <option value="">Select a trade...</option>
               {selectableTrades.map((t) => (
@@ -216,7 +195,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
               type="button"
               onClick={syncTrades}
               disabled={syncing}
-              className="text-xxs font-mono px-2 py-1 rounded border border-terminal-border text-text-muted hover:text-text-secondary hover:border-up/40 transition-colors disabled:opacity-50"
+              className="text-xxs font-mono px-2 py-1 rounded border border-border text-text-muted hover:text-text-secondary hover:border-profit/40 transition-colors disabled:opacity-50"
             >
               {syncing ? 'Syncing...' : 'Sync'}
             </button>
@@ -229,49 +208,31 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         </>
       )}
 
-      {/* Strategy selector */}
-      {postType === 'strategy' && (
-        <select
-          value={selectedStrategyId}
-          onChange={(e) => setSelectedStrategyId(e.target.value)}
-          className="w-full bg-terminal-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none mb-2"
-        >
-          <option value="">Select a strategy...</option>
-          {strategies.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name} ({s.symbols.join(', ') || 'no symbols'})
-            </option>
+      {/* Symbol + sentiment */}
+      <div className="flex gap-2 mb-2">
+        {postType === 'text' && (
+          <input
+            value={symbol}
+            onChange={(e) => setSymbol(e.target.value)}
+            placeholder="$SYM (optional)"
+            className="w-24 bg-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none uppercase"
+          />
+        )}
+        <div className="flex gap-1">
+          {sentiments.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSentiment(sentiment === s ? null : s)}
+              className={`text-xxs font-mono px-2 py-1 rounded border capitalize transition-colors ${
+                sentiment === s ? sentimentStyles[s] : 'border-border text-text-muted hover:text-text-secondary'
+              }`}
+            >
+              {s}
+            </button>
           ))}
-        </select>
-      )}
-
-      {/* Symbol + sentiment (text, position, trade) */}
-      {postType !== 'strategy' && (
-        <div className="flex gap-2 mb-2">
-          {postType === 'text' && (
-            <input
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
-              placeholder="$SYM (optional)"
-              className="w-24 bg-terminal-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none uppercase"
-            />
-          )}
-          <div className="flex gap-1">
-            {sentiments.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSentiment(sentiment === s ? null : s)}
-                className={`text-xxs font-mono px-2 py-1 rounded border capitalize transition-colors ${
-                  sentiment === s ? sentimentStyles[s] : 'border-terminal-border text-text-muted hover:text-text-secondary'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
         </div>
-      )}
+      </div>
 
       {/* Content textarea */}
       <textarea
@@ -279,7 +240,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         onChange={(e) => setContent(e.target.value)}
         placeholder={postType === 'text' ? "What's on your mind?" : 'Add a comment (optional)...'}
         rows={3}
-        className="w-full bg-terminal-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none resize-none mb-2"
+        className="w-full bg-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none resize-none mb-2"
       />
 
       {/* Actions */}
@@ -294,7 +255,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         <button
           type="submit"
           disabled={!canSubmit()}
-          className="text-xxs font-mono text-up border border-up/30 hover:bg-up/10 disabled:text-text-muted disabled:border-terminal-border px-3 py-1 rounded transition-colors"
+          className="text-xxs font-mono text-profit border border-profit/30 hover:bg-profit/10 disabled:text-text-muted disabled:border-border px-3 py-1 rounded transition-colors"
         >
           {loading ? 'Posting...' : 'Post'}
         </button>

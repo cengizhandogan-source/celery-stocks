@@ -47,9 +47,9 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
   const last = currentValue ?? filteredSnapshots[filteredSnapshots.length - 1]?.total_usd ?? 0;
   const isUp = last >= first;
 
-  const lineColor = isUp ? '#4ade80' : '#f87171';
-  const topGradient = isUp ? 'rgba(74,222,128,0.28)' : 'rgba(248,113,113,0.28)';
-  const bottomGradient = isUp ? 'rgba(74,222,128,0.02)' : 'rgba(248,113,113,0.02)';
+  const lineColor = isUp ? '#00FFA3' : '#FF4D4F';
+  const topGradient = isUp ? 'rgba(0,255,163,0.28)' : 'rgba(255,77,79,0.28)';
+  const bottomGradient = isUp ? 'rgba(0,255,163,0.02)' : 'rgba(255,77,79,0.02)';
 
   const handleCrosshairMove = useCallback((param: MouseEventParams) => {
     if (!param.time || !seriesRef.current || !param.point) {
@@ -75,7 +75,7 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
     const chart = createChart(containerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#888888',
+        textColor: '#A1A1AA',
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 10,
         attributionLogo: false,
@@ -176,13 +176,13 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
         <div ref={containerRef} className="w-full h-[100px]" />
         {tooltip && (
           <div
-            className="absolute pointer-events-none bg-[#2C2C2C] border border-terminal-border rounded px-1.5 py-0.5 text-xxs font-mono whitespace-nowrap z-10"
+            className="absolute pointer-events-none bg-elevated border border-border rounded px-1.5 py-0.5 text-xxs font-mono whitespace-nowrap z-10"
             style={{
               left: Math.min(tooltip.x, (containerRef.current?.clientWidth ?? 200) - 100),
               top: Math.max(0, tooltip.y - 28),
             }}
           >
-            <span className="text-amber-400">{formatNetWorth(tooltip.value)}</span>
+            <span className="text-gold">{formatNetWorth(tooltip.value)}</span>
             <span className="text-text-muted ml-1.5">{tooltip.date}</span>
           </div>
         )}
@@ -196,7 +196,7 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
             onClick={() => setRange(r.label)}
             className={`px-2 py-0.5 text-xxs font-mono rounded transition-colors ${
               range === r.label
-                ? isUp ? 'text-up bg-up/10' : 'text-down bg-down/10'
+                ? isUp ? 'text-profit bg-profit/10' : 'text-loss bg-loss/10'
                 : 'text-text-muted hover:text-text-secondary'
             }`}
           >

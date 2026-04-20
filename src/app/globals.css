@@ -1,23 +1,29 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-terminal-bg: #1C1C1C;
-  --color-terminal-panel: #232323;
-  --color-terminal-panel-header: #262626;
-  --color-terminal-hover: #2C2C2C;
-  --color-terminal-input: #1F1F1F;
-  --color-terminal-border: rgba(255,255,255,0.08);
-  --color-terminal-border-strong: rgba(255,255,255,0.12);
+  --color-base: #0B0B0F;
+  --color-surface: #12121A;
+  --color-surface-2: #16161F;
+  --color-card: #1A1A24;
+  --color-elevated: #1F1F2B;
+  --color-hover: #20202C;
+  --color-input: #141420;
+  --color-border: #2A2A35;
+  --color-border-strong: #3A3A48;
 
-  --color-up: #4ade80;
-  --color-up-dim: #166534;
-  --color-down: #f87171;
-  --color-down-dim: #991b1b;
-  --color-amber: #e9b86e;
-  --color-cyan: #22d3ee;
-  --color-text-primary: #eaeaea;
-  --color-text-secondary: #888888;
-  --color-text-muted: #555555;
+  --color-gold: #F5C542;
+  --color-gold-bright: #FFD76A;
+  --color-gold-dark: #B88A1E;
+
+  --color-profit: #00FFA3;
+  --color-profit-dim: #0B7A50;
+  --color-loss: #FF4D4F;
+  --color-loss-dim: #7A1E20;
+  --color-info: #3B82F6;
+
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #A1A1AA;
+  --color-text-muted: #52525B;
 
   --font-mono: var(--font-jetbrains), 'JetBrains Mono', 'Fira Code', monospace;
   --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
@@ -26,11 +32,15 @@
   --text-xxs--line-height: 1rem;
   --text-data: 0.8125rem;
   --text-data--line-height: 1.25rem;
+
+  --radius-card: 12px;
+  --radius-pill: 999px;
+  --ease-snap: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 html, body {
-  background: #1C1C1C;
-  color: #eaeaea;
+  background: var(--color-base);
+  color: var(--color-text-primary);
 }
 
 /* Menu slide-in animation */
@@ -62,25 +72,6 @@ html, body {
   animation: menu-out 150ms ease-in forwards;
 }
 
-/* Celery thinking bounce */
-@keyframes celery-bounce {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-8px) rotate(-6deg);
-  }
-  50% {
-    transform: translateY(0) rotate(0deg);
-  }
-  75% {
-    transform: translateY(-5px) rotate(6deg);
-  }
-}
-.celery-thinking {
-  animation: celery-bounce 1s ease-in-out infinite;
-}
-
 /* Pixel art logo effect */
 .pixel-logo {
   image-rendering: pixelated;
@@ -88,7 +79,7 @@ html, body {
   image-rendering: crisp-edges;
 }
 
-/* Terminal-style scrollbars */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -97,13 +88,12 @@ html, body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in oklab, var(--color-text-muted) 40%, transparent);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in oklab, var(--color-gold) 50%, transparent);
 }
-
 
 /* AI Chat markdown prose */
 .ai-prose p { margin: 0.25rem 0; line-height: 1.5; }
@@ -113,34 +103,34 @@ html, body {
 .ai-prose li { margin: 0.125rem 0; }
 .ai-prose ul li { list-style-type: disc; }
 .ai-prose ol li { list-style-type: decimal; }
-.ai-prose li::marker { color: #555; }
-.ai-prose strong { color: #eaeaea; font-weight: 600; }
-.ai-prose em { color: #22d3ee; font-style: italic; }
+.ai-prose li::marker { color: var(--color-text-muted); }
+.ai-prose strong { color: var(--color-text-primary); font-weight: 600; }
+.ai-prose em { color: var(--color-gold); font-style: italic; }
 .ai-prose u { text-decoration: underline; text-underline-offset: 2px; }
-.ai-prose h1, .ai-prose h2, .ai-prose h3 { color: #22d3ee; font-weight: 600; margin: 0.5rem 0 0.25rem; }
+.ai-prose h1, .ai-prose h2, .ai-prose h3 { color: var(--color-gold); font-weight: 600; margin: 0.5rem 0 0.25rem; }
 .ai-prose h1 { font-size: 1rem; }
 .ai-prose h2 { font-size: 0.875rem; }
 .ai-prose h3 { font-size: 0.8125rem; }
-.ai-prose hr { border-color: rgba(255,255,255,0.08); margin: 0.5rem 0; }
-.ai-prose blockquote { border-left: 2px solid #22d3ee; padding-left: 0.75rem; color: #888; margin: 0.25rem 0; }
+.ai-prose hr { border-color: var(--color-border); margin: 0.5rem 0; }
+.ai-prose blockquote { border-left: 2px solid var(--color-gold); padding-left: 0.75rem; color: var(--color-text-secondary); margin: 0.25rem 0; }
 
-/* KaTeX overrides for terminal theme */
-.ai-prose .katex { color: #e9b86e; font-size: 0.9em; }
+/* KaTeX overrides */
+.ai-prose .katex { color: var(--color-gold-bright); font-size: 0.9em; }
 .ai-prose .katex-display { margin: 0.5rem 0; overflow-x: auto; }
 
 /* Recharts tooltip override for dark theme */
 .recharts-default-tooltip {
-  background: #232323 !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  border-radius: 4px !important;
+  background: var(--color-card) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 8px !important;
 }
 .recharts-tooltip-label {
-  color: #eaeaea !important;
-  font-family: 'JetBrains Mono', monospace !important;
+  color: var(--color-text-primary) !important;
+  font-family: var(--font-mono) !important;
   font-size: 0.75rem !important;
 }
 .recharts-tooltip-item {
-  color: #888 !important;
-  font-family: 'JetBrains Mono', monospace !important;
+  color: var(--color-text-secondary) !important;
+  font-family: var(--font-mono) !important;
   font-size: 0.6875rem !important;
 }

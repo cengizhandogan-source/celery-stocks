@@ -39,23 +39,23 @@ export default function CreateRoomForm({ onCreated }: CreateRoomFormProps) {
   );
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2 px-3 py-2 border-t border-terminal-border">
+    <form onSubmit={handleSubmit} className="flex gap-2 px-3 py-2 border-t border-border">
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Room name"
-        className="flex-1 bg-terminal-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none"
+        className="flex-1 bg-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
       />
       <input
         value={symbol}
         onChange={(e) => setSymbol(e.target.value)}
         placeholder="$SYM"
-        className="w-16 bg-terminal-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none uppercase"
+        className="w-16 bg-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none uppercase"
       />
       <button
         type="submit"
         disabled={!name.trim() || loading}
-        className="text-xs font-mono text-up hover:text-up/80 disabled:text-text-muted transition-colors px-2"
+        className="text-xs font-mono text-profit hover:text-profit/80 disabled:text-text-muted transition-colors px-2"
       >
         {loading ? '...' : '+'}
       </button>

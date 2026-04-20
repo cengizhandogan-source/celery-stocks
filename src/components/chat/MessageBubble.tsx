@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import type { StrategyChipData } from '@/lib/types';
-import StrategyChip from './StrategyChip';
+import type { Post } from '@/lib/types';
+import PostChip from '@/components/feed/PostChip';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import NetWorthBadge from '@/components/ui/NetWorthBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -9,23 +9,23 @@ interface MessageBubbleProps {
   displayName: string;
   avatarColor: string;
   avatarUrl?: string | null;
-  content: string;
+  content: string | null;
   timestamp: string;
   isOwn: boolean;
   isVerified?: boolean;
   netWorth?: number | null;
   showNetWorth?: boolean;
-  strategy?: StrategyChipData | null;
+  post?: Post | null;
 }
 
-export default function MessageBubble({ displayName, avatarColor, avatarUrl, content, timestamp, isOwn, isVerified, netWorth, showNetWorth, strategy }: MessageBubbleProps) {
+export default function MessageBubble({ displayName, avatarColor, avatarUrl, content, timestamp, isOwn, isVerified, netWorth, showNetWorth, post }: MessageBubbleProps) {
   const timeStr = useMemo(() => {
     const d = new Date(timestamp);
     return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   }, [timestamp]);
 
   return (
-    <div className={`group flex gap-2 px-3 py-1.5 hover:bg-terminal-hover transition-colors ${isOwn ? 'bg-white/[0.02]' : ''}`}>
+    <div className={`group flex gap-2 px-3 py-1.5 hover:bg-hover transition-colors ${isOwn ? 'bg-white/[0.02]' : ''}`}>
       <UserAvatar avatarUrl={avatarUrl} size="sm" className="mt-0.5" />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
@@ -38,10 +38,12 @@ export default function MessageBubble({ displayName, avatarColor, avatarUrl, con
             {timeStr}
           </span>
         </div>
-        <p className="text-sm font-mono text-text-primary break-words whitespace-pre-wrap">
-          {content}
-        </p>
-        {strategy && <StrategyChip strategy={strategy} />}
+        {content && (
+          <p className="text-sm font-mono text-text-primary break-words whitespace-pre-wrap">
+            {content}
+          </p>
+        )}
+        {post && <PostChip post={post} />}
       </div>
     </div>
   );

@@ -21,11 +21,11 @@ export default function MessagesPage() {
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-terminal-bg/80 backdrop-blur-sm border-b border-terminal-border">
+      <div className="sticky top-0 z-10 bg-base/80 backdrop-blur-sm border-b border-border">
         <div className="px-4 py-3">
           <h1 className="text-sm font-mono font-bold text-text-primary uppercase tracking-wider">Messages</h1>
         </div>
-        <div className="px-4 py-2 border-t border-terminal-border">
+        <div className="px-4 py-2 border-t border-border">
           <UserSearchInput onSelect={handleSelectUser} />
         </div>
       </div>
@@ -50,7 +50,7 @@ export default function MessagesPage() {
             <Link
               key={conv.peer.id}
               href={`/social/messages/${conv.peer.id}`}
-              className="flex items-center gap-3 px-4 py-3 border-b border-terminal-border hover:bg-terminal-hover transition-colors"
+              className="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-hover transition-colors"
             >
               <OnlineDot isOnline={onlineUserIds.has(conv.peer.id)} />
               <div className="flex-1 min-w-0">
@@ -65,11 +65,11 @@ export default function MessagesPage() {
                   <span className="text-xxs font-mono text-text-muted shrink-0">{timeStr}</span>
                 </div>
                 <p className="text-xxs font-mono text-text-muted truncate mt-0.5">
-                  {conv.lastMessage.content}
+                  {conv.lastMessage.content ?? (conv.lastMessage.post_id ? 'Shared a post' : '')}
                 </p>
               </div>
               {conv.unreadCount > 0 && (
-                <span className="text-xxs font-mono bg-up text-terminal-bg rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                <span className="text-xxs font-mono bg-profit text-base rounded-full w-5 h-5 flex items-center justify-center shrink-0">
                   {conv.unreadCount}
                 </span>
               )}

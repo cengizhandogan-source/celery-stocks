@@ -35,7 +35,7 @@ export default function HoldingsTable({
         return (
           <div
             key={h.id}
-            className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-2 py-1.5 text-xxs font-mono hover:bg-terminal-hover/50 rounded transition-colors"
+            className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-2 py-1.5 text-xxs font-mono hover:bg-hover/50 rounded transition-colors"
           >
             <span className="text-text-primary font-medium truncate flex items-center gap-1.5">
               <TickerLogo symbol={h.asset} size={16} />
@@ -58,7 +58,7 @@ export default function HoldingsTable({
       {hasMore && !showAll && (
         <button
           onClick={() => setShowAll(true)}
-          className="w-full text-center text-xxs font-mono text-cyan hover:text-cyan/80 py-2 transition-colors"
+          className="w-full text-center text-xxs font-mono text-info hover:text-info/80 py-2 transition-colors"
         >
           Show all {holdings.length} assets
         </button>

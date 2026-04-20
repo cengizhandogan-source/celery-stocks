@@ -67,7 +67,7 @@ export default function ProfileSection({ userId }: { userId: string }) {
           <input
             value={avatarUrl}
             onChange={(e) => setAvatarUrl(e.target.value)}
-            className="w-full bg-terminal-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none"
+            className="w-full bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
             placeholder="https://..."
           />
         </div>
@@ -79,7 +79,7 @@ export default function ProfileSection({ userId }: { userId: string }) {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full bg-terminal-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none"
+          className="w-full bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
           placeholder="Display name"
         />
       </div>
@@ -90,7 +90,7 @@ export default function ProfileSection({ userId }: { userId: string }) {
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full bg-terminal-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none"
+          className="w-full bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
           placeholder="username"
         />
       </div>
@@ -101,7 +101,7 @@ export default function ProfileSection({ userId }: { userId: string }) {
         <textarea
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className="w-full bg-terminal-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none resize-none"
+          className="w-full bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none resize-none"
           placeholder="Tell people about yourself"
           rows={3}
         />
@@ -113,7 +113,7 @@ export default function ProfileSection({ userId }: { userId: string }) {
         <input
           value={link}
           onChange={(e) => setLink(e.target.value)}
-          className="w-full bg-terminal-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none"
+          className="w-full bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
           placeholder="https://yoursite.com"
         />
       </div>
@@ -123,12 +123,12 @@ export default function ProfileSection({ userId }: { userId: string }) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="text-xxs font-mono text-up border border-up/30 hover:bg-up/10 px-4 py-1.5 rounded transition-colors disabled:opacity-40"
+          className="text-xxs font-mono text-profit border border-profit/30 hover:bg-profit/10 px-4 py-1.5 rounded transition-colors disabled:opacity-40"
         >
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
-        {saved && <span className="text-xxs font-mono text-up">Saved</span>}
-        {error && <span className="text-xxs font-mono text-down">{error}</span>}
+        {saved && <span className="text-xxs font-mono text-profit">Saved</span>}
+        {error && <span className="text-xxs font-mono text-loss">{error}</span>}
       </div>
     </div>
   );

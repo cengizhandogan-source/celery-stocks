@@ -1,8 +1,7 @@
 import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Share2 } from 'lucide-react';
 import { SENTIMENT_COLORS, SENTIMENT_BG } from '@/stores/chatStore';
-import StrategyChip from '@/components/chat/StrategyChip';
 import TradeEmbed from './TradeEmbed';
 import MiniStockChart from './MiniStockChart';
 import PnLDisplay from './PnLDisplay';
@@ -11,6 +10,7 @@ import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import NetWorthBadge from '@/components/ui/NetWorthBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 import CommentSection from './CommentSection';
+import SharePostModal from './SharePostModal';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import type { Post, Quote } from '@/lib/types';
 
@@ -27,7 +27,7 @@ function renderContentWithTickers(content: string): ReactNode[] {
       parts.push(content.slice(lastIndex, start));
     }
     parts.push(
-      <span key={start} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-cyan/10 text-cyan align-middle">
+      <span key={start} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-info/10 text-info align-middle">
         <TickerLogo symbol={symbol} size={12} />
         <span>${symbol}</span>
       </span>
@@ -47,15 +47,18 @@ export default function PostCard({
   onToggleLike,
   onDelete,
   currentUserId,
+  defaultCommentsOpen = false,
 }: {
   post: Post;
   onToggleLike: (postId: string) => void;
   onDelete?: (postId: string) => void;
   currentUserId?: string;
+  defaultCommentsOpen?: boolean;
 }) {
   const { requireAuth } = useAuthGate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(defaultCommentsOpen);
+  const [shareOpen, setShareOpen] = useState(false);
   const [currentQuote, setCurrentQuote] = useState<Quote | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUserId != null && post.user_id === currentUserId;
@@ -83,14 +86,14 @@ export default function PostCard({
   }, [post.created_at]);
 
   return (
-    <div className="px-3 py-3 border-b border-terminal-border transition-colors">
+    <div className="px-3 py-3 border-b border-border transition-colors">
       {/* Header: author + time */}
       <div className="flex items-center gap-1.5 mb-1.5">
         <Link href={`/social/profile/${post.user_id}`} className="flex items-center gap-1.5 min-w-0">
           <UserAvatar avatarUrl={post.profile?.avatar_url} size="sm" />
           <span
             className="text-xs font-mono font-medium truncate hover:underline"
-            style={{ color: post.profile?.avatar_color ?? '#888888' }}
+            style={{ color: post.profile?.avatar_color ?? '#A1A1AA' }}
           >
             {post.profile?.display_name ?? 'Unknown'}
           </span>
@@ -108,10 +111,10 @@ export default function PostCard({
               &hellip;
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 min-w-[120px] py-1 rounded border border-terminal-border bg-terminal-bg shadow-lg">
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[120px] py-1 rounded border border-border bg-base shadow-lg">
                 <button
                   onClick={() => { onDelete(post.id); setMenuOpen(false); }}
-                  className="w-full text-left text-xxs font-mono px-3 py-1.5 text-down hover:bg-down/10 transition-colors"
+                  className="w-full text-left text-xxs font-mono px-3 py-1.5 text-loss hover:bg-loss/10 transition-colors"
                 >
                   Delete post
                 </button>
@@ -143,21 +146,13 @@ export default function PostCard({
         />
       )}
 
-      {/* Chart: full size for text/strategy posts only */}
-      {post.post_type !== 'position' && post.post_type !== 'trade' && (post.symbol || post.position_symbol) && (
+      {/* Chart: full size for text posts with a symbol */}
+      {post.post_type === 'text' && (post.symbol || post.position_symbol) && (
         <MiniStockChart symbol={(post.symbol || post.position_symbol)!} />
       )}
 
       {/* Type-specific embeds */}
       {post.post_type === 'trade' && <TradeEmbed post={post} hidePnl />}
-      {post.post_type === 'strategy' && post.strategy && (
-        <StrategyChip strategy={post.strategy} />
-      )}
-      {post.post_type === 'strategy' && !post.strategy && (
-        <div className="text-xxs font-mono text-text-muted italic px-2 py-1.5 border border-terminal-border rounded bg-terminal-bg/50">
-          Strategy removed
-        </div>
-      )}
 
       {/* Text content with inline sentiment */}
       {(post.content || post.sentiment) && (
@@ -177,7 +172,7 @@ export default function PostCard({
           onClick={() => { if (requireAuth('like this post')) onToggleLike(post.id); }}
           className={`flex items-center gap-1 text-xxs font-mono px-1.5 py-0.5 rounded transition-colors ${
             post.liked_by_me
-              ? 'text-up bg-up/10'
+              ? 'text-profit bg-profit/10'
               : 'text-text-muted hover:text-text-secondary'
           }`}
         >
@@ -188,12 +183,20 @@ export default function PostCard({
           onClick={() => setCommentsOpen(!commentsOpen)}
           className={`flex items-center gap-1 text-xxs font-mono px-1.5 py-0.5 rounded transition-colors ${
             commentsOpen
-              ? 'text-cyan bg-cyan/10'
+              ? 'text-info bg-info/10'
               : 'text-text-muted hover:text-text-secondary'
           }`}
         >
           <MessageCircle size={12} />
           <span>{post.comment_count || ''}</span>
+        </button>
+        <button
+          onClick={() => setShareOpen(true)}
+          className="flex items-center gap-1 text-xxs font-mono px-1.5 py-0.5 rounded text-text-muted hover:text-text-secondary transition-colors"
+          title="Share"
+          aria-label="Share post"
+        >
+          <Share2 size={12} />
         </button>
       </div>
 
@@ -203,6 +206,8 @@ export default function PostCard({
           <CommentSection postId={post.id} currentUserId={currentUserId} />
         </div>
       )}
+
+      {shareOpen && <SharePostModal post={post} onClose={() => setShareOpen(false)} />}
     </div>
   );
 }

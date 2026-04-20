@@ -70,7 +70,7 @@ function MiniStockChartInner({
   }, [symbol]);
 
   if (candlesLoading) {
-    return <div className="h-[100px] rounded bg-terminal-hover/50 animate-pulse" />;
+    return <div className="h-[100px] rounded bg-hover/50 animate-pulse" />;
   }
 
   if (!candles.length) return null;
@@ -87,7 +87,7 @@ function MiniStockChartInner({
   const domain: [number, number] = [min - padding, max + padding];
 
   const chartIsUp = last >= first;
-  const color = chartIsUp ? '#4ade80' : '#f87171';
+  const color = chartIsUp ? '#00FFA3' : '#FF4D4F';
   const isUp = quote ? quote.change >= 0 : chartIsUp;
 
   const price = quote?.price ?? last;
@@ -103,14 +103,14 @@ function MiniStockChartInner({
               content={({ active, payload }) => {
                 if (!active || !payload?.[0]) return null;
                 return (
-                  <div className="text-xxs font-mono font-medium text-text-primary bg-terminal-bg border border-terminal-border rounded px-1.5 py-0.5 shadow-lg">
+                  <div className="text-xxs font-mono font-medium text-text-primary bg-base border border-border rounded px-1.5 py-0.5 shadow-lg">
                     {formatPrice(payload[0].value as number)}
                   </div>
                 );
               }}
-              cursor={{ stroke: '#555555', strokeWidth: 1, strokeDasharray: '3 3' }}
+              cursor={{ stroke: '#52525B', strokeWidth: 1, strokeDasharray: '3 3' }}
             />
-            <ReferenceLine y={first} stroke="#555555" strokeDasharray="3 3" strokeWidth={1} />
+            <ReferenceLine y={first} stroke="#52525B" strokeDasharray="3 3" strokeWidth={1} />
             <Area type="monotone" dataKey="close" stroke={color} fill="transparent" strokeWidth={1.5} dot={{ r: 1.5, fill: color, strokeWidth: 0 }} isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
@@ -119,7 +119,7 @@ function MiniStockChartInner({
   }
 
   return (
-    <div className="border border-terminal-border rounded-lg bg-terminal-bg/80 overflow-hidden px-3.5 py-3">
+    <div className="border border-border rounded-lg bg-base/80 overflow-hidden px-3.5 py-3">
       <div className="flex items-start justify-between gap-3">
         {/* Left: info */}
         <div className="flex flex-col min-w-0">
@@ -130,7 +130,7 @@ function MiniStockChartInner({
           <span className="text-xl font-mono font-bold text-text-primary leading-none mb-1.5">
             {formatPrice(price)}
           </span>
-          <span className={`text-xxs font-mono font-medium ${isUp ? 'text-up' : 'text-down'}`}>
+          <span className={`text-xxs font-mono font-medium ${isUp ? 'text-profit' : 'text-loss'}`}>
             {formatPercent(changePct)} today
           </span>
         </div>
@@ -144,16 +144,16 @@ function MiniStockChartInner({
                 content={({ active, payload }) => {
                   if (!active || !payload?.[0]) return null;
                   return (
-                    <div className="text-xxs font-mono font-medium text-text-primary bg-terminal-bg border border-terminal-border rounded px-1.5 py-0.5 shadow-lg">
+                    <div className="text-xxs font-mono font-medium text-text-primary bg-base border border-border rounded px-1.5 py-0.5 shadow-lg">
                       {formatPrice(payload[0].value as number)}
                     </div>
                   );
                 }}
-                cursor={{ stroke: '#555555', strokeWidth: 1, strokeDasharray: '3 3' }}
+                cursor={{ stroke: '#52525B', strokeWidth: 1, strokeDasharray: '3 3' }}
               />
               <ReferenceLine
                 y={first}
-                stroke="#555555"
+                stroke="#52525B"
                 strokeDasharray="3 3"
                 strokeWidth={1}
               />

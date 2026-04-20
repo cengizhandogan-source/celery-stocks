@@ -9,7 +9,7 @@ interface PriceChangeProps {
 }
 
 export default function PriceChange({ change, changePercent, showPercent = true }: PriceChangeProps) {
-  const color = change > 0 ? 'text-up' : change < 0 ? 'text-down' : 'text-text-secondary';
+  const color = change > 0 ? 'text-profit' : change < 0 ? 'text-loss' : 'text-text-secondary';
 
   return (
     <span className={`${color} font-mono`}>

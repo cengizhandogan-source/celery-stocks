@@ -21,7 +21,7 @@ export default function PrivacySection({ userId }: { userId: string }) {
               type="checkbox"
               checked={profile.show_net_worth ?? false}
               onChange={(e) => updateProfile({ show_net_worth: e.target.checked })}
-              className="accent-amber-400"
+              className="accent-gold"
             />
             <div>
               <span className="text-xs font-mono text-text-primary">Show net worth on profile</span>
@@ -33,7 +33,7 @@ export default function PrivacySection({ userId }: { userId: string }) {
               type="checkbox"
               checked={profile.show_holdings ?? false}
               onChange={(e) => updateProfile({ show_holdings: e.target.checked })}
-              className="accent-amber-400"
+              className="accent-gold"
             />
             <div>
               <span className="text-xs font-mono text-text-primary">Public holdings</span>

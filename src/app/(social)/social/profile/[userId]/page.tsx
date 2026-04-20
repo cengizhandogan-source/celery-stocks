@@ -23,7 +23,7 @@ function WalletHoldingsSection({ userId, isOwnProfile }: { userId: string; isOwn
 
   if (loading) {
     return (
-      <div className="px-4 py-4 border-b border-terminal-border">
+      <div className="px-4 py-4 border-b border-border">
         <p className="text-xxs font-mono text-text-muted">Loading holdings...</p>
       </div>
     );
@@ -32,10 +32,10 @@ function WalletHoldingsSection({ userId, isOwnProfile }: { userId: string; isOwn
   if (holdings.length === 0 && !isOwnProfile) return null;
 
   return (
-    <div className="px-4 py-4 border-b border-terminal-border">
+    <div className="px-4 py-4 border-b border-border">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-mono font-bold text-text-primary">Wallet Holdings</h2>
-        <span className="text-xs font-mono text-amber-400 font-bold">{formatNetWorth(totalNetWorth)}</span>
+        <span className="text-xs font-mono text-gold font-bold">{formatNetWorth(totalNetWorth)}</span>
       </div>
       {snapshots.length >= 2 && (
         <div className="mb-3">
@@ -89,7 +89,7 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col">
       {/* Profile header */}
-      <div className="px-4 py-6 border-b border-terminal-border">
+      <div className="px-4 py-6 border-b border-border">
         <div className="flex items-start gap-3">
           <UserAvatar avatarUrl={profile.avatar_url} size="xl" />
           <div className="flex-1 min-w-0">
@@ -108,8 +108,8 @@ export default function ProfilePage() {
                       disabled={followLoading}
                       className={`text-xxs font-mono px-3 py-0.5 rounded border transition-colors ${
                         isFollowing
-                          ? 'text-text-muted border-terminal-border hover:border-down/40 hover:text-down'
-                          : 'text-up border-up/30 hover:bg-up/10'
+                          ? 'text-text-muted border-border hover:border-loss/40 hover:text-loss'
+                          : 'text-profit border-profit/30 hover:bg-profit/10'
                       }`}
                     >
                       {isFollowing ? 'Unfollow' : 'Follow'}
@@ -126,7 +126,7 @@ export default function ProfilePage() {
                     href={profile.link.startsWith('http') ? profile.link : `https://${profile.link}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-mono text-cyan hover:underline mt-1 block truncate"
+                    className="text-xs font-mono text-info hover:underline mt-1 block truncate"
                   >
                     {profile.link}
                   </a>
@@ -149,7 +149,7 @@ export default function ProfilePage() {
                   </span>
                   {profile.crypto_net_worth != null && profile.show_net_worth && (
                     <span className="text-xs font-mono">
-                      <span className="text-amber-400 font-bold">{formatNetWorth(profile.crypto_net_worth)}</span>
+                      <span className="text-gold font-bold">{formatNetWorth(profile.crypto_net_worth)}</span>
                       <span className="text-text-muted ml-1">Net Worth</span>
                     </span>
                   )}

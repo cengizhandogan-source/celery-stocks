@@ -26,7 +26,7 @@ function CommentContent({ content }: { content: string }) {
     <p className="text-xxs font-mono text-text-secondary leading-relaxed whitespace-pre-wrap break-words">
       {parts.map((part, i) =>
         part.startsWith('@') ? (
-          <span key={i} className="text-cyan font-medium">{part}</span>
+          <span key={i} className="text-info font-medium">{part}</span>
         ) : (
           <span key={i}>{part}</span>
         )
@@ -68,13 +68,13 @@ function CommentRow({
   }, [menuOpen]);
 
   return (
-    <div className="group flex items-start gap-1.5 py-1.5 px-2 hover:bg-terminal-hover/50 rounded transition-colors">
+    <div className="group flex items-start gap-1.5 py-1.5 px-2 hover:bg-hover/50 rounded transition-colors">
       <UserAvatar avatarUrl={comment.profile?.avatar_url} size="xs" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span
             className="text-xxs font-mono font-medium truncate"
-            style={{ color: comment.profile?.avatar_color ?? '#888888' }}
+            style={{ color: comment.profile?.avatar_color ?? '#A1A1AA' }}
           >
             {comment.profile?.display_name ?? 'Unknown'}
           </span>
@@ -88,7 +88,7 @@ function CommentRow({
               if (!currentUserId) { onAuthGate?.(); return; }
               onReply(comment);
             }}
-            className="text-xxs font-mono text-text-muted hover:text-cyan transition-colors px-1 leading-none opacity-0 group-hover:opacity-100"
+            className="text-xxs font-mono text-text-muted hover:text-info transition-colors px-1 leading-none opacity-0 group-hover:opacity-100"
           >
             reply
           </button>
@@ -106,12 +106,12 @@ function CommentRow({
                 const rect = btnRef.current!.getBoundingClientRect();
                 return (
                   <div
-                    className="fixed z-50 min-w-[100px] py-1 rounded border border-terminal-border bg-terminal-bg shadow-lg"
+                    className="fixed z-50 min-w-[100px] py-1 rounded border border-border bg-base shadow-lg"
                     style={{ top: rect.bottom + 4, left: rect.right - 100 }}
                   >
                     <button
                       onClick={() => { onDelete(comment.id); setMenuOpen(false); }}
-                      className="w-full text-left text-xxs font-mono px-3 py-1.5 text-down hover:bg-down/10 transition-colors"
+                      className="w-full text-left text-xxs font-mono px-3 py-1.5 text-loss hover:bg-loss/10 transition-colors"
                     >
                       Delete
                     </button>
@@ -126,7 +126,7 @@ function CommentRow({
         {parentUsername && (
           <span className="text-xxs font-mono text-text-muted">
             ↳{' '}
-            <span style={{ color: comment.parent?.profile?.avatar_color ?? '#888' }}>
+            <span style={{ color: comment.parent?.profile?.avatar_color ?? '#A1A1AA' }}>
               @{parentUsername}
             </span>
           </span>
@@ -148,12 +148,12 @@ function MentionDropdown({
 }) {
   if (results.length === 0) return null;
   return (
-    <div className="absolute bottom-full left-0 right-0 mb-1 bg-terminal-panel border border-terminal-border-strong rounded shadow-2xl z-50 max-h-36 overflow-y-auto">
+    <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface border border-border-strong rounded shadow-2xl z-50 max-h-36 overflow-y-auto">
       {results.map((p) => (
         <button
           key={p.id}
           onMouseDown={(e) => { e.preventDefault(); onSelect(p); }}
-          className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-terminal-hover transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-hover transition-colors"
         >
           <UserAvatar avatarUrl={p.avatar_url} size="xs" />
           <span className="text-xxs font-mono text-text-muted">@{p.username}</span>
@@ -252,7 +252,7 @@ export default function CommentSection({
   };
 
   return (
-    <div className="border-t border-terminal-border/50 ml-3 border-l-2 border-l-terminal-border/30">
+    <div className="border-t border-border/50 ml-3 border-l-2 border-l-border/30">
       {/* Comment list */}
       <div ref={listRef} className="max-h-60 overflow-y-auto">
         {loading && comments.length === 0 && (
@@ -275,16 +275,16 @@ export default function CommentSection({
 
       {/* Comment input */}
       {currentUserId ? (
-        <div className="relative px-2 py-1.5 border-t border-terminal-border/30">
+        <div className="relative px-2 py-1.5 border-t border-border/30">
           {/* Reply indicator */}
           {replyTo && (
             <div className="flex items-center gap-1.5 px-2 pb-1">
               <span className="text-xxs font-mono text-text-muted">
-                replying to <span className="text-cyan">@{replyTo.username}</span>
+                replying to <span className="text-info">@{replyTo.username}</span>
               </span>
               <button
                 onClick={cancelReply}
-                className="text-xxs font-mono text-text-muted hover:text-down transition-colors leading-none"
+                className="text-xxs font-mono text-text-muted hover:text-loss transition-colors leading-none"
               >
                 ✕
               </button>
@@ -309,11 +309,11 @@ export default function CommentSection({
               }
             }}
             placeholder="Add a comment..."
-            className="w-full bg-terminal-input text-xxs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-terminal-border focus:border-cyan/40 focus:outline-none transition-colors"
+            className="w-full bg-input text-xxs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-info/40 focus:outline-none transition-colors"
           />
         </div>
       ) : (
-        <div className="px-2 py-1.5 border-t border-terminal-border/30">
+        <div className="px-2 py-1.5 border-t border-border/30">
           <button
             onClick={() => requireAuth('leave a comment')}
             className="w-full text-xxs font-mono text-text-muted hover:text-text-secondary py-1.5 text-left px-2 transition-colors"

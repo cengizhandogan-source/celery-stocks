@@ -123,7 +123,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="font-mono bg-terminal-bg text-text-primary antialiased">
+      <body className="font-mono bg-base text-text-primary antialiased">
         <AuthGateProvider>
           {children}
         </AuthGateProvider>

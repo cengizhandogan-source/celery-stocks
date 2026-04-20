@@ -11,7 +11,7 @@ function LoginForm() {
   const redirectTo = searchParams.get('redirectTo') || '/social'
 
   return (
-    <div className="bg-terminal-panel border border-terminal-border rounded-lg p-6">
+    <div className="bg-surface border border-border rounded-lg p-6">
       <h1 className="text-sm font-mono text-text-primary uppercase tracking-widest mb-6 text-center">
         Sign In
       </h1>
@@ -27,7 +27,7 @@ function LoginForm() {
             name="email"
             type="email"
             required
-            className="w-full px-3 py-2 text-sm font-mono bg-terminal-input border border-terminal-border rounded text-text-primary placeholder:text-text-muted focus:border-up/50 focus:outline-none"
+            className="w-full px-3 py-2 text-sm font-mono bg-input border border-border rounded text-text-primary placeholder:text-text-muted focus:border-profit/50 focus:outline-none"
             placeholder="you@example.com"
           />
         </div>
@@ -41,19 +41,19 @@ function LoginForm() {
             name="password"
             type="password"
             required
-            className="w-full px-3 py-2 text-sm font-mono bg-terminal-input border border-terminal-border rounded text-text-primary placeholder:text-text-muted focus:border-up/50 focus:outline-none"
+            className="w-full px-3 py-2 text-sm font-mono bg-input border border-border rounded text-text-primary placeholder:text-text-muted focus:border-profit/50 focus:outline-none"
             placeholder="••••••••"
           />
         </div>
 
         {state.error && (
-          <p className="text-down text-xs font-mono">{state.error}</p>
+          <p className="text-loss text-xs font-mono">{state.error}</p>
         )}
 
         <button
           type="submit"
           disabled={pending}
-          className="w-full py-2 bg-terminal-panel border border-terminal-border rounded font-mono text-sm text-text-primary uppercase tracking-wider hover:border-up/50 hover:text-up transition-colors disabled:opacity-50"
+          className="w-full py-2 bg-surface border border-border rounded font-mono text-sm text-text-primary uppercase tracking-wider hover:border-profit/50 hover:text-profit transition-colors disabled:opacity-50"
         >
           {pending ? 'Signing in...' : 'Sign In'}
         </button>
@@ -61,7 +61,7 @@ function LoginForm() {
 
       <p className="mt-4 text-center text-xxs font-mono text-text-muted">
         Don&apos;t have an account?{' '}
-        <Link href={`/signup?redirectTo=${encodeURIComponent(redirectTo)}`} className="text-text-secondary hover:text-up transition-colors">
+        <Link href={`/signup?redirectTo=${encodeURIComponent(redirectTo)}`} className="text-text-secondary hover:text-profit transition-colors">
           Sign Up
         </Link>
       </p>

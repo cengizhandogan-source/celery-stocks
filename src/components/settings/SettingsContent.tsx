@@ -25,15 +25,15 @@ export default function SettingsContent() {
   return (
     <div className="flex flex-col h-full">
       {/* Tab navigation */}
-      <div className="px-4 py-2 border-b border-terminal-border shrink-0 flex gap-1">
+      <div className="px-4 py-2 border-b border-border shrink-0 flex gap-1">
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`text-xxs font-mono px-2.5 py-1 rounded border transition-colors ${
               activeTab === tab
-                ? 'border-up/50 bg-up/10 text-up'
-                : 'border-transparent text-text-muted hover:text-text-secondary hover:bg-terminal-hover'
+                ? 'border-profit/50 bg-profit/10 text-profit'
+                : 'border-transparent text-text-muted hover:text-text-secondary hover:bg-hover'
             }`}
           >
             {tab}

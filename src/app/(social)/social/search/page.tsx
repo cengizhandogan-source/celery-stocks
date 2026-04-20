@@ -9,7 +9,7 @@ import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { useUser } from '@/hooks/useUser';
 import { useAuthGate } from '@/hooks/useAuthGate';
-import type { Post, Profile, StrategyChipData } from '@/lib/types';
+import type { Post } from '@/lib/types';
 
 type SearchTab = 'users' | 'posts';
 
@@ -105,31 +105,31 @@ export default function SearchPage() {
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-terminal-bg/80 backdrop-blur-sm border-b border-terminal-border">
+      <div className="sticky top-0 z-10 bg-base/80 backdrop-blur-sm border-b border-border">
         <div className="px-4 py-3">
           <h1 className="text-sm font-mono font-bold text-text-primary uppercase tracking-wider">Search</h1>
         </div>
 
         {/* Search input */}
-        <div className="px-4 py-2 border-t border-terminal-border">
+        <div className="px-4 py-2 border-t border-border">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={tab === 'users' ? 'Search users...' : 'Search posts...'}
-            className="w-full bg-terminal-input text-sm font-mono text-text-primary placeholder:text-text-muted px-3 py-2 rounded border border-terminal-border focus:border-up/40 focus:outline-none"
+            className="w-full bg-input text-sm font-mono text-text-primary placeholder:text-text-muted px-3 py-2 rounded border border-border focus:border-profit/40 focus:outline-none"
           />
         </div>
 
         {/* Tabs */}
-        <div className="flex px-4 gap-1 py-2 border-t border-terminal-border">
+        <div className="flex px-4 gap-1 py-2 border-t border-border">
           {(['users', 'posts'] as SearchTab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`text-xxs font-mono px-3 py-1 rounded border capitalize transition-colors ${
                 tab === t
-                  ? 'border-up/50 bg-up/10 text-up'
-                  : 'border-terminal-border text-text-muted hover:text-text-secondary'
+                  ? 'border-profit/50 bg-profit/10 text-profit'
+                  : 'border-border text-text-muted hover:text-text-secondary'
               }`}
             >
               {t}
@@ -153,7 +153,7 @@ export default function SearchPage() {
             <Link
               key={u.id}
               href={`/social/profile/${u.id}`}
-              className="flex items-center gap-3 px-4 py-3 border-b border-terminal-border hover:bg-terminal-hover transition-colors"
+              className="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-hover transition-colors"
             >
               <UserAvatar avatarUrl={u.avatar_url} size="lg" />
               <span

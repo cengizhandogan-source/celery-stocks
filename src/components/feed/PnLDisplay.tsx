@@ -15,13 +15,13 @@ interface PnLDisplayProps {
 export default function PnLDisplay({ symbol, pnlDollars, pnlPercent, currentPrice, shares, avgCost, chart }: PnLDisplayProps) {
   if (pnlDollars == null) {
     return (
-      <div className="border border-terminal-border rounded-lg bg-terminal-bg/80 overflow-hidden px-3.5 py-3">
+      <div className="border border-border rounded-lg bg-base/80 overflow-hidden px-3.5 py-3">
         <div className="flex items-center gap-2 mb-2">
           <TickerLogo symbol={symbol} size={22} />
           <span className="text-xs font-mono font-medium text-text-secondary tracking-wide">{symbol}</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="h-6 w-32 rounded bg-terminal-hover/50 animate-pulse" />
+          <div className="h-6 w-32 rounded bg-hover/50 animate-pulse" />
           {chart && <div className="w-[50%] shrink-0 ml-auto">{chart}</div>}
         </div>
       </div>
@@ -29,12 +29,12 @@ export default function PnLDisplay({ symbol, pnlDollars, pnlPercent, currentPric
   }
 
   const isPositive = pnlDollars >= 0;
-  const color = isPositive ? 'text-up' : 'text-down';
+  const color = isPositive ? 'text-profit' : 'text-loss';
   const sign = isPositive ? '+' : '-';
   const formattedPnl = `${sign}$${Math.abs(pnlDollars).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
-    <div className="border border-terminal-border rounded-lg bg-terminal-bg/80 overflow-hidden px-3.5 py-3">
+    <div className="border border-border rounded-lg bg-base/80 overflow-hidden px-3.5 py-3">
       <div className="flex items-center gap-2 mb-2">
         <TickerLogo symbol={symbol} size={22} />
         <span className="text-xs font-mono font-medium text-text-secondary tracking-wide">{symbol}</span>
@@ -58,7 +58,7 @@ export default function PnLDisplay({ symbol, pnlDollars, pnlPercent, currentPric
         {chart && <div className="w-[50%] shrink-0 ml-auto">{chart}</div>}
       </div>
       {(shares != null || avgCost != null) && (
-        <div className="flex gap-4 mt-2 pt-2 border-t border-terminal-border/50">
+        <div className="flex gap-4 mt-2 pt-2 border-t border-border/50">
           {shares != null && (
             <div>
               <div className="text-xxs font-mono text-text-muted leading-tight">Shares</div>

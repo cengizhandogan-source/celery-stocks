@@ -48,7 +48,7 @@ export default function WalletsSection() {
         <button
           onClick={triggerSync}
           disabled={syncing || connections.length === 0}
-          className="text-xxs font-mono text-cyan hover:text-cyan/80 disabled:opacity-40 transition-colors"
+          className="text-xxs font-mono text-info hover:text-info/80 disabled:opacity-40 transition-colors"
         >
           {syncing ? 'Syncing...' : 'Sync Now'}
         </button>
@@ -60,7 +60,7 @@ export default function WalletsSection() {
           <span className="text-xxs font-mono text-text-muted uppercase tracking-wider">Exchange Connections</span>
           <button
             onClick={() => setShowConnect(true)}
-            className="text-xxs font-mono text-cyan hover:text-cyan/80 transition-colors"
+            className="text-xxs font-mono text-info hover:text-info/80 transition-colors"
           >
             + Add
           </button>
@@ -71,7 +71,7 @@ export default function WalletsSection() {
             <p className="text-xs font-mono text-text-muted mb-3">No exchanges connected</p>
             <button
               onClick={() => setShowConnect(true)}
-              className="text-xs font-mono text-cyan border border-cyan/30 hover:bg-cyan/10 px-4 py-2 rounded transition-colors"
+              className="text-xs font-mono text-info border border-info/30 hover:bg-info/10 px-4 py-2 rounded transition-colors"
             >
               Connect Exchange
             </button>
@@ -81,7 +81,7 @@ export default function WalletsSection() {
             {connections.map((conn) => (
               <div
                 key={conn.id}
-                className="flex items-center justify-between py-2 px-2 rounded hover:bg-terminal-hover transition-colors group"
+                className="flex items-center justify-between py-2 px-2 rounded hover:bg-hover transition-colors group"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-xs font-mono text-text-primary font-medium">
@@ -91,12 +91,12 @@ export default function WalletsSection() {
                     <span className="text-xxs font-mono text-text-muted truncate">{conn.label}</span>
                   )}
                   {!conn.is_valid && (
-                    <span className="text-xxs font-mono text-down">Invalid</span>
+                    <span className="text-xxs font-mono text-loss">Invalid</span>
                   )}
                 </div>
                 <button
                   onClick={() => removeConnection(conn.id)}
-                  className="text-xxs font-mono text-text-muted hover:text-down opacity-0 group-hover:opacity-100 transition-all"
+                  className="text-xxs font-mono text-text-muted hover:text-loss opacity-0 group-hover:opacity-100 transition-all"
                 >
                   Remove
                 </button>

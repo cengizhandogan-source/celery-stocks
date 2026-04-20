@@ -10,7 +10,7 @@ export default function SocialLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen">
       <SocialSidebar />
       <main>
-        <div className="max-w-[760px] mx-auto border-x border-terminal-border min-h-screen">
+        <div className="max-w-[760px] mx-auto border-x border-border min-h-screen">
           {children}
         </div>
       </main>

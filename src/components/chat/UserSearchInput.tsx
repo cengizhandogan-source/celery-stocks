@@ -63,16 +63,16 @@ export default function UserSearchInput({ onSelect }: UserSearchInputProps) {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative px-3 py-2 border-b border-terminal-border">
+    <div ref={containerRef} className="relative px-3 py-2 border-b border-border">
       <input
         value={query}
         onChange={(e) => handleChange(e.target.value)}
         onFocus={() => results.length > 0 && setOpen(true)}
         placeholder="Search users..."
-        className="w-full bg-terminal-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-terminal-border focus:border-up/40 focus:outline-none"
+        className="w-full bg-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
       />
       {open && results.length > 0 && (
-        <div className="absolute left-3 right-3 top-full mt-1 bg-terminal-panel border border-terminal-border-strong rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
+        <div className="absolute left-3 right-3 top-full mt-1 bg-surface border border-border-strong rounded shadow-2xl z-50 max-h-48 overflow-y-auto">
           {results.map((p) => (
             <button
               key={p.id}
@@ -82,7 +82,7 @@ export default function UserSearchInput({ onSelect }: UserSearchInputProps) {
                 setResults([]);
                 setOpen(false);
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-terminal-hover transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-hover transition-colors"
             >
               <UserAvatar avatarUrl={p.avatar_url} size="sm" />
               <OnlineDot isOnline={onlineUserIds.has(p.id)} />
