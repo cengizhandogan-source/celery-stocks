@@ -1,7 +1,6 @@
 import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
 import { MessageCircle, Share2, Heart } from 'lucide-react';
-import { SENTIMENT_COLORS, SENTIMENT_BG } from '@/stores/chatStore';
 import TradeEmbed from './TradeEmbed';
 import MiniStockChart from './MiniStockChart';
 import PnLDisplay from './PnLDisplay';
@@ -28,7 +27,7 @@ function renderContentWithTickers(content: string): ReactNode[] {
     }
     parts.push(
       <span key={start} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-gold/10 text-gold font-mono align-middle">
-        <TickerLogo symbol={symbol} size={12} />
+        <TickerLogo symbol={symbol} size={14} />
         <span>${symbol}</span>
       </span>
     );
@@ -91,14 +90,11 @@ export default function PostCard({
       <div className="flex items-center gap-1.5 mb-1.5">
         <Link href={`/social/profile/${post.user_id}`} className="flex items-center gap-1.5 min-w-0">
           <UserAvatar avatarUrl={post.profile?.avatar_url} size="sm" />
-          <span
-            className="text-sm font-sans font-semibold truncate hover:underline"
-            style={{ color: post.profile?.avatar_color ?? '#A1A1AA' }}
-          >
+          <span className="text-sm font-sans font-semibold truncate hover:underline text-text-primary">
             {post.profile?.display_name ?? 'Unknown'}
           </span>
         </Link>
-        {post.profile?.is_verified && <VerifiedBadge size={12} />}
+        {post.profile?.is_verified && <VerifiedBadge size={14} />}
         <NetWorthBadge netWorth={post.profile?.crypto_net_worth} showNetWorth={post.profile?.show_net_worth} />
         <span className="text-xxs font-mono text-text-muted ml-auto shrink-0">{timeStr}</span>
         {isOwner && onDelete && (
@@ -154,15 +150,9 @@ export default function PostCard({
       {/* Type-specific embeds */}
       {post.post_type === 'trade' && <TradeEmbed post={post} hidePnl />}
 
-      {/* Text content with inline sentiment */}
-      {(post.content || post.sentiment) && (
+      {post.content && (
         <p className={`text-sm font-sans text-text-primary leading-relaxed whitespace-pre-wrap ${post.post_type !== 'text' ? 'mt-2' : ''}`}>
-          {post.sentiment && (
-            <span className={`inline-flex text-[10px] font-sans font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded capitalize mr-1.5 align-middle ${SENTIMENT_COLORS[post.sentiment]} ${SENTIMENT_BG[post.sentiment]}`}>
-              {post.sentiment}
-            </span>
-          )}
-          {post.content && renderContentWithTickers(post.content)}
+          {renderContentWithTickers(post.content)}
         </p>
       )}
 

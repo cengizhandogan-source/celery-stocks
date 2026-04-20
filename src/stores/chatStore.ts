@@ -42,15 +42,3 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 }));
 
 export const MESSAGES_PAGE_SIZE = 50;
-
-export const SENTIMENT_COLORS = {
-  bullish: 'text-profit',
-  bearish: 'text-loss',
-  neutral: 'text-gold',
-} as const;
-
-export const SENTIMENT_BG = {
-  bullish: 'bg-profit/10',
-  bearish: 'bg-loss/10',
-  neutral: 'bg-gold/10',
-} as const;

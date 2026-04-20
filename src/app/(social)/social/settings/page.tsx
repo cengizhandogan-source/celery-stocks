@@ -7,7 +7,7 @@ export default function SettingsPage() {
     <div className="flex flex-col">
       <div className="sticky top-0 z-10 bg-base/80 backdrop-blur-sm border-b border-border">
         <div className="px-4 py-3">
-          <h1 className="text-sm font-mono font-bold text-text-primary uppercase tracking-wider">Settings</h1>
+          <h1 className="text-lg font-mono font-bold text-text-primary uppercase tracking-wider">Settings</h1>
         </div>
       </div>
       <SettingsContent />

@@ -12,13 +12,18 @@ export function useWalletConnections() {
   useEffect(() => {
     if (!user) return;
 
-    fetch('/api/wallet/connections')
-      .then((res) => res.json())
-      .then((data) => {
-        setConnections(data.connections ?? []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    const fetchConnections = () =>
+      fetch('/api/wallet/connections')
+        .then((res) => res.json())
+        .then((data) => {
+          setConnections(data.connections ?? []);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+
+    fetchConnections();
+    const interval = setInterval(fetchConnections, 60_000);
+    return () => clearInterval(interval);
   }, [user]);
 
   const addConnection = useCallback(

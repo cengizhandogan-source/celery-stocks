@@ -17,7 +17,7 @@ export default function PnLDisplay({ symbol, pnlDollars, pnlPercent, currentPric
     return (
       <div className="border border-border rounded-lg bg-base/80 overflow-hidden px-3.5 py-3">
         <div className="flex items-center gap-2 mb-2">
-          <TickerLogo symbol={symbol} size={22} />
+          <TickerLogo symbol={symbol} size={28} />
           <span className="text-xs font-mono font-medium text-text-secondary tracking-wide">{symbol}</span>
         </div>
         <div className="flex items-center gap-3">
@@ -36,7 +36,7 @@ export default function PnLDisplay({ symbol, pnlDollars, pnlPercent, currentPric
   return (
     <div className="border border-border rounded-lg bg-base/80 overflow-hidden px-3.5 py-3">
       <div className="flex items-center gap-2 mb-2">
-        <TickerLogo symbol={symbol} size={22} />
+        <TickerLogo symbol={symbol} size={28} />
         <span className="text-xs font-mono font-medium text-text-secondary tracking-wide">{symbol}</span>
         {currentPrice != null && (
           <span className="text-xs font-mono text-text-muted">
@@ -46,7 +46,7 @@ export default function PnLDisplay({ symbol, pnlDollars, pnlPercent, currentPric
       </div>
       <div className="flex items-center gap-3">
         <div className="min-w-0">
-          <div className={`text-lg font-mono font-bold leading-none mb-1 ${color}`}>
+          <div className={`text-2xl font-mono font-bold leading-none mb-1 ${color}`}>
             {formattedPnl}
           </div>
           {pnlPercent != null && (

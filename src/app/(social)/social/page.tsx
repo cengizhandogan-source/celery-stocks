@@ -26,7 +26,7 @@ export default function FeedPage() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-base/80 backdrop-blur-md border-b border-border">
         <div className="px-4 py-3.5">
-          <h1 className="text-base font-sans font-semibold text-text-primary tracking-tight">Feed</h1>
+          <h1 className="text-xl font-sans font-semibold text-text-primary tracking-tight">Feed</h1>
         </div>
 
         {/* Toolbar */}

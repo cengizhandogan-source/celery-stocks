@@ -4,7 +4,7 @@ interface VerifiedBadgeProps {
   pulse?: boolean;
 }
 
-export default function VerifiedBadge({ size = 12, className = 'text-gold', pulse = true }: VerifiedBadgeProps) {
+export default function VerifiedBadge({ size = 14, className = 'text-gold', pulse = true }: VerifiedBadgeProps) {
   const svg = (
     <svg
       width={size}

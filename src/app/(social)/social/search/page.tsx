@@ -107,7 +107,7 @@ export default function SearchPage() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-base/80 backdrop-blur-sm border-b border-border">
         <div className="px-4 py-3">
-          <h1 className="text-sm font-mono font-bold text-text-primary uppercase tracking-wider">Search</h1>
+          <h1 className="text-lg font-mono font-bold text-text-primary uppercase tracking-wider">Search</h1>
         </div>
 
         {/* Search input */}
@@ -156,13 +156,10 @@ export default function SearchPage() {
               className="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-hover transition-colors"
             >
               <UserAvatar avatarUrl={u.avatar_url} size="lg" />
-              <span
-                className="text-sm font-mono font-medium truncate"
-                style={{ color: u.avatar_color }}
-              >
+              <span className="text-sm font-mono font-medium truncate text-text-primary">
                 {u.display_name}
               </span>
-              {u.is_verified && <VerifiedBadge size={12} />}
+              {u.is_verified && <VerifiedBadge size={14} />}
             </Link>
           ))
         )

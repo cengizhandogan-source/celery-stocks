@@ -28,6 +28,8 @@ export function useNetWorthHistory(userId?: string | null) {
       return;
     }
     fetchSnapshots();
+    const interval = setInterval(fetchSnapshots, 60_000);
+    return () => clearInterval(interval);
   }, [targetId, fetchSnapshots]);
 
   return { snapshots, loading };

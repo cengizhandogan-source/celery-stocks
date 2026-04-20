@@ -42,6 +42,7 @@ export async function POST() {
         continue;
       }
 
+      let markInvalid = false;
       try {
         const adapter = getAdapter(conn.exchange);
         const apiKey = decryptBundle(conn.api_key_enc);
@@ -53,22 +54,23 @@ export async function POST() {
         const balances = await adapter.fetchBalances(apiKey, apiSecret, passphrase);
         connectionBalances.push({ connectionId: conn.id, balances });
         balances.forEach((b) => allAssets.add(b.asset.toUpperCase()));
-
-        // Update last_synced_at
-        await supabase
-          .from('exchange_connections')
-          .update({ last_synced_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-          .eq('id', conn.id);
       } catch (err) {
         if (err instanceof ExchangeAuthError) {
-          await supabase
-            .from('exchange_connections')
-            .update({ is_valid: false, updated_at: new Date().toISOString() })
-            .eq('id', conn.id);
+          markInvalid = true;
         } else {
           console.error('[wallet-sync] connection sync failed:', conn.id, err);
         }
       }
+
+      const now = new Date().toISOString();
+      await supabase
+        .from('exchange_connections')
+        .update(
+          markInvalid
+            ? { is_valid: false, last_synced_at: now, updated_at: now }
+            : { last_synced_at: now, updated_at: now }
+        )
+        .eq('id', conn.id);
     }
 
     // Get prices for all assets (fallback to empty if CoinGecko fails)
@@ -118,7 +120,7 @@ export async function POST() {
       .from('profiles')
       .select('crypto_net_worth')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.crypto_net_worth != null) {
       const today = new Date().toISOString().split('T')[0];

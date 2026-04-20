@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('is_valid', true)
       .or(`last_synced_at.is.null,last_synced_at.lt.${fiveMinAgo}`)
+      .order('last_synced_at', { ascending: true, nullsFirst: true })
       .limit(50); // batch size to avoid timeout
 
     if (error) throw error;
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
       const connectionBalances: { connectionId: string; balances: { asset: string; free: number; locked: number }[] }[] = [];
 
       for (const conn of userConns) {
+        let markInvalid = false;
         try {
           const adapter = getAdapter(conn.exchange);
           const apiKey = decryptBundle(conn.api_key_enc);
@@ -75,23 +77,24 @@ export async function GET(request: NextRequest) {
           const balances = await adapter.fetchBalances(apiKey, apiSecret, passphrase);
           connectionBalances.push({ connectionId: conn.id, balances });
           balances.forEach((b) => allAssets.add(b.asset.toUpperCase()));
-
-          await supabase
-            .from('exchange_connections')
-            .update({ last_synced_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-            .eq('id', conn.id);
-
           syncedCount++;
         } catch (err) {
           if (err instanceof ExchangeAuthError) {
-            await supabase
-              .from('exchange_connections')
-              .update({ is_valid: false, updated_at: new Date().toISOString() })
-              .eq('id', conn.id);
+            markInvalid = true;
           } else {
             console.error('[wallet-cron] connection sync failed:', conn.id, err);
           }
         }
+
+        const now = new Date().toISOString();
+        await supabase
+          .from('exchange_connections')
+          .update(
+            markInvalid
+              ? { is_valid: false, last_synced_at: now, updated_at: now }
+              : { last_synced_at: now, updated_at: now }
+          )
+          .eq('id', conn.id);
       }
 
       // Get prices (fallback to empty if CoinGecko fails)
@@ -134,7 +137,7 @@ export async function GET(request: NextRequest) {
         .from('profiles')
         .select('crypto_net_worth')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profile?.crypto_net_worth != null) {
         const today = new Date().toISOString().split('T')[0];

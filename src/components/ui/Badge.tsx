@@ -2,10 +2,10 @@
 
 const variants = {
   default: 'bg-white/5 text-text-secondary',
-  green: 'bg-up-dim text-up',
-  red: 'bg-down-dim text-down',
-  amber: 'bg-amber/15 text-amber',
-  cyan: 'bg-cyan/15 text-cyan',
+  green: 'bg-profit-dim text-profit',
+  red: 'bg-loss-dim text-loss',
+  amber: 'bg-gold/15 text-gold',
+  cyan: 'bg-info/15 text-info',
 };
 
 interface BadgeProps {

@@ -14,7 +14,6 @@ Coinly is a social web app for crypto traders. Users connect their exchange acco
 - Trade and position embeds with P&L (profit/loss) display
 - Follow other traders
 - Real-time direct messages
-- In-feed commentary with sentiment (bullish, bearish, neutral)
 - Verified-badge system for API-synced trades
 
 ## Access

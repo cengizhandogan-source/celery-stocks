@@ -38,7 +38,7 @@ export default function HoldingsTable({
             className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-2 py-1.5 text-xxs font-mono hover:bg-hover/50 rounded transition-colors"
           >
             <span className="text-text-primary font-medium truncate flex items-center gap-1.5">
-              <TickerLogo symbol={h.asset} size={16} />
+              <TickerLogo symbol={h.asset} size={20} />
               {h.asset}
             </span>
             <span className="text-right text-text-secondary w-20">

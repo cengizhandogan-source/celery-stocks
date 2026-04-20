@@ -23,7 +23,7 @@ export default function MessagesPage() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-base/80 backdrop-blur-sm border-b border-border">
         <div className="px-4 py-3">
-          <h1 className="text-sm font-mono font-bold text-text-primary uppercase tracking-wider">Messages</h1>
+          <h1 className="text-lg font-mono font-bold text-text-primary uppercase tracking-wider">Messages</h1>
         </div>
         <div className="px-4 py-2 border-t border-border">
           <UserSearchInput onSelect={handleSelectUser} />
@@ -55,13 +55,10 @@ export default function MessagesPage() {
               <OnlineDot isOnline={onlineUserIds.has(conv.peer.id)} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <span
-                    className="text-sm font-mono font-medium truncate"
-                    style={{ color: conv.peer.avatar_color }}
-                  >
+                  <span className="text-sm font-mono font-medium truncate text-text-primary">
                     {conv.peer.display_name}
                   </span>
-                  {conv.peer.is_verified && <VerifiedBadge size={12} />}
+                  {conv.peer.is_verified && <VerifiedBadge size={14} />}
                   <span className="text-xxs font-mono text-text-muted shrink-0">{timeStr}</span>
                 </div>
                 <p className="text-xxs font-mono text-text-muted truncate mt-0.5">

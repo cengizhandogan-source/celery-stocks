@@ -29,10 +29,10 @@ export default function MessageBubble({ displayName, avatarColor, avatarUrl, con
       <UserAvatar avatarUrl={avatarUrl} size="sm" className="mt-0.5" />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="text-sm font-sans font-semibold" style={{ color: avatarColor }}>
+          <span className="text-sm font-sans font-semibold text-text-primary">
             {displayName}
           </span>
-          {isVerified && <VerifiedBadge size={11} />}
+          {isVerified && <VerifiedBadge size={14} />}
           <NetWorthBadge netWorth={netWorth} showNetWorth={showNetWorth} />
           <span className="text-[10px] font-mono text-text-muted opacity-0 group-hover:opacity-100 transition-opacity">
             {timeStr}

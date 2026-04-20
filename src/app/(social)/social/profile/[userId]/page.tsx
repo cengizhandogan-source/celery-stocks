@@ -34,8 +34,8 @@ function WalletHoldingsSection({ userId, isOwnProfile }: { userId: string; isOwn
   return (
     <div className="px-4 py-4 border-b border-border">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-mono font-bold text-text-primary">Wallet Holdings</h2>
-        <span className="text-xs font-mono text-gold font-bold">{formatNetWorth(totalNetWorth)}</span>
+        <h2 className="text-sm font-mono font-bold text-text-primary">Wallet Holdings</h2>
+        <span className="text-base font-mono text-gold font-bold">{formatNetWorth(totalNetWorth)}</span>
       </div>
       {snapshots.length >= 2 && (
         <div className="mb-3">
@@ -94,13 +94,10 @@ export default function ProfilePage() {
           <UserAvatar avatarUrl={profile.avatar_url} size="xl" />
           <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h1
-                    className="text-base font-mono font-bold truncate"
-                    style={{ color: profile.avatar_color }}
-                  >
+                  <h1 className="text-xl font-mono font-bold truncate text-text-primary">
                     {profile.display_name}
                   </h1>
-                  {profile.is_verified && <VerifiedBadge size={14} />}
+                  {profile.is_verified && <VerifiedBadge size={16} />}
                   <NetWorthBadge netWorth={profile.crypto_net_worth} showNetWorth={profile.show_net_worth} />
                   {!isOwnProfile && (
                     <button

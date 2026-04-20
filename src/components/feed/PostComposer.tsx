@@ -3,11 +3,11 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useCryptoHoldings } from '@/hooks/useCryptoHoldings';
 import { useCachedTrades } from '@/hooks/useCachedTrades';
-import type { Sentiment, PostType } from '@/lib/types';
+import type { PostType } from '@/lib/types';
 
 interface PostComposerProps {
-  onPostText: (data: { content: string; symbol?: string; sentiment?: Sentiment }) => Promise<void>;
-  onPostPosition: (data: { content?: string; symbol: string; shares: number; avgCost: number; sentiment?: Sentiment }) => Promise<void>;
+  onPostText: (data: { content: string; symbol?: string }) => Promise<void>;
+  onPostPosition: (data: { content?: string; symbol: string; shares: number; avgCost: number }) => Promise<void>;
   onPostTrade: (data: {
     content?: string;
     symbol: string;
@@ -17,17 +17,9 @@ interface PostComposerProps {
     quoteQty: number;
     pnl?: number;
     executedAt: string;
-    sentiment?: Sentiment;
   }) => Promise<void>;
   onCancel: () => void;
 }
-
-const sentiments: Sentiment[] = ['bullish', 'bearish', 'neutral'];
-const sentimentStyles: Record<Sentiment, string> = {
-  bullish: 'border-profit/50 bg-profit/10 text-profit',
-  bearish: 'border-loss/50 bg-loss/10 text-loss',
-  neutral: 'border-gold/50 bg-gold/10 text-gold',
-};
 
 const typeLabels: { type: PostType; label: string }[] = [
   { type: 'text', label: 'Text' },
@@ -39,7 +31,6 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
   const [postType, setPostType] = useState<PostType>('text');
   const [content, setContent] = useState('');
   const [symbol, setSymbol] = useState('');
-  const [sentiment, setSentiment] = useState<Sentiment | null>(null);
   const [selectedPositionId, setSelectedPositionId] = useState('');
   const [selectedTradeId, setSelectedTradeId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -98,7 +89,6 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
           await onPostText({
             content: content.trim(),
             symbol: symbol.trim() || undefined,
-            sentiment: sentiment ?? undefined,
           });
           break;
         case 'position': {
@@ -109,7 +99,6 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
               symbol: selected.symbol,
               shares: selected.shares,
               avgCost: selected.avgCost,
-              sentiment: sentiment ?? undefined,
             });
           }
           break;
@@ -125,7 +114,6 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
               price: selected.price,
               quoteQty: selected.quoteQty,
               executedAt: selected.executedAt,
-              sentiment: sentiment ?? undefined,
             });
           }
           break;
@@ -134,13 +122,12 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
 
       setContent('');
       setSymbol('');
-      setSentiment(null);
       setSelectedPositionId('');
       setSelectedTradeId('');
       setLoading(false);
       onCancel();
     },
-    [postType, content, symbol, sentiment, selectedPositionId, selectedTradeId, selectablePositions, selectableTrades, loading, onPostText, onPostPosition, onPostTrade, onCancel]
+    [postType, content, symbol, selectedPositionId, selectedTradeId, selectablePositions, selectableTrades, loading, onPostText, onPostPosition, onPostTrade, onCancel]
   );
 
   return (
@@ -208,31 +195,16 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         </>
       )}
 
-      {/* Symbol + sentiment */}
-      <div className="flex gap-2 mb-2">
-        {postType === 'text' && (
+      {postType === 'text' && (
+        <div className="mb-2">
           <input
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
             placeholder="$SYM (optional)"
             className="w-28 bg-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2.5 py-2 rounded-md border border-border focus:border-gold/40 focus:outline-none uppercase transition-colors"
           />
-        )}
-        <div className="flex gap-1">
-          {sentiments.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setSentiment(sentiment === s ? null : s)}
-              className={`text-xs font-sans font-medium px-2.5 py-1 rounded-full border capitalize transition-all duration-150 ease-[var(--ease-snap)] ${
-                sentiment === s ? sentimentStyles[s] : 'border-border text-text-muted hover:text-text-primary hover:border-border-strong'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
         </div>
-      </div>
+      )}
 
       {/* Content textarea */}
       <textarea

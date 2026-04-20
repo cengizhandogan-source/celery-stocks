@@ -30,6 +30,8 @@ export function useCryptoHoldings(userId?: string | null) {
       return;
     }
     fetchHoldings();
+    const interval = setInterval(fetchHoldings, 60_000);
+    return () => clearInterval(interval);
   }, [targetId, fetchHoldings]);
 
   return { holdings, totalNetWorth, loading, refetch: fetchHoldings };

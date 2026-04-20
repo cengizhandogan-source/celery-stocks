@@ -12,7 +12,7 @@ function LoginForm() {
 
   return (
     <div className="bg-surface border border-border rounded-lg p-6">
-      <h1 className="text-sm font-mono text-text-primary uppercase tracking-widest mb-6 text-center">
+      <h1 className="text-base font-mono text-text-primary uppercase tracking-widest mb-6 text-center">
         Sign In
       </h1>
 

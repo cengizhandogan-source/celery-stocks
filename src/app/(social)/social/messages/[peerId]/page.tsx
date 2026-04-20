@@ -69,10 +69,10 @@ export default function ConversationPage() {
           <>
             <UserAvatar avatarUrl={peer.avatar_url} size="md" />
             <OnlineDot isOnline={onlineUserIds.has(peer.id)} />
-            <span className="text-sm font-mono font-medium" style={{ color: peer.avatar_color }}>
+            <span className="text-lg font-mono font-medium text-text-primary">
               {peer.display_name}
             </span>
-            {peer.is_verified && <VerifiedBadge size={12} />}
+            {peer.is_verified && <VerifiedBadge size={14} />}
           </>
         )}
       </div>

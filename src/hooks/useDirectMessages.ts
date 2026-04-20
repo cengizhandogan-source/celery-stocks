@@ -4,21 +4,33 @@ import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import { useChatStore, MESSAGES_PAGE_SIZE } from '@/stores/chatStore';
-import type { DirectMessage, StrategyChipData } from '@/lib/types';
+import type { DirectMessage, Post } from '@/lib/types';
+
+const DM_SELECT = `
+  *,
+  sender:profiles!sender_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
+  receiver:profiles!receiver_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
+  post:posts!post_id(id, user_id, post_type, content, symbol, position_symbol, position_shares, position_avg_cost, trade_symbol, trade_side, trade_qty, trade_price, trade_pnl, trade_executed_at, like_count, comment_count, created_at, profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth))
+`;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapStrategy(s: any): StrategyChipData | undefined {
-  if (!s) return undefined;
-  const author = Array.isArray(s.author) ? s.author[0] : s.author;
+function mapPost(p: any): Post | undefined {
+  if (!p) return undefined;
+  const profile = Array.isArray(p.profile) ? p.profile[0] : p.profile;
   return {
-    id: s.id,
-    name: s.name,
-    description: s.description || '',
-    symbols: s.symbols || [],
-    code: s.code || '',
-    author: author || { id: '', username: 'unknown', display_name: 'Unknown', avatar_color: '#888', is_verified: false },
-    import_count: 0,
-    created_at: s.created_at,
+    ...p,
+    profile,
+    liked_by_me: false,
+  } as Post;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapDm(m: any): DirectMessage {
+  return {
+    ...m,
+    sender: Array.isArray(m.sender) ? m.sender[0] : m.sender,
+    receiver: Array.isArray(m.receiver) ? m.receiver[0] : m.receiver,
+    post: m.post ? mapPost(m.post) : null,
   };
 }
 
@@ -42,18 +54,13 @@ export function useDirectMessages(peerId: string | null) {
 
     supabase
       .from('direct_messages')
-      .select('*, sender:profiles!sender_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), receiver:profiles!receiver_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified))')
+      .select(DM_SELECT)
       .or(`and(sender_id.eq.${user.id},receiver_id.eq.${peerId}),and(sender_id.eq.${peerId},receiver_id.eq.${user.id})`)
       .order('created_at', { ascending: false })
       .limit(MESSAGES_PAGE_SIZE)
       .then(({ data }) => {
         if (data) {
-          const msgs = data.reverse().map((m) => ({
-            ...m,
-            sender: Array.isArray(m.sender) ? m.sender[0] : m.sender,
-            receiver: Array.isArray(m.receiver) ? m.receiver[0] : m.receiver,
-            strategy: m.strategy ? mapStrategy(m.strategy) : undefined,
-          }));
+          const msgs = data.reverse().map(mapDm);
           setMessages(msgs);
           setHasMore(data.length === MESSAGES_PAGE_SIZE);
         }
@@ -75,32 +82,31 @@ export function useDirectMessages(peerId: string | null) {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'direct_messages' },
-        (payload) => {
-          const dm = payload.new as DirectMessage;
+        async (payload) => {
+          const raw = payload.new as DirectMessage;
           // Only add if it's part of this conversation
           const isRelevant =
-            (dm.sender_id === user.id && dm.receiver_id === peerId) ||
-            (dm.sender_id === peerId && dm.receiver_id === user.id);
+            (raw.sender_id === user.id && raw.receiver_id === peerId) ||
+            (raw.sender_id === peerId && raw.receiver_id === user.id);
 
           if (!isRelevant) return;
 
-          // Fetch profiles for the DM
-          supabase
-            .from('profiles')
-            .select('id, username, display_name, avatar_color, avatar_url, is_verified')
-            .in('id', [dm.sender_id, dm.receiver_id])
-            .then(({ data: profiles }) => {
-              if (profiles) {
-                cacheProfiles(profiles);
-                dm.sender = profiles.find((p) => p.id === dm.sender_id);
-                dm.receiver = profiles.find((p) => p.id === dm.receiver_id);
-              }
+          // Refetch with joins so embeds and profiles are populated.
+          const { data: full } = await supabase
+            .from('direct_messages')
+            .select(DM_SELECT)
+            .eq('id', raw.id)
+            .single();
 
-              setMessages((prev) => {
-                if (prev.some((m) => m.id === dm.id)) return prev;
-                return [...prev, dm];
-              });
-            });
+          const dm = full ? mapDm(full) : raw;
+
+          if (dm.sender) cacheProfiles([dm.sender]);
+          if (dm.receiver) cacheProfiles([dm.receiver]);
+
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === dm.id)) return prev;
+            return [...prev, dm];
+          });
 
           // Mark as read if we received it
           if (dm.receiver_id === user.id) {
@@ -116,28 +122,24 @@ export function useDirectMessages(peerId: string | null) {
   }, [peerId, user, cacheProfiles]);
 
   const sendDm = useCallback(
-    async (content: string, strategyId?: string) => {
+    async (content: string, postId?: string) => {
       if (!peerId || !user) return;
       const supabase = createClient();
-      const insertData: Record<string, string | boolean> = {
+      const trimmed = content.trim();
+      const insertData: Record<string, string | boolean | null> = {
         sender_id: user.id,
         receiver_id: peerId,
-        content,
+        content: trimmed.length > 0 ? trimmed : null,
       };
-      if (strategyId) insertData.strategy_id = strategyId;
+      if (postId) insertData.post_id = postId;
       const { data: inserted } = await supabase
         .from('direct_messages')
         .insert(insertData)
-        .select('*, sender:profiles!sender_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), receiver:profiles!receiver_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth), strategy:strategies!strategy_id(id, name, description, symbols, code, is_public, created_at, user_id, author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified))')
+        .select(DM_SELECT)
         .single();
 
       if (inserted) {
-        const dm = {
-          ...inserted,
-          sender: Array.isArray(inserted.sender) ? inserted.sender[0] : inserted.sender,
-          receiver: Array.isArray(inserted.receiver) ? inserted.receiver[0] : inserted.receiver,
-          strategy: inserted.strategy ? mapStrategy(inserted.strategy) : undefined,
-        };
+        const dm = mapDm(inserted);
         setMessages((prev) => {
           if (prev.some((m) => m.id === dm.id)) return prev;
           return [...prev, dm];

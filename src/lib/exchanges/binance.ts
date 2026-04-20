@@ -36,7 +36,8 @@ export class BinanceAdapter implements ExchangeAdapter {
 
     if (!res.ok) {
       const body = await res.text();
-      if (res.status === 401 || res.status === 403) {
+      // 451 = geo-block from this server region; will never resolve via retry.
+      if (res.status === 401 || res.status === 403 || res.status === 451) {
         throw new ExchangeAuthError('Binance', res.status, body);
       }
       throw new Error(`Binance API error ${res.status}: ${body}`);

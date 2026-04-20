@@ -34,9 +34,9 @@ export default function SocialSidebar() {
       <div className="px-5 py-5 border-b border-border">
         <Link
           href="/social"
-          className="flex items-center gap-2.5 text-[15px] font-sans font-semibold text-gold tracking-tight"
+          className="flex items-center gap-2.5 text-[17px] font-sans font-semibold text-gold tracking-tight"
         >
-          <img src="/coinly-logo.png" alt="Coinly" className="h-6 w-6" />
+          <img src="/coinly-logo.png" alt="Coinly" className="h-8 w-8" />
           Coinly
         </Link>
       </div>
@@ -85,8 +85,8 @@ export default function SocialSidebar() {
               <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r bg-gold" aria-hidden />
             )}
             <UserAvatar avatarUrl={profile.avatar_url} size="xs" />
-            <span className="truncate">{profile.display_name}</span>
-            {profile.is_verified && <VerifiedBadge size={11} pulse={false} />}
+            <span className="truncate text-text-primary">{profile.display_name}</span>
+            {profile.is_verified && <VerifiedBadge size={13} pulse={false} />}
           </Link>
         )}
       </nav>
@@ -99,7 +99,7 @@ export default function SocialSidebar() {
             <span className="text-xs font-sans font-medium text-text-primary truncate">
               {profile.display_name}
             </span>
-            {profile.is_verified && <VerifiedBadge size={11} pulse={false} />}
+            {profile.is_verified && <VerifiedBadge size={13} pulse={false} />}
             <Link
               href="/social/settings"
               className={`ml-auto transition-colors duration-150 ${

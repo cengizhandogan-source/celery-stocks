@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import { useChatStore } from '@/stores/chatStore';
-import type { Post, PostType, Sentiment, StrategyChipData, Profile } from '@/lib/types';
+import type { Post, PostType, Profile } from '@/lib/types';
 import { rankPosts } from '@/lib/feedRanking';
 
 export interface FeedFilters {
@@ -30,15 +30,7 @@ export function useFeed() {
       .from('posts')
       .select(`
         *,
-        profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
-        strategy:strategies!strategy_id(
-          id, name, description, symbols, code, created_at,
-          author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
-          backtest:strategy_backtest_results(
-            id, strategy_id, total_return, win_rate, sharpe_ratio,
-            max_drawdown, total_trades, backtest_range, equity_curve, computed_at
-          )
-        )
+        profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth)
       `)
       .order('created_at', { ascending: false })
       .limit(FEED_PAGE_SIZE);
@@ -71,28 +63,9 @@ export function useFeed() {
     if (data) {
       const mapped: Post[] = data.map((p) => {
         const profile = Array.isArray(p.profile) ? p.profile[0] : p.profile;
-        let strategy: StrategyChipData | undefined;
-        if (p.strategy && !Array.isArray(p.strategy)) {
-          const s = p.strategy as Record<string, unknown>;
-          const author = Array.isArray(s.author) ? s.author[0] : s.author;
-          const backtests = Array.isArray(s.backtest) ? s.backtest : [];
-          const backtest = backtests.length > 0 ? backtests[0] : undefined;
-          strategy = {
-            id: s.id as string,
-            name: s.name as string,
-            description: (s.description as string) ?? '',
-            symbols: (s.symbols as string[]) ?? [],
-            code: (s.code as string) ?? '',
-            author: author as Profile,
-            backtest,
-            import_count: 0,
-            created_at: s.created_at as string,
-          };
-        }
         return {
           ...p,
           profile,
-          strategy,
           liked_by_me: likedIds.has(p.id),
         };
       });
@@ -285,7 +258,7 @@ export function useFeed() {
   );
 
   const postText = useCallback(
-    async (data: { content: string; symbol?: string; sentiment?: Sentiment }) => {
+    async (data: { content: string; symbol?: string }) => {
       if (!user) return;
       const supabase = createClient();
       const { data: inserted } = await supabase
@@ -295,7 +268,6 @@ export function useFeed() {
           post_type: 'text',
           content: data.content,
           symbol: data.symbol?.toUpperCase() || null,
-          sentiment: data.sentiment || null,
         })
         .select('*, profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth)')
         .single();
@@ -316,7 +288,7 @@ export function useFeed() {
   );
 
   const postPosition = useCallback(
-    async (data: { content?: string; symbol: string; shares: number; avgCost: number; sentiment?: Sentiment }) => {
+    async (data: { content?: string; symbol: string; shares: number; avgCost: number }) => {
       if (!user) return;
       const supabase = createClient();
       const { data: inserted } = await supabase
@@ -326,7 +298,6 @@ export function useFeed() {
           post_type: 'position',
           content: data.content || null,
           symbol: data.symbol.toUpperCase(),
-          sentiment: data.sentiment || null,
           position_symbol: data.symbol.toUpperCase(),
           position_shares: data.shares,
           position_avg_cost: data.avgCost,
@@ -359,7 +330,6 @@ export function useFeed() {
       quoteQty: number;
       pnl?: number;
       executedAt: string;
-      sentiment?: Sentiment;
     }) => {
       if (!user) return;
       const supabase = createClient();
@@ -370,7 +340,6 @@ export function useFeed() {
           post_type: 'trade',
           content: data.content || null,
           symbol: data.symbol.toUpperCase(),
-          sentiment: data.sentiment || null,
           trade_symbol: data.symbol.toUpperCase(),
           trade_side: data.side,
           trade_qty: data.qty,
@@ -397,66 +366,6 @@ export function useFeed() {
     [user]
   );
 
-  const postStrategy = useCallback(
-    async (data: { content?: string; strategyId: string }) => {
-      if (!user) return;
-      const supabase = createClient();
-      const { data: inserted } = await supabase
-        .from('posts')
-        .insert({
-          user_id: user.id,
-          post_type: 'strategy',
-          content: data.content || null,
-          strategy_id: data.strategyId,
-        })
-        .select(`
-          *,
-          profile:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
-          strategy:strategies!strategy_id(
-            id, name, description, symbols, code, created_at,
-            author:profiles!user_id(id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth),
-            backtest:strategy_backtest_results(
-              id, strategy_id, total_return, win_rate, sharpe_ratio,
-              max_drawdown, total_trades, backtest_range, equity_curve, computed_at
-            )
-          )
-        `)
-        .single();
-
-      if (inserted) {
-        let strategy: StrategyChipData | undefined;
-        if (inserted.strategy && !Array.isArray(inserted.strategy)) {
-          const s = inserted.strategy as Record<string, unknown>;
-          const author = Array.isArray(s.author) ? s.author[0] : s.author;
-          const backtests = Array.isArray(s.backtest) ? s.backtest : [];
-          const backtest = backtests.length > 0 ? backtests[0] : undefined;
-          strategy = {
-            id: s.id as string,
-            name: s.name as string,
-            description: (s.description as string) ?? '',
-            symbols: (s.symbols as string[]) ?? [],
-            code: (s.code as string) ?? '',
-            author: author as Profile,
-            backtest,
-            import_count: 0,
-            created_at: s.created_at as string,
-          };
-        }
-        const mapped: Post = {
-          ...inserted,
-          profile: Array.isArray(inserted.profile) ? inserted.profile[0] : inserted.profile,
-          strategy,
-          liked_by_me: false,
-        };
-        setPosts((prev) => {
-          if (prev.some((p) => p.id === mapped.id)) return prev;
-          return rankPosts([mapped, ...prev]);
-        });
-      }
-    },
-    [user]
-  );
-
   const deletePost = useCallback(
     async (postId: string) => {
       if (!user) return;
@@ -474,5 +383,5 @@ export function useFeed() {
     [user, fetchPosts]
   );
 
-  return { posts, loading, filters, setFilters, postText, postPosition, postTrade, postStrategy, toggleLike, deletePost };
+  return { posts, loading, filters, setFilters, postText, postPosition, postTrade, toggleLike, deletePost };
 }

@@ -36,7 +36,7 @@ interface TickerLogoProps {
   className?: string;
 }
 
-export default function TickerLogo({ symbol, website, size = 20, className = '' }: TickerLogoProps) {
+export default function TickerLogo({ symbol, website, size = 24, className = '' }: TickerLogoProps) {
   const [imgError, setImgError] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(() => {
     // Try to resolve immediately (crypto or with website)

@@ -86,7 +86,7 @@ export default function UserSearchInput({ onSelect }: UserSearchInputProps) {
             >
               <UserAvatar avatarUrl={p.avatar_url} size="sm" />
               <OnlineDot isOnline={onlineUserIds.has(p.id)} />
-              <span className="text-xs font-mono" style={{ color: p.avatar_color }}>
+              <span className="text-xs font-mono text-text-primary">
                 {p.display_name}
               </span>
               {p.is_verified && <VerifiedBadge size={10} />}

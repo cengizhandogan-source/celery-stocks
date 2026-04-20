@@ -124,10 +124,10 @@ function MiniStockChartInner({
         {/* Left: info */}
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            <TickerLogo symbol={symbol} size={22} />
+            <TickerLogo symbol={symbol} size={28} />
             <span className="text-xs font-mono font-medium text-text-secondary tracking-wide">{symbol}</span>
           </div>
-          <span className="text-xl font-mono font-bold text-text-primary leading-none mb-1.5">
+          <span className="text-2xl font-mono font-bold text-text-primary leading-none mb-1.5">
             {formatPrice(price)}
           </span>
           <span className={`text-xxs font-mono font-medium ${isUp ? 'text-profit' : 'text-loss'}`}>

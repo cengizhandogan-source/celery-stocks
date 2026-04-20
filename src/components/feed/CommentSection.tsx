@@ -72,13 +72,10 @@ function CommentRow({
       <UserAvatar avatarUrl={comment.profile?.avatar_url} size="xs" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span
-            className="text-xxs font-mono font-medium truncate"
-            style={{ color: comment.profile?.avatar_color ?? '#A1A1AA' }}
-          >
+          <span className="text-xxs font-mono font-medium truncate text-text-primary">
             {comment.profile?.display_name ?? 'Unknown'}
           </span>
-          {comment.profile?.is_verified && <VerifiedBadge size={10} />}
+          {comment.profile?.is_verified && <VerifiedBadge size={12} />}
           <NetWorthBadge netWorth={comment.profile?.crypto_net_worth} showNetWorth={comment.profile?.show_net_worth} />
           <span className="text-xxs font-mono text-text-muted">{timeStr}</span>
 
@@ -126,7 +123,7 @@ function CommentRow({
         {parentUsername && (
           <span className="text-xxs font-mono text-text-muted">
             ↳{' '}
-            <span style={{ color: comment.parent?.profile?.avatar_color ?? '#A1A1AA' }}>
+            <span className="text-text-primary">
               @{parentUsername}
             </span>
           </span>
@@ -156,11 +153,11 @@ function MentionDropdown({
           className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-hover transition-colors"
         >
           <UserAvatar avatarUrl={p.avatar_url} size="xs" />
-          <span className="text-xxs font-mono text-text-muted">@{p.username}</span>
-          <span className="text-xxs font-mono" style={{ color: p.avatar_color }}>
+          <span className="text-xxs font-mono text-text-primary">@{p.username}</span>
+          <span className="text-xxs font-mono text-text-primary">
             {p.display_name}
           </span>
-          {p.is_verified && <VerifiedBadge size={10} />}
+          {p.is_verified && <VerifiedBadge size={12} />}
           <NetWorthBadge netWorth={p.crypto_net_worth} showNetWorth={p.show_net_worth} />
         </button>
       ))}
@@ -280,7 +277,7 @@ export default function CommentSection({
           {replyTo && (
             <div className="flex items-center gap-1.5 px-2 pb-1">
               <span className="text-xxs font-mono text-text-muted">
-                replying to <span className="text-info">@{replyTo.username}</span>
+                replying to <span className="text-text-primary">@{replyTo.username}</span>
               </span>
               <button
                 onClick={cancelReply}
