@@ -189,15 +189,15 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
       </div>
 
       {/* Time range selector */}
-      <div className="flex gap-1 mt-1">
+      <div className="flex gap-1 mt-2">
         {TIME_RANGES.map((r) => (
           <button
             key={r.label}
             onClick={() => setRange(r.label)}
-            className={`px-2 py-0.5 text-xxs font-mono rounded transition-colors ${
+            className={`px-2.5 py-0.5 text-[11px] font-sans font-medium rounded-full transition-all duration-150 ease-[var(--ease-snap)] ${
               range === r.label
                 ? isUp ? 'text-profit bg-profit/10' : 'text-loss bg-loss/10'
-                : 'text-text-muted hover:text-text-secondary'
+                : 'text-text-muted hover:text-text-primary hover:bg-hover'
             }`}
           >
             {r.label}

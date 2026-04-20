@@ -144,18 +144,18 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
   );
 
   return (
-    <form onSubmit={handleSubmit} className="px-3 py-3 border-b border-border bg-white/[0.02]">
+    <form onSubmit={handleSubmit} className="px-4 py-4 border-b border-border bg-surface/40">
       {/* Post type selector */}
-      <div className="flex gap-1 mb-2">
+      <div className="flex gap-1 mb-3">
         {typeLabels.map(({ type, label }) => (
           <button
             key={type}
             type="button"
             onClick={() => setPostType(type)}
-            className={`text-xxs font-mono px-2 py-1 rounded border capitalize transition-colors ${
+            className={`text-xs font-sans px-3 py-1 rounded-full border capitalize transition-all duration-150 ease-[var(--ease-snap)] ${
               postType === type
-                ? 'border-profit/50 bg-profit/10 text-profit'
-                : 'border-border text-text-muted hover:text-text-secondary'
+                ? 'border-gold/50 bg-gold/10 text-gold'
+                : 'border-border text-text-muted hover:text-text-primary hover:border-border-strong'
             }`}
           >
             {label}
@@ -168,7 +168,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         <select
           value={selectedPositionId}
           onChange={(e) => setSelectedPositionId(e.target.value)}
-          className="w-full bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none mb-2"
+          className="w-full bg-input text-xs font-sans text-text-primary px-2.5 py-2 rounded-md border border-border focus:border-gold/40 focus:outline-none mb-2 transition-colors"
         >
           <option value="">Select a position...</option>
           {selectablePositions.map((p) => (
@@ -184,7 +184,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
             <select
               value={selectedTradeId}
               onChange={(e) => setSelectedTradeId(e.target.value)}
-              className="flex-1 bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
+              className="flex-1 bg-input text-xs font-sans text-text-primary px-2.5 py-2 rounded-md border border-border focus:border-gold/40 focus:outline-none transition-colors"
             >
               <option value="">Select a trade...</option>
               {selectableTrades.map((t) => (
@@ -195,13 +195,13 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
               type="button"
               onClick={syncTrades}
               disabled={syncing}
-              className="text-xxs font-mono px-2 py-1 rounded border border-border text-text-muted hover:text-text-secondary hover:border-profit/40 transition-colors disabled:opacity-50"
+              className="text-xs font-sans px-3 py-1.5 rounded-md border border-border text-text-secondary hover:text-text-primary hover:border-gold/40 transition-all duration-150 ease-[var(--ease-snap)] disabled:opacity-50"
             >
               {syncing ? 'Syncing...' : 'Sync'}
             </button>
           </div>
           {selectableTrades.length === 0 && !syncing && (
-            <p className="text-xxs font-mono text-text-muted mb-2">
+            <p className="text-xs font-sans text-text-muted mb-2">
               No trades found. Click Sync to fetch from your exchanges.
             </p>
           )}
@@ -215,7 +215,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
             placeholder="$SYM (optional)"
-            className="w-24 bg-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none uppercase"
+            className="w-28 bg-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2.5 py-2 rounded-md border border-border focus:border-gold/40 focus:outline-none uppercase transition-colors"
           />
         )}
         <div className="flex gap-1">
@@ -224,8 +224,8 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
               key={s}
               type="button"
               onClick={() => setSentiment(sentiment === s ? null : s)}
-              className={`text-xxs font-mono px-2 py-1 rounded border capitalize transition-colors ${
-                sentiment === s ? sentimentStyles[s] : 'border-border text-text-muted hover:text-text-secondary'
+              className={`text-xs font-sans font-medium px-2.5 py-1 rounded-full border capitalize transition-all duration-150 ease-[var(--ease-snap)] ${
+                sentiment === s ? sentimentStyles[s] : 'border-border text-text-muted hover:text-text-primary hover:border-border-strong'
               }`}
             >
               {s}
@@ -240,7 +240,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         onChange={(e) => setContent(e.target.value)}
         placeholder={postType === 'text' ? "What's on your mind?" : 'Add a comment (optional)...'}
         rows={3}
-        className="w-full bg-input text-xs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none resize-none mb-2"
+        className="w-full bg-input text-sm font-sans text-text-primary placeholder:text-text-muted px-3 py-2 rounded-md border border-border focus:border-gold/40 focus:outline-none resize-none mb-3 transition-colors"
       />
 
       {/* Actions */}
@@ -248,14 +248,14 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
         <button
           type="button"
           onClick={onCancel}
-          className="text-xxs font-mono text-text-muted hover:text-text-secondary px-3 py-1 transition-colors"
+          className="text-xs font-sans text-text-muted hover:text-text-primary px-3 py-1.5 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={!canSubmit()}
-          className="text-xxs font-mono text-profit border border-profit/30 hover:bg-profit/10 disabled:text-text-muted disabled:border-border px-3 py-1 rounded transition-colors"
+          className="text-xs font-sans font-semibold bg-gold text-base hover:bg-gold-bright hover:glow-gold disabled:bg-border disabled:text-text-muted disabled:hover:shadow-none px-4 py-1.5 rounded-md transition-all duration-150 ease-[var(--ease-snap)]"
         >
           {loading ? 'Posting...' : 'Post'}
         </button>

@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
-import { MessageCircle, Share2 } from 'lucide-react';
+import { MessageCircle, Share2, Heart } from 'lucide-react';
 import { SENTIMENT_COLORS, SENTIMENT_BG } from '@/stores/chatStore';
 import TradeEmbed from './TradeEmbed';
 import MiniStockChart from './MiniStockChart';
@@ -27,7 +27,7 @@ function renderContentWithTickers(content: string): ReactNode[] {
       parts.push(content.slice(lastIndex, start));
     }
     parts.push(
-      <span key={start} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-info/10 text-info align-middle">
+      <span key={start} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-gold/10 text-gold font-mono align-middle">
         <TickerLogo symbol={symbol} size={12} />
         <span>${symbol}</span>
       </span>
@@ -86,13 +86,13 @@ export default function PostCard({
   }, [post.created_at]);
 
   return (
-    <div className="px-3 py-3 border-b border-border transition-colors">
+    <div className="px-4 py-3.5 border-b border-border transition-colors duration-150 ease-[var(--ease-snap)] hover:bg-surface/60">
       {/* Header: author + time */}
       <div className="flex items-center gap-1.5 mb-1.5">
         <Link href={`/social/profile/${post.user_id}`} className="flex items-center gap-1.5 min-w-0">
           <UserAvatar avatarUrl={post.profile?.avatar_url} size="sm" />
           <span
-            className="text-xs font-mono font-medium truncate hover:underline"
+            className="text-sm font-sans font-semibold truncate hover:underline"
             style={{ color: post.profile?.avatar_color ?? '#A1A1AA' }}
           >
             {post.profile?.display_name ?? 'Unknown'}
@@ -105,16 +105,16 @@ export default function PostCard({
           <div className="relative ml-1.5 shrink-0" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="text-xs font-mono text-text-muted hover:text-text-secondary transition-colors px-1 leading-none"
+              className="text-xs font-sans text-text-muted hover:text-text-secondary transition-colors px-1 leading-none"
               title="More options"
             >
               &hellip;
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 min-w-[120px] py-1 rounded border border-border bg-base shadow-lg">
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[120px] py-1 rounded-lg border border-border bg-card shadow-lg">
                 <button
                   onClick={() => { onDelete(post.id); setMenuOpen(false); }}
-                  className="w-full text-left text-xxs font-mono px-3 py-1.5 text-loss hover:bg-loss/10 transition-colors"
+                  className="w-full text-left text-xs font-sans px-3 py-1.5 text-loss hover:bg-loss/10 transition-colors"
                 >
                   Delete post
                 </button>
@@ -156,9 +156,9 @@ export default function PostCard({
 
       {/* Text content with inline sentiment */}
       {(post.content || post.sentiment) && (
-        <p className={`text-xs font-mono text-text-secondary leading-relaxed whitespace-pre-wrap ${post.post_type !== 'text' ? 'mt-2' : ''}`}>
+        <p className={`text-sm font-sans text-text-primary leading-relaxed whitespace-pre-wrap ${post.post_type !== 'text' ? 'mt-2' : ''}`}>
           {post.sentiment && (
-            <span className={`inline-flex text-xxs font-mono px-1.5 py-0.5 rounded capitalize mr-1.5 align-middle ${SENTIMENT_COLORS[post.sentiment]} ${SENTIMENT_BG[post.sentiment]}`}>
+            <span className={`inline-flex text-[10px] font-sans font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded capitalize mr-1.5 align-middle ${SENTIMENT_COLORS[post.sentiment]} ${SENTIMENT_BG[post.sentiment]}`}>
               {post.sentiment}
             </span>
           )}
@@ -167,36 +167,38 @@ export default function PostCard({
       )}
 
       {/* Footer: like + comment buttons */}
-      <div className="flex items-center gap-2 mt-2">
+      <div className="flex items-center gap-1 mt-2.5">
         <button
           onClick={() => { if (requireAuth('like this post')) onToggleLike(post.id); }}
-          className={`flex items-center gap-1 text-xxs font-mono px-1.5 py-0.5 rounded transition-colors ${
+          className={`flex items-center gap-1.5 text-xs font-sans px-2 py-1 rounded-md transition-all duration-150 ease-[var(--ease-snap)] ${
             post.liked_by_me
               ? 'text-profit bg-profit/10'
-              : 'text-text-muted hover:text-text-secondary'
+              : 'text-text-muted hover:text-text-primary hover:bg-hover'
           }`}
+          aria-label={post.liked_by_me ? 'Unlike' : 'Like'}
         >
-          <span>{post.liked_by_me ? '\u25B2' : '\u25B3'}</span>
-          <span>{post.like_count}</span>
+          <Heart size={14} strokeWidth={post.liked_by_me ? 2.2 : 1.75} fill={post.liked_by_me ? 'currentColor' : 'none'} />
+          <span className="font-mono tabular-nums">{post.like_count}</span>
         </button>
         <button
           onClick={() => setCommentsOpen(!commentsOpen)}
-          className={`flex items-center gap-1 text-xxs font-mono px-1.5 py-0.5 rounded transition-colors ${
+          className={`flex items-center gap-1.5 text-xs font-sans px-2 py-1 rounded-md transition-all duration-150 ease-[var(--ease-snap)] ${
             commentsOpen
               ? 'text-info bg-info/10'
-              : 'text-text-muted hover:text-text-secondary'
+              : 'text-text-muted hover:text-text-primary hover:bg-hover'
           }`}
+          aria-label="Comments"
         >
-          <MessageCircle size={12} />
-          <span>{post.comment_count || ''}</span>
+          <MessageCircle size={14} strokeWidth={1.75} />
+          <span className="font-mono tabular-nums">{post.comment_count || ''}</span>
         </button>
         <button
           onClick={() => setShareOpen(true)}
-          className="flex items-center gap-1 text-xxs font-mono px-1.5 py-0.5 rounded text-text-muted hover:text-text-secondary transition-colors"
+          className="flex items-center gap-1.5 text-xs font-sans px-2 py-1 rounded-md text-text-muted hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
           title="Share"
           aria-label="Share post"
         >
-          <Share2 size={12} />
+          <Share2 size={14} strokeWidth={1.75} />
         </button>
       </div>
 

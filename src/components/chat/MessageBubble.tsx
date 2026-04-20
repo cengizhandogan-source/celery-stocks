@@ -25,21 +25,21 @@ export default function MessageBubble({ displayName, avatarColor, avatarUrl, con
   }, [timestamp]);
 
   return (
-    <div className={`group flex gap-2 px-3 py-1.5 hover:bg-hover transition-colors ${isOwn ? 'bg-white/[0.02]' : ''}`}>
+    <div className={`group flex gap-2.5 px-4 py-2 transition-colors duration-150 ${isOwn ? 'bg-surface/50' : 'hover:bg-hover/60'}`}>
       <UserAvatar avatarUrl={avatarUrl} size="sm" className="mt-0.5" />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="text-xs font-mono font-medium" style={{ color: avatarColor }}>
+          <span className="text-sm font-sans font-semibold" style={{ color: avatarColor }}>
             {displayName}
           </span>
-          {isVerified && <VerifiedBadge size={10} />}
+          {isVerified && <VerifiedBadge size={11} />}
           <NetWorthBadge netWorth={netWorth} showNetWorth={showNetWorth} />
-          <span className="text-xxs font-mono text-text-muted opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-[10px] font-mono text-text-muted opacity-0 group-hover:opacity-100 transition-opacity">
             {timeStr}
           </span>
         </div>
         {content && (
-          <p className="text-sm font-mono text-text-primary break-words whitespace-pre-wrap">
+          <p className="text-sm font-sans text-text-primary break-words whitespace-pre-wrap mt-0.5">
             {content}
           </p>
         )}

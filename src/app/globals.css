@@ -43,6 +43,59 @@ html, body {
   color: var(--color-text-primary);
 }
 
+/* Glass + glow utilities */
+@utility glass-card {
+  background: color-mix(in oklab, var(--color-card) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, white 4%, transparent) inset,
+    0 8px 24px -12px rgba(0, 0, 0, 0.6);
+}
+
+@utility glass-surface {
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  border: 1px solid var(--color-border);
+}
+
+@utility glow-gold {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-gold) 40%, transparent),
+    0 0 24px -8px color-mix(in oklab, var(--color-gold) 60%, transparent);
+}
+
+@utility glow-profit {
+  box-shadow: 0 0 20px -8px color-mix(in oklab, var(--color-profit) 70%, transparent);
+}
+
+@utility glow-loss {
+  box-shadow: 0 0 20px -8px color-mix(in oklab, var(--color-loss) 70%, transparent);
+}
+
+/* Gold ring pulse — used on verified badges */
+@keyframes gold-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-gold) 60%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--color-gold) 0%, transparent);
+  }
+}
+.verified-pulse {
+  animation: gold-pulse 2.4s ease-in-out infinite;
+  border-radius: 999px;
+  display: inline-flex;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-gold) 35%, transparent);
+  color: var(--color-text-primary);
+}
+
 /* Menu slide-in animation */
 @keyframes menu-in {
   from {
