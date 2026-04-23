@@ -30,7 +30,7 @@ export default function SocialSidebar() {
   };
 
   return (
-    <aside className="w-[240px] h-screen fixed top-0 left-0 flex flex-col border-r border-border bg-surface z-40">
+    <aside className="w-[240px] h-screen fixed top-0 left-0 flex flex-col border-r border-border bg-base z-40">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-border">
         <Link
@@ -44,6 +44,9 @@ export default function SocialSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-3">
+        <div className="px-5 pt-2 pb-1 text-[10px] font-sans uppercase tracking-wider text-text-muted">
+          Browse
+        </div>
         {NAV_ITEMS.filter(({ label }) => label !== 'Messages' || user).map(({ href, label, icon: Icon }) => {
           const isActive = href === '/social'
             ? pathname === '/social'
@@ -84,8 +87,12 @@ export default function SocialSidebar() {
         })}
 
         {user && profile && (
-          <Link
-            href={`/social/profile/${user.id}`}
+          <>
+            <div className="px-5 pt-4 pb-1 text-[10px] font-sans uppercase tracking-wider text-text-muted">
+              You
+            </div>
+            <Link
+              href={`/social/profile/${user.id}`}
             className={`relative flex items-center gap-3 px-5 py-2.5 font-sans text-sm transition-all duration-150 ease-[var(--ease-snap)] ${
               pathname.startsWith('/social/profile')
                 ? 'text-gold bg-gold/5'
@@ -98,7 +105,8 @@ export default function SocialSidebar() {
             <UserAvatar avatarUrl={profile.avatar_url} size="xs" />
             <span className="truncate text-text-primary">@{profile.username}</span>
             {profile.is_verified && <VerifiedBadge size={13} pulse={false} />}
-          </Link>
+            </Link>
+          </>
         )}
       </nav>
 

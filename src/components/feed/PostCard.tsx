@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import Link from 'next/link';
-import { MessageCircle, Send, Heart } from 'lucide-react';
+import { MessageCircle, Send, ArrowBigUp } from 'lucide-react';
 import TradeEmbed from './TradeEmbed';
 import MiniStockChart from './MiniStockChart';
 import PnLDisplay from './PnLDisplay';
@@ -85,20 +85,21 @@ export default function PostCard({
   }, [post.created_at]);
 
   return (
-    <div className="px-4 py-3.5 border-b border-border transition-colors duration-150 ease-[var(--ease-snap)] hover:bg-surface/60">
+    <div className="rounded-2xl px-4 py-3.5 bg-card/40 border border-transparent hover:bg-card hover:border-border/60 transition-all duration-150 ease-[var(--ease-snap)]">
       {/* Header: author + time */}
-      <div className="flex items-center gap-1.5 mb-1.5">
+      <div className="flex items-center gap-1.5 mb-2 text-xs">
         <Link href={`/social/profile/${post.user_id}`} className="flex items-center gap-1.5 min-w-0">
           <UserAvatar avatarUrl={post.profile?.avatar_url} size="sm" />
-          <span className="text-sm font-sans font-semibold truncate hover:underline text-text-primary">
+          <span className="font-sans font-semibold truncate hover:underline text-text-primary">
             {post.profile?.username ? `@${post.profile.username}` : 'Unknown'}
           </span>
         </Link>
         {post.profile?.is_verified && <VerifiedBadge size={14} />}
         <NetWorthBadge netWorth={post.profile?.crypto_net_worth} showNetWorth={post.profile?.show_net_worth} />
-        <span className="text-xxs font-mono text-text-muted ml-auto shrink-0">{timeStr}</span>
+        <span className="text-text-muted shrink-0" aria-hidden>·</span>
+        <span className="font-mono text-text-muted shrink-0">{timeStr}</span>
         {isOwner && onDelete && (
-          <div className="relative ml-1.5 shrink-0" ref={menuRef}>
+          <div className="relative ml-auto shrink-0" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="text-xs font-sans text-text-muted hover:text-text-secondary transition-colors px-1 leading-none"
@@ -156,39 +157,40 @@ export default function PostCard({
         </p>
       )}
 
-      {/* Footer: like + comment buttons */}
-      <div className="flex items-center gap-1 mt-2.5">
+      {/* Footer: vote pill + comment + share */}
+      <div className="flex items-center gap-2 mt-3">
         <button
           onClick={() => { if (requireAuth('like this post')) onToggleLike(post.id); }}
-          className={`flex items-center gap-1.5 text-xs font-sans px-2 py-1 rounded-md transition-all duration-150 ease-[var(--ease-snap)] ${
+          className={`flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans transition-all duration-150 ease-[var(--ease-snap)] ${
             post.liked_by_me
-              ? 'text-text-primary hover:bg-hover'
-              : 'text-text-muted hover:text-text-primary hover:bg-hover'
+              ? 'bg-gold text-base hover:bg-gold-bright'
+              : 'text-text-muted bg-surface/60 hover:text-gold hover:bg-gold/10'
           }`}
           aria-label={post.liked_by_me ? 'Unlike' : 'Like'}
         >
-          <Heart size={14} strokeWidth={post.liked_by_me ? 2.2 : 1.75} fill={post.liked_by_me ? 'currentColor' : 'none'} />
+          <ArrowBigUp size={16} strokeWidth={2} fill={post.liked_by_me ? 'currentColor' : 'none'} />
           <span className="font-mono tabular-nums">{post.like_count}</span>
         </button>
         <button
           onClick={() => setCommentsOpen(!commentsOpen)}
-          className={`flex items-center gap-1.5 text-xs font-sans px-2 py-1 rounded-md transition-all duration-150 ease-[var(--ease-snap)] ${
+          className={`flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans transition-all duration-150 ease-[var(--ease-snap)] ${
             commentsOpen
               ? 'text-info bg-info/10'
-              : 'text-text-muted hover:text-text-primary hover:bg-hover'
+              : 'text-text-muted bg-surface/60 hover:text-text-primary hover:bg-hover'
           }`}
           aria-label="Comments"
         >
           <MessageCircle size={14} strokeWidth={1.75} />
-          <span className="font-mono tabular-nums">{post.comment_count || ''}</span>
+          <span className="font-mono tabular-nums">{post.comment_count || 0}</span>
         </button>
         <button
           onClick={() => setShareOpen(true)}
-          className="flex items-center gap-1.5 text-xs font-sans px-2 py-1 rounded-md text-text-muted hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
+          className="flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans text-text-muted bg-surface/60 hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
           title="Share"
           aria-label="Share post"
         >
           <Send size={14} strokeWidth={1.75} />
+          <span>Share</span>
         </button>
       </div>
 

@@ -15,7 +15,7 @@ interface PnLDisplayProps {
 export default function PnLDisplay({ symbol, pnlDollars, pnlPercent, currentPrice, shares, avgCost, chart }: PnLDisplayProps) {
   if (pnlDollars == null) {
     return (
-      <div className="border border-border rounded-lg bg-base/80 overflow-hidden px-3.5 py-3">
+      <div className="border border-border rounded-xl bg-base/60 overflow-hidden px-3.5 py-3">
         <div className="flex items-center gap-2 mb-2">
           <TickerLogo symbol={symbol} size={28} />
           <span className="text-xs font-mono font-medium text-text-secondary tracking-wide">{symbol}</span>
@@ -34,7 +34,7 @@ export default function PnLDisplay({ symbol, pnlDollars, pnlPercent, currentPric
   const formattedPnl = `${sign}$${Math.abs(pnlDollars).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
-    <div className="border border-border rounded-lg bg-base/80 overflow-hidden px-3.5 py-3">
+    <div className="border border-border rounded-xl bg-base/60 overflow-hidden px-3.5 py-3">
       <div className="flex items-center gap-2 mb-2">
         <TickerLogo symbol={symbol} size={28} />
         <span className="text-xs font-mono font-medium text-text-secondary tracking-wide">{symbol}</span>

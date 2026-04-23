@@ -131,7 +131,7 @@ export default function PostComposer({ onPostText, onPostPosition, onPostTrade, 
   );
 
   return (
-    <form onSubmit={handleSubmit} className="px-4 py-4 border-b border-border bg-surface/40">
+    <form onSubmit={handleSubmit} className="rounded-2xl px-4 py-4 border border-border/60 bg-card/40 mt-2">
       {/* Post type selector */}
       <div className="flex gap-1 mb-3">
         {typeLabels.map(({ type, label }) => (
