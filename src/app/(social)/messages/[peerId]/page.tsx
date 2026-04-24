@@ -10,6 +10,7 @@ import MessageInput from '@/components/chat/MessageInput';
 import OnlineDot from '@/components/chat/OnlineDot';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
+import SocialTopBar from '@/components/social/SocialTopBar';
 import { createClient } from '@/utils/supabase/client';
 import type { Profile } from '@/lib/types';
 
@@ -57,25 +58,27 @@ export default function ConversationPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0 sticky top-0 bg-base/80 backdrop-blur-sm z-10">
-        <button
-          onClick={() => router.push('/social/messages')}
-          className="text-text-muted hover:text-text-primary transition-colors text-sm font-mono"
-        >
-          &larr;
-        </button>
-        {peer && (
-          <>
-            <UserAvatar avatarUrl={peer.avatar_url} size="md" />
-            <OnlineDot isOnline={onlineUserIds.has(peer.id)} />
-            <span className="text-lg font-mono font-medium text-text-primary">
-              @{peer.username}
-            </span>
-            {peer.is_verified && <VerifiedBadge size={14} />}
-          </>
-        )}
-      </div>
+      <SocialTopBar
+        title={peer ? `@${peer.username}` : ''}
+        left={
+          <button
+            onClick={() => router.push('/messages')}
+            className="text-text-muted hover:text-text-primary transition-colors text-sm font-mono"
+            aria-label="Back"
+          >
+            &larr;
+          </button>
+        }
+        right={
+          peer ? (
+            <div className="flex items-center gap-2">
+              <OnlineDot isOnline={onlineUserIds.has(peer.id)} />
+              {peer.is_verified && <VerifiedBadge size={14} />}
+              <UserAvatar avatarUrl={peer.avatar_url} size="md" />
+            </div>
+          ) : undefined
+        }
+      />
 
       {/* Messages */}
       <div ref={containerRef} className="flex-1 overflow-y-auto" onScroll={handleScroll}>

@@ -9,7 +9,7 @@ export type AuthState = { error: string | null }
 export async function login(_prevState: AuthState, formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const redirectTo = (formData.get('redirectTo') as string) || '/social'
+  const redirectTo = (formData.get('redirectTo') as string) || '/'
 
   const supabase = createClient(await cookies())
   const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -24,7 +24,7 @@ export async function login(_prevState: AuthState, formData: FormData) {
 export async function signup(_prevState: AuthState, formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const redirectTo = (formData.get('redirectTo') as string) || '/social'
+  const redirectTo = (formData.get('redirectTo') as string) || '/'
 
   const supabase = createClient(await cookies())
   const { error } = await supabase.auth.signUp({ email, password })

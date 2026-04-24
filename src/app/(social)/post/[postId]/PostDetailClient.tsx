@@ -60,7 +60,7 @@ export default function PostDetailClient({ initialPost }: { initialPost: Post })
     if (!user || user.id !== post.user_id) return;
     const supabase = createClient();
     const { error } = await supabase.from('posts').delete().eq('id', postId);
-    if (!error) router.push('/social');
+    if (!error) router.push('/');
   }, [post.user_id, user, router]);
 
   return (

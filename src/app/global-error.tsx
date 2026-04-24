@@ -8,7 +8,7 @@ export default function GlobalError({
 }) {
   return (
     <html>
-      <body style={{ margin: 0, backgroundColor: '#0B0B0F', color: '#A1A1AA', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <body style={{ margin: 0, backgroundColor: '#060C0D', color: '#A1A1AA', fontFamily: 'Instrument Sans, system-ui, sans-serif' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '16px' }}>
           <span style={{ color: '#FF4D4F', fontSize: '14px' }}>Something went wrong</span>
           <button
@@ -16,7 +16,7 @@ export default function GlobalError({
             style={{
               padding: '6px 16px',
               fontSize: '12px',
-              fontFamily: 'Inter, system-ui, sans-serif',
+              fontFamily: 'Instrument Sans, system-ui, sans-serif',
               border: '1px solid #2A2A35',
               background: 'transparent',
               color: '#A1A1AA',

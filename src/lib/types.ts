@@ -10,25 +10,6 @@ export interface Profile {
   show_net_worth?: boolean;
 }
 
-export interface Chatroom {
-  id: string;
-  name: string;
-  description: string | null;
-  symbol: string | null;
-  is_default: boolean;
-  created_by: string;
-  created_at: string;
-}
-
-export interface ChatMessage {
-  id: string;
-  chatroom_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  profile?: Profile;
-}
-
 export interface DirectMessage {
   id: string;
   sender_id: string;
@@ -71,6 +52,7 @@ export interface Post {
   liked_by_me: boolean;
   created_at: string;
   profile?: Profile;
+  top_comment?: Comment | null;
 }
 
 export interface Comment {

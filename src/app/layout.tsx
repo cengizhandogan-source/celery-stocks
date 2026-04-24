@@ -1,18 +1,28 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Inter } from "next/font/google";
-import AuthGateProvider from "@/components/auth/AuthGateProvider";
+import { IBM_Plex_Mono, Instrument_Sans, Exo_2 } from "next/font/google";
+import Link from "next/link";
+import { EperBadge } from "@/components/ui/EperBadge";
 import "./globals.css";
 
-const jetbrains = JetBrains_Mono({
+const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  variable: "--font-jetbrains",
+  variable: "--font-plex-mono",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
-const inter = Inter({
+const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-instrument-sans",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const exo2 = Exo_2({
+  subsets: ["latin"],
+  variable: "--font-exo2",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coinly.club";
@@ -35,9 +45,9 @@ export const metadata: Metadata = {
     "trader community",
     "crypto chat",
   ],
-  authors: [{ name: "Coinly" }],
-  creator: "Coinly",
-  publisher: "Coinly",
+  authors: [{ name: "Eper Technologies", url: "https://epertechnologies.com" }],
+  creator: "Eper Technologies",
+  publisher: "Eper Technologies",
   applicationName: "Coinly",
   referrer: "origin-when-cross-origin",
   formatDetection: {
@@ -101,9 +111,14 @@ const jsonLd = {
         "Social feed of verified trade and position posts",
         "Connect crypto exchanges to share trades automatically",
         "Public profiles with portfolio net worth",
-        "Real-time direct messages and chatrooms",
+        "Real-time direct messages",
         "Follow other traders",
       ],
+      publisher: {
+        "@type": "Organization",
+        name: "Eper Technologies",
+        url: "https://epertechnologies.com",
+      },
     },
     {
       "@type": "Organization",
@@ -111,12 +126,18 @@ const jsonLd = {
       url: siteUrl,
       logo: `${siteUrl}/coinly-logo.png`,
     },
+    {
+      "@type": "Organization",
+      name: "Eper Technologies",
+      url: "https://epertechnologies.com",
+      logo: `${siteUrl}/eper-logo.png`,
+    },
   ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jetbrains.variable} ${inter.variable} dark`}>
+    <html lang="en" className={`${plexMono.variable} ${instrumentSans.variable} ${exo2.variable} dark`}>
       <head>
         <script
           type="application/ld+json"
@@ -124,9 +145,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="font-sans bg-base text-text-primary antialiased">
-        <AuthGateProvider>
-          {children}
-        </AuthGateProvider>
+        {children}
+        <Link
+          href="/disclaimer"
+          className="fixed bottom-3 right-3 z-40 text-[10px] uppercase tracking-wider text-text-muted hover:text-gold transition-colors px-2 py-1 rounded-md bg-base/70 backdrop-blur-sm border border-border/50"
+        >
+          Not investment advice
+        </Link>
+        <EperBadge />
       </body>
     </html>
   );

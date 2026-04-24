@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getLogoUrl } from '@/lib/logoUrl';
 import { isCryptoSymbol } from '@/lib/formatters';
 import { resolveSymbol } from '@/lib/symbolUtils';
+import { LruCache } from '@/lib/lruCache';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import YahooFinance from 'yahoo-finance2';
 
 const yahooFinance = new YahooFinance();
 
-const cache = new Map<string, { url: string | null; expiry: number }>();
+const cache = new LruCache<string, { url: string | null; expiry: number }>(2000);
 
 export async function GET(req: NextRequest) {
   const symbol = req.nextUrl.searchParams.get('symbol');

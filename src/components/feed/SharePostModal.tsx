@@ -13,10 +13,32 @@ import type { Post, Profile } from '@/lib/types';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://coinly.club';
 
+function buildShareText(post: Post, shareUrl: string): string {
+  const symbol = post.trade_symbol ?? post.position_symbol ?? post.symbol;
+  const cashtag = symbol ? `$${symbol.toUpperCase()}` : null;
+  const author = post.profile?.username ? `@${post.profile.username}` : null;
+
+  let hook: string;
+  if (post.post_type === 'trade' && cashtag) {
+    const verb = post.trade_side === 'sell' ? 'sell' : 'buy';
+    hook = `Check out this ${cashtag} ${verb} on Coinly`;
+  } else if (post.post_type === 'position' && cashtag) {
+    hook = `Check out this ${cashtag} position on Coinly`;
+  } else if (cashtag) {
+    hook = `Check out this ${cashtag} post on Coinly`;
+  } else if (author) {
+    hook = `Check out ${author}'s post on Coinly`;
+  } else {
+    hook = 'Check out this post on Coinly';
+  }
+
+  return `${hook} — the social feed for crypto and stock traders.\nJoin at https://coinly.club\n\n${shareUrl}`;
+}
+
 export default function SharePostModal({ post, onClose }: { post: Post; onClose: () => void }) {
   const { user } = useUser();
   const { requireAuth } = useAuthGate();
-  const shareUrl = `${SITE_URL}/social/post/${post.id}`;
+  const shareUrl = `${SITE_URL}/post/${post.id}`;
   const [copied, setCopied] = useState(false);
   const [recipient, setRecipient] = useState<Profile | null>(null);
   const [message, setMessage] = useState('');
@@ -33,15 +55,13 @@ export default function SharePostModal({ post, onClose }: { post: Post; onClose:
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(buildShareText(post, shareUrl));
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Fallback: select text for manual copy
-      const input = document.getElementById('share-url-input') as HTMLInputElement | null;
-      input?.select();
+      // Clipboard API unavailable; leave button in idle state so user can retry.
     }
-  }, [shareUrl]);
+  }, [post, shareUrl]);
 
   const handleSend = useCallback(async () => {
     if (!recipient) return;
@@ -98,26 +118,17 @@ export default function SharePostModal({ post, onClose }: { post: Post; onClose:
           <label className="block text-xxs font-mono text-text-muted uppercase tracking-wider mb-1.5">
             Copy link
           </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="share-url-input"
-              readOnly
-              value={shareUrl}
-              onFocus={(e) => e.currentTarget.select()}
-              className="flex-1 bg-input text-xxs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
-            />
-            <button
-              onClick={handleCopy}
-              className={`flex items-center gap-1 text-xxs font-mono px-2 py-1.5 rounded border transition-colors ${
-                copied
-                  ? 'text-profit border-profit/40 bg-profit/10'
-                  : 'text-text-primary border-border hover:bg-hover'
-              }`}
-            >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              <span>{copied ? 'Copied' : 'Copy'}</span>
-            </button>
-          </div>
+          <button
+            onClick={handleCopy}
+            className={`w-full flex items-center justify-center gap-1.5 text-xxs font-mono px-3 py-2 rounded border transition-colors ${
+              copied
+                ? 'text-profit border-profit/40 bg-profit/10'
+                : 'text-text-primary border-border hover:bg-hover'
+            }`}
+          >
+            {copied ? <Check size={12} /> : <Copy size={12} />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
+          </button>
         </div>
 
         {/* Send in DM */}

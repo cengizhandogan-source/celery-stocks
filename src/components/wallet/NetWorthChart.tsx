@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   createChart,
   IChartApi,
@@ -32,24 +32,29 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seriesRef = useRef<ISeriesApi<any> | null>(null);
   const [range, setRange] = useState<string>('ALL');
+  const [containerWidth, setContainerWidth] = useState(200);
   const [tooltip, setTooltip] = useState<{ value: number; date: string; x: number; y: number } | null>(null);
 
-  const filteredSnapshots = (() => {
+  const filteredSnapshots = useMemo(() => {
     const selected = TIME_RANGES.find((r) => r.label === range);
     if (!selected || selected.days === Infinity) return snapshots;
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - selected.days);
     const cutoffStr = cutoff.toISOString().split('T')[0];
     return snapshots.filter((s) => s.date >= cutoffStr);
-  })();
+  }, [range, snapshots]);
 
-  const first = filteredSnapshots[0]?.total_usd ?? 0;
-  const last = currentValue ?? filteredSnapshots[filteredSnapshots.length - 1]?.total_usd ?? 0;
-  const isUp = last >= first;
-
-  const lineColor = isUp ? '#00FFA3' : '#FF4D4F';
-  const topGradient = isUp ? 'rgba(0,255,163,0.28)' : 'rgba(255,77,79,0.28)';
-  const bottomGradient = isUp ? 'rgba(0,255,163,0.02)' : 'rgba(255,77,79,0.02)';
+  const { isUp, lineColor, topGradient, bottomGradient } = useMemo(() => {
+    const f = filteredSnapshots[0]?.total_usd ?? 0;
+    const l = currentValue ?? filteredSnapshots[filteredSnapshots.length - 1]?.total_usd ?? 0;
+    const up = l >= f;
+    return {
+      isUp: up,
+      lineColor: up ? '#00FFA3' : '#FF4D4F',
+      topGradient: up ? 'rgba(0,255,163,0.28)' : 'rgba(255,77,79,0.28)',
+      bottomGradient: up ? 'rgba(0,255,163,0.02)' : 'rgba(255,77,79,0.02)',
+    };
+  }, [filteredSnapshots, currentValue]);
 
   const handleCrosshairMove = useCallback((param: MouseEventParams) => {
     if (!param.time || !seriesRef.current || !param.point) {
@@ -72,11 +77,15 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const monoFontFamily =
+      getComputedStyle(document.documentElement).getPropertyValue('--font-plex-mono').trim() ||
+      "'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace";
+
     const chart = createChart(containerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
         textColor: '#A1A1AA',
-        fontFamily: "'JetBrains Mono', monospace",
+        fontFamily: `${monoFontFamily}, 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace`,
         fontSize: 10,
         attributionLogo: false,
       },
@@ -112,7 +121,9 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
 
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        chart.resize(entry.contentRect.width, entry.contentRect.height);
+        const { width, height } = entry.contentRect;
+        setContainerWidth(width);
+        chart.resize(width, height);
       }
     });
     ro.observe(containerRef.current);
@@ -178,7 +189,7 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
           <div
             className="absolute pointer-events-none bg-elevated border border-border rounded px-1.5 py-0.5 text-xxs font-mono whitespace-nowrap z-10"
             style={{
-              left: Math.min(tooltip.x, (containerRef.current?.clientWidth ?? 200) - 100),
+              left: Math.min(tooltip.x, containerWidth - 100),
               top: Math.max(0, tooltip.y - 28),
             }}
           >

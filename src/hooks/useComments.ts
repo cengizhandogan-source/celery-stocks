@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/hooks/useUser';
+import { useChatStore } from '@/stores/chatStore';
 import type { Comment } from '@/lib/types';
 
 const PROFILE_SELECT = 'id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth';
@@ -40,6 +41,7 @@ async function fetchLikedSet(
 
 export function useComments(postId: string | null) {
   const { user } = useUser();
+  const fetchProfile = useChatStore((s) => s.fetchProfile);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -83,21 +85,26 @@ export function useComments(postId: string | null) {
 
       const topIds = topLevel.map((c) => c.id);
 
-      let replies: RawComment[] = [];
-      if (topIds.length > 0) {
-        const { data: repliesData } = await supabase
-          .from('post_comments')
-          .select(COMMENT_SELECT)
-          .eq('post_id', postId)
-          .in('parent_id', topIds)
-          .order('created_at', { ascending: true });
-        replies = (repliesData ?? []) as RawComment[];
-      }
+      // Replies depend on topIds, but likes-for-topIds can run in parallel.
+      const repliesPromise = topIds.length > 0
+        ? supabase
+            .from('post_comments')
+            .select(COMMENT_SELECT)
+            .eq('post_id', postId)
+            .in('parent_id', topIds)
+            .order('created_at', { ascending: true })
+        : Promise.resolve({ data: [] as RawComment[] });
+      const topLikedPromise = fetchLikedSet(supabase, user?.id, topIds);
+
+      const [repliesResult, topLiked] = await Promise.all([repliesPromise, topLikedPromise]);
       if (cancelled) return;
 
-      const allIds = [...topIds, ...replies.map((r) => r.id)];
-      const liked = await fetchLikedSet(supabase, user?.id, allIds);
+      const replies = (repliesResult.data ?? []) as RawComment[];
+      const replyIds = replies.map((r) => r.id);
+      const replyLiked = await fetchLikedSet(supabase, user?.id, replyIds);
       if (cancelled) return;
+
+      const liked = new Set<string>([...topLiked, ...replyLiked]);
       likedSetRef.current = liked;
 
       const merged = [
@@ -129,26 +136,25 @@ export function useComments(postId: string | null) {
         async (payload) => {
           const row = payload.new as Comment;
 
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select(PROFILE_SELECT)
-            .eq('id', row.user_id)
-            .single();
+          const profilePromise = fetchProfile(row.user_id);
+          const parentPromise: Promise<Comment['parent']> = row.parent_id
+            ? (async (): Promise<Comment['parent']> => {
+                const { data } = await supabase
+                  .from('post_comments')
+                  .select('user_id, profile:profiles!user_id(username, display_name, avatar_color)')
+                  .eq('id', row.parent_id)
+                  .single();
+                if (!data) return undefined;
+                return {
+                  user_id: data.user_id,
+                  profile: Array.isArray(data.profile)
+                    ? data.profile[0]
+                    : data.profile ?? undefined,
+                };
+              })()
+            : Promise.resolve(undefined);
 
-          let parent: Comment['parent'] = undefined;
-          if (row.parent_id) {
-            const { data: parentData } = await supabase
-              .from('post_comments')
-              .select('user_id, profile:profiles!user_id(username, display_name, avatar_color)')
-              .eq('id', row.parent_id)
-              .single();
-            if (parentData) {
-              parent = {
-                user_id: parentData.user_id,
-                profile: Array.isArray(parentData.profile) ? parentData.profile[0] : parentData.profile ?? undefined,
-              };
-            }
-          }
+          const [profile, parent] = await Promise.all([profilePromise, parentPromise]);
 
           const comment: Comment = {
             ...row,
@@ -191,7 +197,7 @@ export function useComments(postId: string | null) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [postId]);
+  }, [postId, fetchProfile]);
 
   const loadMore = useCallback(async () => {
     if (!postId || loadingMore || !hasMore) return;
@@ -217,20 +223,21 @@ export function useComments(postId: string | null) {
 
     const topIds = topLevel.map((c) => c.id);
 
-    let replies: RawComment[] = [];
-    if (topIds.length > 0) {
-      const { data: repliesData } = await supabase
-        .from('post_comments')
-        .select(COMMENT_SELECT)
-        .eq('post_id', postId)
-        .in('parent_id', topIds)
-        .order('created_at', { ascending: true });
-      replies = (repliesData ?? []) as RawComment[];
-    }
+    const repliesPromise = topIds.length > 0
+      ? supabase
+          .from('post_comments')
+          .select(COMMENT_SELECT)
+          .eq('post_id', postId)
+          .in('parent_id', topIds)
+          .order('created_at', { ascending: true })
+      : Promise.resolve({ data: [] as RawComment[] });
+    const topLikedPromise = fetchLikedSet(supabase, user?.id, topIds);
 
-    const newIds = [...topIds, ...replies.map((r) => r.id)];
-    const liked = await fetchLikedSet(supabase, user?.id, newIds);
-    liked.forEach((id) => likedSetRef.current.add(id));
+    const [repliesResult, topLiked] = await Promise.all([repliesPromise, topLikedPromise]);
+    const replies = (repliesResult.data ?? []) as RawComment[];
+    const replyLiked = await fetchLikedSet(supabase, user?.id, replies.map((r) => r.id));
+    topLiked.forEach((id) => likedSetRef.current.add(id));
+    replyLiked.forEach((id) => likedSetRef.current.add(id));
 
     const incoming = [
       ...(topLevel as RawComment[]).map((c) => normalize(c, likedSetRef.current)),

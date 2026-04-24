@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useDmConversations } from '@/hooks/useDmConversations';
 import { useChatStore } from '@/stores/chatStore';
 import UserSearchInput from '@/components/chat/UserSearchInput';
+import SocialTopBar from '@/components/social/SocialTopBar';
 import OnlineDot from '@/components/chat/OnlineDot';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import type { Profile } from '@/lib/types';
@@ -15,19 +16,14 @@ export default function MessagesPage() {
   const router = useRouter();
 
   const handleSelectUser = (peer: Profile) => {
-    router.push(`/social/messages/${peer.id}`);
+    router.push(`/messages/${peer.id}`);
   };
 
   return (
     <div className="flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-base/80 backdrop-blur-sm border-b border-border">
-        <div className="px-4 py-3">
-          <h1 className="text-lg font-mono font-bold text-text-primary uppercase tracking-wider">Messages</h1>
-        </div>
-        <div className="px-4 py-2 border-t border-border">
-          <UserSearchInput onSelect={handleSelectUser} />
-        </div>
+      <SocialTopBar title="Messages" />
+      <div className="px-4 py-2 bg-base/80 backdrop-blur-sm">
+        <UserSearchInput onSelect={handleSelectUser} />
       </div>
 
       {/* Conversations */}
@@ -49,7 +45,7 @@ export default function MessagesPage() {
           return (
             <Link
               key={conv.peer.id}
-              href={`/social/messages/${conv.peer.id}`}
+              href={`/messages/${conv.peer.id}`}
               className="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-hover transition-colors"
             >
               <OnlineDot isOnline={onlineUserIds.has(conv.peer.id)} />

@@ -1,6 +1,6 @@
-import { useMemo, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
+import { useMemo, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { MessageCircle, Send, ArrowBigUp } from 'lucide-react';
+import { MessageCircle, Send, ArrowBigUp, Heart, MoreHorizontal } from 'lucide-react';
 import TradeEmbed from './TradeEmbed';
 import MiniStockChart from './MiniStockChart';
 import PnLDisplay from './PnLDisplay';
@@ -11,7 +11,8 @@ import UserAvatar from '@/components/ui/UserAvatar';
 import CommentSection from './CommentSection';
 import SharePostModal from './SharePostModal';
 import { useAuthGate } from '@/hooks/useAuthGate';
-import type { Post, Quote } from '@/lib/types';
+import { useQuote } from '@/stores/quoteStore';
+import type { Post } from '@/lib/types';
 
 const TICKER_RE = /\$([A-Z]{1,5})\b/g;
 
@@ -44,24 +45,30 @@ function renderContentWithTickers(content: string): ReactNode[] {
 export default function PostCard({
   post,
   onToggleLike,
+  onToggleTopCommentLike,
   onDelete,
   currentUserId,
   defaultCommentsOpen = false,
 }: {
   post: Post;
   onToggleLike: (postId: string) => void;
+  onToggleTopCommentLike?: (postId: string, commentId: string) => void;
   onDelete?: (postId: string) => void;
   currentUserId?: string;
   defaultCommentsOpen?: boolean;
 }) {
   const { requireAuth } = useAuthGate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(defaultCommentsOpen);
   const [shareOpen, setShareOpen] = useState(false);
-  const [currentQuote, setCurrentQuote] = useState<Quote | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUserId != null && post.user_id === currentUserId;
-  const handleQuoteReady = useCallback((quote: Quote) => setCurrentQuote(quote), []);
+  const clickable = !defaultCommentsOpen;
+  const topComment = !defaultCommentsOpen ? post.top_comment ?? null : null;
+  const liveSymbol =
+    (post.post_type === 'position' && post.position_symbol) ||
+    (post.post_type === 'trade' && post.trade_symbol) ||
+    null;
+  const currentQuote = useQuote(liveSymbol);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -85,10 +92,21 @@ export default function PostCard({
   }, [post.created_at]);
 
   return (
-    <div className="rounded-2xl px-4 py-3.5 bg-card/40 border border-transparent hover:bg-card hover:border-border/60 transition-all duration-150 ease-[var(--ease-snap)]">
+    <article
+      className={`relative rounded-2xl px-4 py-3.5 bg-card/40 border border-transparent hover:bg-card hover:border-border/60 transition-all duration-150 ease-[var(--ease-snap)]${clickable ? ' cursor-pointer' : ''}`}
+    >
+      {clickable && (
+        <Link
+          href={`/post/${post.id}`}
+          prefetch={false}
+          aria-label={`Open post by @${post.profile?.username ?? 'user'}`}
+          className="absolute inset-0 z-[1] rounded-2xl focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-base focus-visible:outline-none"
+        />
+      )}
+      <div className={`relative z-[2]${clickable ? ' pointer-events-none' : ''}`}>
       {/* Header: author + time */}
       <div className="flex items-center gap-1.5 mb-2 text-xs">
-        <Link href={`/social/profile/${post.user_id}`} className="flex items-center gap-1.5 min-w-0">
+        <Link href={`/profile/${post.user_id}`} className="flex items-center gap-1.5 min-w-0 pointer-events-auto">
           <UserAvatar avatarUrl={post.profile?.avatar_url} size="sm" />
           <span className="font-sans font-semibold truncate hover:underline text-text-primary">
             {post.profile?.username ? `@${post.profile.username}` : 'Unknown'}
@@ -99,13 +117,14 @@ export default function PostCard({
         <span className="text-text-muted shrink-0" aria-hidden>·</span>
         <span className="font-mono text-text-muted shrink-0">{timeStr}</span>
         {isOwner && onDelete && (
-          <div className="relative ml-auto shrink-0" ref={menuRef}>
+          <div className="relative ml-auto shrink-0 pointer-events-auto" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="text-xs font-sans text-text-muted hover:text-text-secondary transition-colors px-1 leading-none"
+              className="flex items-center justify-center h-7 w-7 rounded-full text-text-muted hover:text-text-secondary hover:bg-white/5 transition-colors"
               title="More options"
+              aria-label="More options"
             >
-              &hellip;
+              <MoreHorizontal size={18} />
             </button>
             {menuOpen && (
               <div className="absolute right-0 top-full mt-1 z-50 min-w-[120px] py-1 rounded-lg border border-border bg-card shadow-lg">
@@ -130,7 +149,7 @@ export default function PostCard({
           currentPrice={currentQuote?.price}
           shares={post.position_shares}
           avgCost={post.position_avg_cost}
-          chart={<MiniStockChart symbol={post.position_symbol!} compact onQuoteReady={handleQuoteReady} />}
+          chart={<MiniStockChart symbol={post.position_symbol!} compact />}
         />
       )}
       {post.post_type === 'trade' && post.trade_pnl != null && (
@@ -157,11 +176,51 @@ export default function PostCard({
         </p>
       )}
 
+      {topComment && (
+        <div className="mt-3 flex items-start gap-1.5 rounded-lg bg-surface/40 px-2.5 py-1.5">
+          <UserAvatar avatarUrl={topComment.profile?.avatar_url} size="xs" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xxs font-mono font-medium truncate text-text-primary">
+                {topComment.profile?.username ? `@${topComment.profile.username}` : 'Unknown'}
+              </span>
+              {topComment.profile?.is_verified && <VerifiedBadge size={12} />}
+              {topComment.parent?.profile?.username && (
+                <span className="text-xxs font-mono text-text-muted truncate">
+                  ↳ <span className="text-text-primary">@{topComment.parent.profile.username}</span>
+                </span>
+              )}
+            </div>
+            <p className="text-xxs font-mono text-text-secondary leading-relaxed line-clamp-2 break-words">
+              {topComment.content}
+            </p>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!onToggleTopCommentLike) return;
+              if (requireAuth('like this comment')) onToggleTopCommentLike(post.id, topComment.id);
+            }}
+            className={`flex items-center gap-1 text-xxs font-mono shrink-0 mt-0.5 pointer-events-auto transition-colors duration-150 ease-[var(--ease-snap)] ${
+              topComment.liked_by_me ? 'text-gold' : 'text-text-muted hover:text-gold'
+            }`}
+            aria-label={topComment.liked_by_me ? 'Unlike comment' : 'Like comment'}
+          >
+            <Heart
+              size={12}
+              strokeWidth={2}
+              fill={topComment.liked_by_me ? 'currentColor' : 'none'}
+            />
+            <span>{topComment.like_count}</span>
+          </button>
+        </div>
+      )}
+
       {/* Footer: vote pill + comment + share */}
       <div className="flex items-center gap-2 mt-3">
         <button
           onClick={() => { if (requireAuth('like this post')) onToggleLike(post.id); }}
-          className={`flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans transition-all duration-150 ease-[var(--ease-snap)] ${
+          className={`flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans transition-all duration-150 ease-[var(--ease-snap)] pointer-events-auto ${
             post.liked_by_me
               ? 'bg-gold text-base hover:bg-gold-bright'
               : 'text-text-muted bg-surface/60 hover:text-gold hover:bg-gold/10'
@@ -171,21 +230,16 @@ export default function PostCard({
           <ArrowBigUp size={16} strokeWidth={2} fill={post.liked_by_me ? 'currentColor' : 'none'} />
           <span className="font-mono tabular-nums">{post.like_count}</span>
         </button>
-        <button
-          onClick={() => setCommentsOpen(!commentsOpen)}
-          className={`flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans transition-all duration-150 ease-[var(--ease-snap)] ${
-            commentsOpen
-              ? 'text-info bg-info/10'
-              : 'text-text-muted bg-surface/60 hover:text-text-primary hover:bg-hover'
-          }`}
-          aria-label="Comments"
+        <div
+          className="flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans text-text-muted bg-surface/60"
+          aria-label={`${post.comment_count || 0} comments`}
         >
           <MessageCircle size={14} strokeWidth={1.75} />
           <span className="font-mono tabular-nums">{post.comment_count || 0}</span>
-        </button>
+        </div>
         <button
           onClick={() => setShareOpen(true)}
-          className="flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans text-text-muted bg-surface/60 hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
+          className="flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans text-text-muted bg-surface/60 hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)] pointer-events-auto"
           title="Share"
           aria-label="Share post"
         >
@@ -194,14 +248,14 @@ export default function PostCard({
         </button>
       </div>
 
-      {/* Inline comments */}
-      {commentsOpen && (
+      {defaultCommentsOpen && (
         <div className="mt-2">
           <CommentSection postId={post.id} currentUserId={currentUserId} />
         </div>
       )}
+      </div>
 
       {shareOpen && <SharePostModal post={post} onClose={() => setShareOpen(false)} />}
-    </div>
+    </article>
   );
 }

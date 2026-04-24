@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import PostDetailClient from './PostDetailClient';
+import SocialTopBar from '@/components/social/SocialTopBar';
 import type { Post } from '@/lib/types';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://coinly.club';
@@ -38,7 +39,7 @@ export async function generateMetadata({
   const author = post.profile?.username ? `@${post.profile.username}` : 'Unknown';
   const title = `${author} on Coinly`;
   const description = (post.content ?? `${post.post_type} post${post.symbol ? ` — $${post.symbol}` : ''}`).slice(0, 160);
-  const url = `${SITE_URL}/social/post/${postId}`;
+  const url = `${SITE_URL}/post/${postId}`;
 
   return {
     title,
@@ -64,21 +65,15 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
   if (!post) notFound();
 
   return (
-    <div className="flex flex-col">
-      <div className="sticky top-0 z-10 bg-base/80 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center gap-2 px-4 py-3">
-          <Link
-            href="/social"
-            className="text-text-muted hover:text-text-primary transition-colors text-sm font-mono"
-            aria-label="Back to feed"
-          >
-            &larr;
-          </Link>
-          <h1 className="text-sm font-mono font-bold text-text-primary uppercase tracking-wider">
-            Post
-          </h1>
-        </div>
-      </div>
+    <div className="relative flex flex-col">
+      <SocialTopBar title="Post" />
+      <Link
+        href="/"
+        aria-label="Back to feed"
+        className="absolute top-[60px] left-0 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full text-text-muted bg-surface/70 backdrop-blur-sm hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
+      >
+        <span aria-hidden className="text-base leading-none">&larr;</span>
+      </Link>
       <PostDetailClient initialPost={post} />
     </div>
   );

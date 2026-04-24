@@ -1,5 +1,3 @@
-'use client';
-
 const variants = {
   default: 'bg-white/5 text-text-secondary',
   green: 'bg-profit-dim text-profit',

@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Quote, Candle } from './types';
+import { LruCache } from './lruCache';
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
 // Price cache (used by wallet sync getPrices)
-const cache = new Map<string, { data: Record<string, number>; expiry: number }>();
+const cache = new LruCache<string, { data: Record<string, number>; expiry: number }>(1000);
 const CACHE_TTL = 60_000;
 
 // General-purpose cache for quotes and candles
-const dataCache = new Map<string, { data: unknown; expiry: number }>();
+const dataCache = new LruCache<string, { data: unknown; expiry: number }>(2000);
 
 function getCached<T>(key: string): T | null {
   const entry = dataCache.get(key);

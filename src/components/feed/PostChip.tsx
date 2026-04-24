@@ -17,7 +17,7 @@ export default function PostChip({ post }: { post: Post }) {
 
   return (
     <Link
-      href={`/social/post/${post.id}`}
+      href={`/post/${post.id}`}
       className="mt-1.5 block border border-border rounded-md p-2 max-w-sm bg-base/50 hover:bg-hover transition-colors"
     >
       <div className="flex items-center gap-1.5 mb-1">

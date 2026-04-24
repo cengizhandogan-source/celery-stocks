@@ -1,5 +1,3 @@
-'use client';
-
 const sizes = {
   sm: 'w-3 h-3',
   md: 'w-5 h-5',

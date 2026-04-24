@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, Send } from 'lucide-react';
 import { useComments } from '@/hooks/useComments';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -398,23 +398,34 @@ export default function CommentSection({
 
           {mentionQuery !== null && <MentionDropdown results={mentionResults} onSelect={handleMentionSelect} />}
 
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit();
-              }
-              if (e.key === 'Escape' && replyTo) {
-                cancelReply();
-              }
-            }}
-            placeholder="Add a comment..."
-            className="w-full bg-input text-xxs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-info/40 focus:outline-none transition-colors"
-          />
+          <div className="flex items-center gap-1.5">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+                if (e.key === 'Escape' && replyTo) {
+                  cancelReply();
+                }
+              }}
+              placeholder="Add a comment..."
+              className="w-full bg-input text-xxs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-info/40 focus:outline-none transition-colors"
+            />
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!input.trim()}
+              aria-label="Send comment"
+              className="text-xxs font-mono text-text-muted hover:text-info disabled:opacity-40 disabled:cursor-not-allowed transition-colors p-1.5 rounded"
+            >
+              <Send size={14} />
+            </button>
+          </div>
         </div>
       ) : (
         <div className="px-2 py-1.5 border-t border-border/30">

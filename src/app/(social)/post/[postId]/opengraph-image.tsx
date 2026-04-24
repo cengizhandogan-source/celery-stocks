@@ -32,13 +32,13 @@ export default async function Image({ params }: { params: Promise<{ postId: stri
     (
       <div
         style={{
-          background: '#0B0B0F',
+          background: '#060C0D',
           width: '100%',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           padding: 64,
-          fontFamily: 'Inter, system-ui, sans-serif',
+          fontFamily: 'Instrument Sans, system-ui, sans-serif',
           color: '#FFFFFF',
         }}
       >
@@ -72,7 +72,7 @@ export default async function Image({ params }: { params: Promise<{ postId: stri
                 padding: '4px 12px',
                 background: '#F5C5421a',
                 borderRadius: 8,
-                fontFamily: 'JetBrains Mono, monospace',
+                fontFamily: 'IBM Plex Mono, monospace',
               }}
             >
               ${symbol}

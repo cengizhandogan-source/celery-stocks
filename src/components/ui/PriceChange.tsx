@@ -1,5 +1,3 @@
-'use client';
-
 import { formatChange, formatPercent } from '@/lib/formatters';
 
 interface PriceChangeProps {

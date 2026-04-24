@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
@@ -12,9 +13,9 @@ import UserAvatar from '@/components/ui/UserAvatar';
 import { Home, Search, MessageCircle, Settings, LogOut, Plus, type LucideIcon } from 'lucide-react';
 
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
-  { href: '/social', label: 'Feed', icon: Home },
-  { href: '/social/search', label: 'Search', icon: Search },
-  { href: '/social/messages', label: 'Messages', icon: MessageCircle },
+  { href: '/', label: 'Feed', icon: Home },
+  { href: '/search', label: 'Search', icon: Search },
+  { href: '/messages', label: 'Messages', icon: MessageCircle },
 ];
 
 export default function SocialSidebar() {
@@ -30,33 +31,33 @@ export default function SocialSidebar() {
   };
 
   return (
-    <aside className="w-[240px] h-screen fixed top-0 left-0 flex flex-col border-r border-border bg-base z-40">
+    <aside className="w-[240px] h-screen fixed top-0 left-0 flex flex-col bg-base z-40">
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-border">
-        <Link
-          href="/social"
-          className="flex items-center gap-2.5 text-[17px] font-sans font-semibold text-gold tracking-tight"
-        >
-          <img src="/coinly-logo.png" alt="Coinly" className="h-8 w-8" />
-          Coinly
+      <div className="h-[56px] flex items-center px-5 border-b border-border">
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/coinly-text.png"
+            alt="Coinly"
+            width={192}
+            height={108}
+            priority
+            className="h-9 w-auto"
+          />
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-3">
-        <div className="px-5 pt-2 pb-1 text-[10px] font-sans uppercase tracking-wider text-text-muted">
-          Browse
-        </div>
+      <nav className="flex-1 py-3 border-r border-border">
         {NAV_ITEMS.filter(({ label }) => label !== 'Messages' || user).map(({ href, label, icon: Icon }) => {
-          const isActive = href === '/social'
-            ? pathname === '/social'
+          const isActive = href === '/'
+            ? pathname === '/'
             : pathname.startsWith(href);
 
           return (
             <Fragment key={href}>
               {label === 'Search' && user && (
                 <Link
-                  href="/social?compose=1"
+                  href="/?compose=1"
                   className="flex items-center gap-3 px-5 py-2.5 font-sans text-sm text-text-secondary hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
                 >
                   <Plus size={18} strokeWidth={1.75} />
@@ -92,32 +93,32 @@ export default function SocialSidebar() {
               You
             </div>
             <Link
-              href={`/social/profile/${user.id}`}
+              href={`/profile/${user.id}`}
             className={`relative flex items-center gap-3 px-5 py-2.5 font-sans text-sm transition-all duration-150 ease-[var(--ease-snap)] ${
-              pathname.startsWith('/social/profile')
+              pathname.startsWith('/profile')
                 ? 'text-gold bg-gold/5'
                 : 'text-text-secondary hover:text-text-primary hover:bg-hover'
             }`}
           >
-            {pathname.startsWith('/social/profile') && (
+            {pathname.startsWith('/profile') && (
               <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r bg-gold" aria-hidden />
             )}
             <UserAvatar avatarUrl={profile.avatar_url} size="xs" />
             <span className="truncate text-text-primary">@{profile.username}</span>
-            {profile.is_verified && <VerifiedBadge size={13} pulse={false} />}
+            {profile.is_verified && <VerifiedBadge size={13} />}
             </Link>
           </>
         )}
       </nav>
 
       {/* User section */}
-      <div className="px-4 py-3 border-t border-border">
+      <div className="px-4 py-3 border-t border-r border-border">
         {user ? (
           <div className="flex items-center justify-end gap-3">
             <Link
-              href="/social/settings"
+              href="/settings"
               className={`transition-colors duration-150 ${
-                pathname.startsWith('/social/settings')
+                pathname.startsWith('/settings')
                   ? 'text-gold'
                   : 'text-text-muted hover:text-text-secondary'
               }`}

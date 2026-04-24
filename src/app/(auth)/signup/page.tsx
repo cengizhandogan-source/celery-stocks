@@ -8,7 +8,7 @@ import { signup, type AuthState } from '../actions'
 function SignupForm() {
   const [state, formAction, pending] = useActionState(signup, { error: null } as AuthState)
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/social'
+  const redirectTo = searchParams.get('redirectTo') || '/'
 
   return (
     <div className="bg-surface border border-border rounded-lg p-6">

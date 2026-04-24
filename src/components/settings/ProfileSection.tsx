@@ -70,6 +70,9 @@ export default function ProfileSection({ userId }: { userId: string }) {
             className="w-full bg-input text-xs font-mono text-text-primary px-2 py-1.5 rounded border border-border focus:border-profit/40 focus:outline-none"
             placeholder="https://..."
           />
+          <p className="mt-1 text-xxs font-mono text-text-muted">
+            We advise our users <a href="https://cloudinary.com/users/register_free" target="_blank" rel="noopener noreferrer" className="text-profit hover:underline">Cloudinary</a> to upload profile pictures and paste the link.
+          </p>
         </div>
       </div>
 

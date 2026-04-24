@@ -8,7 +8,7 @@ import { login, type AuthState } from '../actions'
 function LoginForm() {
   const [state, formAction, pending] = useActionState(login, { error: null } as AuthState)
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/social'
+  const redirectTo = searchParams.get('redirectTo') || '/'
 
   return (
     <div className="bg-surface border border-border rounded-lg p-6">

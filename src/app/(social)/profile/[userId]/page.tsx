@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
 import { useSocialProfile } from '@/hooks/useSocialProfile';
@@ -11,7 +12,12 @@ import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import NetWorthBadge from '@/components/ui/NetWorthBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 import HoldingsTable from '@/components/wallet/HoldingsTable';
-import NetWorthChart from '@/components/wallet/NetWorthChart';
+import SocialTopBar from '@/components/social/SocialTopBar';
+
+const NetWorthChart = dynamic(() => import('@/components/wallet/NetWorthChart'), {
+  ssr: false,
+  loading: () => <div className="w-full h-[100px] rounded bg-hover/30 animate-pulse" />,
+});
 import { useCryptoHoldings } from '@/hooks/useCryptoHoldings';
 import { useNetWorthHistory } from '@/hooks/useNetWorthHistory';
 import { useAuthGate } from '@/hooks/useAuthGate';
@@ -57,13 +63,27 @@ export default function ProfilePage() {
   const { profile, loading: profileLoading, updateProfile } = useSocialProfile(userId);
   const { isFollowing, loading: followLoading, toggleFollow } = useFollow(userId);
   const { requireAuth } = useAuthGate();
-  const { posts, loading: postsLoading, filters, setFilters, toggleLike, deletePost } = useFeed();
+  const { posts, loading: postsLoading, loadingMore, hasMore, loadMore, setFilters, toggleLike, toggleTopCommentLike, deletePost } = useFeed();
   const isOwnProfile = user?.id === userId;
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Set userId filter on mount
   useEffect(() => {
     setFilters((prev) => ({ ...prev, userId }));
   }, [userId, setFilters]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMore();
+      },
+      { rootMargin: '400px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
 
   if (profileLoading) {
     return (
@@ -88,6 +108,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col">
+      <SocialTopBar title={isOwnProfile ? 'Profile' : `@${profile.username}`} />
       {/* Profile header */}
       <div className="px-4 py-6 border-b border-border">
         <div className="flex items-start gap-3">
@@ -174,9 +195,17 @@ export default function ProfilePage() {
           No posts yet
         </div>
       ) : (
-        posts.map((post) => (
-          <PostCard key={post.id} post={post} onToggleLike={toggleLike} onDelete={deletePost} currentUserId={user?.id} />
-        ))
+        <div className="flex flex-col gap-2 mt-2">
+          {posts.map((post) => (
+            <PostCard key={post.id} post={post} onToggleLike={toggleLike} onToggleTopCommentLike={toggleTopCommentLike} onDelete={deletePost} currentUserId={user?.id} />
+          ))}
+          {hasMore && <div ref={sentinelRef} className="h-4" aria-hidden />}
+          {loadingMore && (
+            <div className="flex items-center justify-center py-4 text-text-muted text-xs font-mono">
+              Loading more…
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

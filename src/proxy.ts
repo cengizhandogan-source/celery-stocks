@@ -2,32 +2,39 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 function isPublicRoute(pathname: string): boolean {
-  if (pathname === '/social' || pathname === '/social/search' || pathname === '/' || pathname === '/login' || pathname === '/signup') {
+  if (pathname === '/' || pathname === '/search' || pathname === '/login' || pathname === '/signup') {
     return true;
   }
-  if (pathname.startsWith('/api/') || pathname.startsWith('/auth/') || pathname.startsWith('/social/profile/') || pathname.startsWith('/social/post/')) {
+  if (pathname.startsWith('/api/') || pathname.startsWith('/auth/') || pathname.startsWith('/profile/') || pathname.startsWith('/post/')) {
     return true;
   }
   return false;
 }
 
 export async function proxy(request: NextRequest) {
-  const { supabaseResponse, user } = await updateSession(request)
+  const { pathname, search, hash } = request.nextUrl
 
-  const path = request.nextUrl.pathname
-  const isAuthPage = path === '/login'
-
-  if (user && isAuthPage) {
-    return NextResponse.redirect(new URL('/social', request.url))
+  // Backwards-compat: redirect any legacy /social/* URL to the stripped path.
+  if (pathname === '/social' || pathname.startsWith('/social/')) {
+    const stripped = pathname.replace(/^\/social/, '') || '/'
+    return NextResponse.redirect(new URL(stripped + search + hash, request.url), 308)
   }
 
-  if (isPublicRoute(path)) {
+  const { supabaseResponse, user } = await updateSession(request)
+
+  const isAuthPage = pathname === '/login'
+
+  if (user && isAuthPage) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  if (isPublicRoute(pathname)) {
     return supabaseResponse
   }
 
   if (!user) {
     const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirectTo', path)
+    loginUrl.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(loginUrl)
   }
 

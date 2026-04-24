@@ -1,5 +1,9 @@
 import { create } from 'zustand';
+import { createClient } from '@/utils/supabase/client';
 import { Profile } from '@/lib/types';
+
+const PROFILE_SELECT = 'id, username, display_name, avatar_color, avatar_url, is_verified, crypto_net_worth, show_net_worth';
+const inflightProfiles = new Map<string, Promise<Profile | null>>();
 
 interface ChatState {
   onlineUserIds: Set<string>;
@@ -11,6 +15,7 @@ interface ChatState {
   cacheProfile: (profile: Profile) => void;
   cacheProfiles: (profiles: Profile[]) => void;
   getProfile: (id: string) => Profile | undefined;
+  fetchProfile: (id: string) => Promise<Profile | null>;
 }
 
 export const useChatStore = create<ChatState>()((set, get) => ({
@@ -39,6 +44,41 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     }),
 
   getProfile: (id) => get().profiles.get(id),
+
+  fetchProfile: (id) => {
+    const cached = get().profiles.get(id);
+    if (cached) return Promise.resolve(cached);
+
+    const existing = inflightProfiles.get(id);
+    if (existing) return existing;
+
+    const promise = (async (): Promise<Profile | null> => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from('profiles')
+          .select(PROFILE_SELECT)
+          .eq('id', id)
+          .single();
+        if (data) {
+          set((s) => {
+            const next = new Map(s.profiles);
+            next.set(id, data as Profile);
+            return { profiles: next };
+          });
+          return data as Profile;
+        }
+        return null;
+      } catch {
+        return null;
+      } finally {
+        inflightProfiles.delete(id);
+      }
+    })();
+
+    inflightProfiles.set(id, promise);
+    return promise;
+  },
 }));
 
 export const MESSAGES_PAGE_SIZE = 50;

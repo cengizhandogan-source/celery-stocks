@@ -7,6 +7,7 @@ import { useUserSearch } from '@/hooks/useUserSearch';
 import PostCard from '@/components/feed/PostCard';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
+import SocialTopBar from '@/components/social/SocialTopBar';
 import { useUser } from '@/hooks/useUser';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import type { Post } from '@/lib/types';
@@ -104,14 +105,10 @@ export default function SearchPage() {
 
   return (
     <div className="flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-base/80 backdrop-blur-sm border-b border-border">
-        <div className="px-4 py-3">
-          <h1 className="text-lg font-mono font-bold text-text-primary uppercase tracking-wider">Search</h1>
-        </div>
-
-        {/* Search input */}
-        <div className="px-4 py-2 border-t border-border">
+      <SocialTopBar title="Search" />
+      {/* Search controls */}
+      <div className="sticky top-0 z-[5] bg-base/80 backdrop-blur-sm border-b border-border">
+        <div className="px-4 py-2">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -119,8 +116,6 @@ export default function SearchPage() {
             className="w-full bg-input text-sm font-mono text-text-primary placeholder:text-text-muted px-3 py-2 rounded border border-border focus:border-profit/40 focus:outline-none"
           />
         </div>
-
-        {/* Tabs */}
         <div className="flex px-4 gap-1 py-2 border-t border-border">
           {(['users', 'posts'] as SearchTab[]).map((t) => (
             <button
@@ -152,7 +147,7 @@ export default function SearchPage() {
           userResults.map((u) => (
             <Link
               key={u.id}
-              href={`/social/profile/${u.id}`}
+              href={`/profile/${u.id}`}
               className="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-hover transition-colors"
             >
               <UserAvatar avatarUrl={u.avatar_url} size="lg" />

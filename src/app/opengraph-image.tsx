@@ -12,14 +12,14 @@ export default async function Image() {
     (
       <div
         style={{
-          background: "#0B0B0F",
+          background: "#060C0D",
           width: "100%",
           height: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: "Inter, system-ui, sans-serif",
+          fontFamily: "Instrument Sans, system-ui, sans-serif",
         }}
       >
         <div

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-base: #0B0B0F;
+  --color-base: #060C0D;
   --color-surface: #12121A;
   --color-surface-2: #16161F;
   --color-card: #1A1A24;
@@ -25,8 +25,8 @@
   --color-text-secondary: #A1A1AA;
   --color-text-muted: #52525B;
 
-  --font-mono: var(--font-jetbrains), 'JetBrains Mono', 'Fira Code', monospace;
-  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  --font-sans: var(--font-instrument-sans), 'Instrument Sans', system-ui, sans-serif;
 
   --text-xxs: 0.6875rem;
   --text-xxs--line-height: 1rem;
@@ -35,7 +35,28 @@
 
   --radius-card: 12px;
   --radius-pill: 999px;
+
+  /* Unified rectangle radius — all rounded-* classes resolve to 12px.
+     rounded-full is unaffected (uses calc(infinity * 1px)). */
+  --radius-xs: 12px;
+  --radius-sm: 12px;
+  --radius-md: 12px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
+  --radius-4xl: 12px;
+
   --ease-snap: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Normalize bare `rounded` and directional variants to the unified 12px */
+@layer utilities {
+  .rounded { border-radius: 12px; }
+  .rounded-t { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+  .rounded-b { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+  .rounded-l { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+  .rounded-r { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
 }
 
 html, body {
@@ -74,21 +95,6 @@ html, body {
 
 @utility glow-loss {
   box-shadow: 0 0 20px -8px color-mix(in oklab, var(--color-loss) 70%, transparent);
-}
-
-/* Gold ring pulse — used on verified badges */
-@keyframes gold-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-gold) 60%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 0 6px color-mix(in oklab, var(--color-gold) 0%, transparent);
-  }
-}
-.verified-pulse {
-  animation: gold-pulse 2.4s ease-in-out infinite;
-  border-radius: 999px;
-  display: inline-flex;
 }
 
 ::selection {
@@ -175,7 +181,7 @@ html, body {
 .recharts-default-tooltip {
   background: var(--color-card) !important;
   border: 1px solid var(--color-border) !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
 }
 .recharts-tooltip-label {
   color: var(--color-text-primary) !important;

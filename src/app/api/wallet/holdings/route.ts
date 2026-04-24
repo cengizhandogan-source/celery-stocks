@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient(await cookies());
@@ -23,7 +25,12 @@ export async function GET(request: NextRequest) {
     // Compute total
     const totalNetWorth = (data ?? []).reduce((sum, h) => sum + (h.usd_value ?? 0), 0);
 
-    return NextResponse.json({ holdings: data ?? [], totalNetWorth });
+    return NextResponse.json(
+      { holdings: data ?? [], totalNetWorth },
+      {
+        headers: { 'Cache-Control': 'private, s-maxage=0, max-age=30, stale-while-revalidate=60' },
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to fetch holdings' },

@@ -5,13 +5,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     {
-      url: `${siteUrl}/social`,
+      url: `${siteUrl}/`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
-      url: `${siteUrl}/social/search`,
+      url: `${siteUrl}/search`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.8,

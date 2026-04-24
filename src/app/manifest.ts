@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "The social network for crypto traders. Share verified trades from connected exchanges, follow other traders, and chat in real time.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0B0B0F",
-    theme_color: "#0B0B0F",
+    background_color: "#060C0D",
+    theme_color: "#060C0D",
     icons: [
       {
         src: "/icon.png",

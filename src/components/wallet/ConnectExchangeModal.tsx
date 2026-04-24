@@ -8,6 +8,11 @@ type Step = 'select' | 'credentials' | 'validating' | 'success' | 'error';
 
 const EXCHANGES = Object.entries(EXCHANGE_METADATA) as [ExchangeName, { displayName: string; requiresPassphrase: boolean }][];
 
+const API_KEY_GUIDES: Partial<Record<ExchangeName, string>> = {
+  binance: 'https://www.youtube.com/watch?v=k9sR7UkXX-s',
+  coinbase: 'https://www.youtube.com/watch?v=qWlkZ6z_Amc',
+};
+
 export default function ConnectExchangeModal({
   onConnect,
   onClose,
@@ -91,6 +96,19 @@ export default function ConnectExchangeModal({
         <div className="space-y-3">
           <p className="text-xxs font-mono text-gold/80 bg-gold/5 border border-gold/20 rounded px-2 py-1.5">
             Create a read-only API key on {meta?.displayName}. This app never places trades.
+            {exchange && API_KEY_GUIDES[exchange] && (
+              <>
+                {' '}
+                <a
+                  href={API_KEY_GUIDES[exchange]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-info underline hover:text-info/80"
+                >
+                  Watch guide →
+                </a>
+              </>
+            )}
           </p>
           <input
             value={label}
