@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Heart, MessageCircle, Send } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowBigUp, MessageCircle, Send } from 'lucide-react';
 import { useComments } from '@/hooks/useComments';
 import { useUserSearch } from '@/hooks/useUserSearch';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -24,10 +25,16 @@ function formatTime(iso: string) {
 function CommentContent({ content }: { content: string }) {
   const parts = content.split(/(@\w+)/g);
   return (
-    <p className="text-xxs font-mono text-text-secondary leading-relaxed whitespace-pre-wrap break-words">
+    <p className="text-sm font-mono text-text-primary leading-relaxed whitespace-pre-wrap break-words">
       {parts.map((part, i) =>
         part.startsWith('@') ? (
-          <span key={i} className="text-info font-medium">{part}</span>
+          <Link
+            key={i}
+            href={`/profile/${part.slice(1)}`}
+            className="text-info font-medium hover:underline"
+          >
+            {part}
+          </Link>
         ) : (
           <span key={i}>{part}</span>
         )
@@ -70,30 +77,34 @@ function CommentRow({
     return () => document.removeEventListener('mousedown', handleClick);
   }, [menuOpen]);
 
-  const likeClass = comment.liked_by_me
-    ? 'text-text-primary'
-    : 'text-text-muted hover:text-text-primary';
+  const likeClass = 'text-text-primary';
   const likeTitle = currentUserId ? (comment.liked_by_me ? 'Unlike' : 'Like') : 'Sign in to like';
   const replyTitle = currentUserId ? 'Reply' : 'Sign in to reply';
 
   return (
     <div className="group flex items-start gap-1.5 py-1.5 px-2 hover:bg-hover/50 rounded transition-colors">
-      <UserAvatar avatarUrl={comment.profile?.avatar_url} size="xs" />
+      <Link href={`/profile/${comment.user_id}`} className="shrink-0">
+        <UserAvatar avatarUrl={comment.profile?.avatar_url} size="xs" />
+      </Link>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-xxs font-mono font-medium truncate text-text-primary">
+          <Link
+            href={`/profile/${comment.user_id}`}
+            className="text-xs font-mono font-medium truncate text-text-primary hover:underline"
+          >
             {comment.profile?.username ? `@${comment.profile.username}` : 'Unknown'}
-          </span>
+          </Link>
           {comment.profile?.is_verified && <VerifiedBadge size={12} />}
           <NetWorthBadge netWorth={comment.profile?.crypto_net_worth} showNetWorth={comment.profile?.show_net_worth} />
-          <span className="text-xxs font-mono text-text-muted">{timeStr}</span>
+          <span className="text-xs font-mono text-text-primary shrink-0" aria-hidden>·</span>
+          <span className="text-xs font-mono text-text-primary">{timeStr}</span>
 
           {isOwner && (
             <div className="relative ml-auto shrink-0" ref={menuRef}>
               <button
                 ref={btnRef}
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="text-xxs font-mono text-text-muted hover:text-text-secondary transition-colors px-1 leading-none opacity-0 group-hover:opacity-100"
+                className="text-xs font-mono text-text-primary transition-colors px-1 leading-none opacity-0 group-hover:opacity-100"
               >
                 &hellip;
               </button>
@@ -118,17 +129,20 @@ function CommentRow({
         </div>
 
         {parentUsername && (
-          <span className="text-xxs font-mono text-text-muted">
+          <span className="text-xs font-mono text-text-primary">
             ↳{' '}
-            <span className="text-text-primary">
+            <Link
+              href={`/profile/${parentUsername}`}
+              className="text-text-primary hover:underline"
+            >
               @{parentUsername}
-            </span>
+            </Link>
           </span>
         )}
 
         <CommentContent content={comment.content} />
 
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-3 mt-1">
           <button
             type="button"
             title={likeTitle}
@@ -136,10 +150,10 @@ function CommentRow({
               if (!currentUserId) { onAuthGate?.(); return; }
               onToggleLike(comment.id);
             }}
-            className={`flex items-center gap-1 text-xxs font-mono transition-colors ${likeClass}`}
+            className={`flex items-center gap-1 text-xs font-mono transition-colors ${likeClass}`}
           >
-            <Heart
-              size={12}
+            <ArrowBigUp
+              size={14}
               fill={comment.liked_by_me ? 'currentColor' : 'none'}
               strokeWidth={comment.liked_by_me ? 0 : 2}
             />
@@ -152,9 +166,9 @@ function CommentRow({
               if (!currentUserId) { onAuthGate?.(); return; }
               onReply(comment);
             }}
-            className="flex items-center gap-1 text-xxs font-mono text-text-muted hover:text-info transition-colors"
+            className="flex items-center gap-1 text-xs font-mono text-text-primary hover:text-info transition-colors"
           >
-            <MessageCircle size={12} />
+            <MessageCircle size={14} />
             <span>Reply</span>
           </button>
         </div>
@@ -337,10 +351,10 @@ export default function CommentSection({
     <div className="border-t border-border/50 ml-3 border-l-2 border-l-border/30">
       <div ref={listRef} onScroll={handleScroll} className="max-h-80 overflow-y-auto">
         {loading && comments.length === 0 && (
-          <div className="px-3 py-2 text-xxs font-mono text-text-muted">Loading...</div>
+          <div className="px-3 py-2 text-xxs font-mono text-text-primary">Loading...</div>
         )}
         {!loading && comments.length === 0 && (
-          <div className="px-3 py-2 text-xxs font-mono text-text-muted">No comments yet</div>
+          <div className="px-3 py-2 text-xxs font-mono text-text-primary">No comments yet</div>
         )}
         {threads.map(({ top, descendants }) => (
           <div key={top.id}>
@@ -373,7 +387,7 @@ export default function CommentSection({
           <button
             onClick={loadMore}
             disabled={loadingMore}
-            className="w-full text-xxs font-mono text-text-muted hover:text-text-primary py-1.5 transition-colors disabled:opacity-50"
+            className="w-full text-xxs font-mono text-text-primary py-1.5 transition-colors disabled:opacity-50"
           >
             {loadingMore ? 'Loading...' : 'Show more comments'}
           </button>
@@ -384,12 +398,12 @@ export default function CommentSection({
         <div className="relative px-2 py-1.5 border-t border-border/30">
           {replyTo && (
             <div className="flex items-center gap-1.5 px-2 pb-1">
-              <span className="text-xxs font-mono text-text-muted">
+              <span className="text-xxs font-mono text-text-primary">
                 replying to <span className="text-text-primary">@{replyTo.username}</span>
               </span>
               <button
                 onClick={cancelReply}
-                className="text-xxs font-mono text-text-muted hover:text-loss transition-colors leading-none"
+                className="text-xxs font-mono text-text-primary hover:text-loss transition-colors leading-none"
               >
                 ✕
               </button>
@@ -414,14 +428,14 @@ export default function CommentSection({
                 }
               }}
               placeholder="Add a comment..."
-              className="w-full bg-input text-xxs font-mono text-text-primary placeholder:text-text-muted px-2 py-1.5 rounded border border-border focus:border-info/40 focus:outline-none transition-colors"
+              className="w-full bg-input text-xxs font-mono text-text-primary placeholder:text-text-primary px-2 py-1.5 rounded border border-border focus:border-info/40 focus:outline-none transition-colors"
             />
             <button
               type="button"
               onClick={handleSubmit}
               disabled={!input.trim()}
               aria-label="Send comment"
-              className="text-xxs font-mono text-text-muted hover:text-info disabled:opacity-40 disabled:cursor-not-allowed transition-colors p-1.5 rounded"
+              className="text-xxs font-mono text-text-primary hover:text-info disabled:opacity-40 disabled:cursor-not-allowed transition-colors p-1.5 rounded"
             >
               <Send size={14} />
             </button>
@@ -431,7 +445,7 @@ export default function CommentSection({
         <div className="px-2 py-1.5 border-t border-border/30">
           <button
             onClick={() => requireAuth('leave a comment')}
-            className="w-full text-xxs font-mono text-text-muted hover:text-text-secondary py-1.5 text-left px-2 transition-colors"
+            className="w-full text-xxs font-mono text-text-primary py-1.5 text-left px-2 transition-colors"
           >
             Sign in to comment...
           </button>

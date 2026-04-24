@@ -14,7 +14,7 @@ export function EperBadge() {
       aria-label="Built by Eper Technologies"
       className="fixed bottom-3 left-3 z-40 opacity-70 hover:opacity-100 transition-opacity"
     >
-      <Image src="/eper-logo.png" alt="Eper Technologies" width={14} height={14} />
+      <Image src="/eper-logo.webp" alt="Eper Technologies" width={14} height={14} />
     </a>
   )
 }

@@ -44,15 +44,13 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
     return snapshots.filter((s) => s.date >= cutoffStr);
   }, [range, snapshots]);
 
-  const { isUp, lineColor, topGradient, bottomGradient } = useMemo(() => {
+  const { isUp, lineColor } = useMemo(() => {
     const f = filteredSnapshots[0]?.total_usd ?? 0;
     const l = currentValue ?? filteredSnapshots[filteredSnapshots.length - 1]?.total_usd ?? 0;
     const up = l >= f;
     return {
       isUp: up,
       lineColor: up ? '#00FFA3' : '#FF4D4F',
-      topGradient: up ? 'rgba(0,255,163,0.28)' : 'rgba(255,77,79,0.28)',
-      bottomGradient: up ? 'rgba(0,255,163,0.02)' : 'rgba(255,77,79,0.02)',
     };
   }, [filteredSnapshots, currentValue]);
 
@@ -84,7 +82,7 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
     const chart = createChart(containerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#A1A1AA',
+        textColor: '#FFFFFF',
         fontFamily: `${monoFontFamily}, 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace`,
         fontSize: 10,
         attributionLogo: false,
@@ -150,8 +148,8 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
     if (filteredSnapshots.length < 2) return;
 
     const series = chart.addSeries(AreaSeries, {
-      topColor: topGradient,
-      bottomColor: bottomGradient,
+      topColor: 'rgba(0,0,0,0)',
+      bottomColor: 'rgba(0,0,0,0)',
       lineColor,
       lineWidth: 2,
       crosshairMarkerVisible: true,
@@ -170,7 +168,7 @@ export default function NetWorthChart({ snapshots, currentValue }: NetWorthChart
     series.setData(data);
     seriesRef.current = series;
     chart.timeScale().fitContent();
-  }, [filteredSnapshots, lineColor, topGradient, bottomGradient]);
+  }, [filteredSnapshots, lineColor]);
 
   if (filteredSnapshots.length < 2) {
     return (

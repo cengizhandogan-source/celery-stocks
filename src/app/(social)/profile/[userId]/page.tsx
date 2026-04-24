@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import { useSocialProfile } from '@/hooks/useSocialProfile';
 import { useFollow } from '@/hooks/useFollow';
@@ -13,6 +14,8 @@ import NetWorthBadge from '@/components/ui/NetWorthBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
 import HoldingsTable from '@/components/wallet/HoldingsTable';
 import SocialTopBar from '@/components/social/SocialTopBar';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const NetWorthChart = dynamic(() => import('@/components/wallet/NetWorthChart'), {
   ssr: false,
@@ -58,19 +61,55 @@ function WalletHoldingsSection({ userId, isOwnProfile }: { userId: string; isOwn
 }
 
 export default function ProfilePage() {
-  const { userId } = useParams<{ userId: string }>();
+  const { userId: param } = useParams<{ userId: string }>();
+  const paramIsUuid = UUID_REGEX.test(param);
+  const [lookup, setLookup] = useState<{
+    param: string;
+    status: 'pending' | 'resolved' | 'failed';
+    id: string | null;
+  }>({ param, status: paramIsUuid ? 'resolved' : 'pending', id: paramIsUuid ? param : null });
+
+  // Reset lookup state synchronously when the URL param changes (React-sanctioned
+  // "reset on prop change during render" pattern — avoids the stale-id flash that
+  // an effect-based reset would cause).
+  if (lookup.param !== param) {
+    setLookup({ param, status: paramIsUuid ? 'resolved' : 'pending', id: paramIsUuid ? param : null });
+  }
+
+  useEffect(() => {
+    if (paramIsUuid) return;
+    const supabase = createClient();
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', param)
+      .single()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setLookup({ param, status: data?.id ? 'resolved' : 'failed', id: data?.id ?? null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [param, paramIsUuid]);
+
+  const resolvedId = lookup.param === param ? lookup.id : null;
+  const resolveFailed = lookup.param === param && lookup.status === 'failed';
+
   const { user } = useUser();
-  const { profile, loading: profileLoading, updateProfile } = useSocialProfile(userId);
-  const { isFollowing, loading: followLoading, toggleFollow } = useFollow(userId);
+  const { profile, loading: profileLoading, updateProfile } = useSocialProfile(resolvedId);
+  const { isFollowing, loading: followLoading, toggleFollow } = useFollow(resolvedId);
   const { requireAuth } = useAuthGate();
   const { posts, loading: postsLoading, loadingMore, hasMore, loadMore, setFilters, toggleLike, toggleTopCommentLike, deletePost } = useFeed();
-  const isOwnProfile = user?.id === userId;
+  const isOwnProfile = !!resolvedId && user?.id === resolvedId;
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Set userId filter on mount
   useEffect(() => {
-    setFilters((prev) => ({ ...prev, userId }));
-  }, [userId, setFilters]);
+    if (!resolvedId) return;
+    setFilters((prev) => ({ ...prev, userId: resolvedId }));
+  }, [resolvedId, setFilters]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -85,7 +124,15 @@ export default function ProfilePage() {
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
 
-  if (profileLoading) {
+  if (resolveFailed) {
+    return (
+      <div className="flex items-center justify-center py-20 text-text-muted text-sm font-mono">
+        User not found
+      </div>
+    );
+  }
+
+  if (!resolvedId || profileLoading) {
     return (
       <div className="flex items-center justify-center py-20 text-text-muted text-sm font-mono">
         Loading profile...
@@ -182,7 +229,7 @@ export default function ProfilePage() {
 
       {/* Holdings section */}
       {profile.crypto_net_worth != null && (isOwnProfile || profile.show_holdings) && (
-        <WalletHoldingsSection userId={userId} isOwnProfile={isOwnProfile} />
+        <WalletHoldingsSection userId={resolvedId} isOwnProfile={isOwnProfile} />
       )}
 
       {/* Posts */}

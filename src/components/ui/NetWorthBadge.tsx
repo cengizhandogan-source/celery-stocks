@@ -9,7 +9,7 @@ export default function NetWorthBadge({ netWorth, showNetWorth }: NetWorthBadgeP
   if (!showNetWorth || netWorth == null) return null;
 
   return (
-    <span className="text-xxs font-mono text-green-400 shrink-0">
+    <span className="text-xxs font-mono text-profit shrink-0">
       {formatNetWorth(netWorth)}
     </span>
   );

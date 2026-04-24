@@ -1,6 +1,6 @@
-import { useMemo, useEffect, useRef, useState, type ReactNode } from 'react';
+import { memo, useMemo, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { MessageCircle, Send, ArrowBigUp, Heart, MoreHorizontal } from 'lucide-react';
+import { MessageCircle, Send, ArrowBigUp, MoreHorizontal } from 'lucide-react';
 import TradeEmbed from './TradeEmbed';
 import MiniStockChart from './MiniStockChart';
 import PnLDisplay from './PnLDisplay';
@@ -42,7 +42,7 @@ function renderContentWithTickers(content: string): ReactNode[] {
   return parts.length > 0 ? parts : [content];
 }
 
-export default function PostCard({
+function PostCard({
   post,
   onToggleLike,
   onToggleTopCommentLike,
@@ -60,10 +60,11 @@ export default function PostCard({
   const { requireAuth } = useAuthGate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(defaultCommentsOpen);
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUserId != null && post.user_id === currentUserId;
-  const clickable = !defaultCommentsOpen;
-  const topComment = !defaultCommentsOpen ? post.top_comment ?? null : null;
+  const clickable = !commentsOpen;
+  const topComment = !commentsOpen ? post.top_comment ?? null : null;
   const liveSymbol =
     (post.post_type === 'position' && post.position_symbol) ||
     (post.post_type === 'trade' && post.trade_symbol) ||
@@ -103,7 +104,7 @@ export default function PostCard({
           className="absolute inset-0 z-[1] rounded-2xl focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-base focus-visible:outline-none"
         />
       )}
-      <div className={`relative z-[2]${clickable ? ' pointer-events-none' : ''}`}>
+      <div className={`relative z-10${clickable ? ' pointer-events-none' : ''}`}>
       {/* Header: author + time */}
       <div className="flex items-center gap-1.5 mb-2 text-xs">
         <Link href={`/profile/${post.user_id}`} className="flex items-center gap-1.5 min-w-0 pointer-events-auto">
@@ -176,46 +177,6 @@ export default function PostCard({
         </p>
       )}
 
-      {topComment && (
-        <div className="mt-3 flex items-start gap-1.5 rounded-lg bg-surface/40 px-2.5 py-1.5">
-          <UserAvatar avatarUrl={topComment.profile?.avatar_url} size="xs" />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xxs font-mono font-medium truncate text-text-primary">
-                {topComment.profile?.username ? `@${topComment.profile.username}` : 'Unknown'}
-              </span>
-              {topComment.profile?.is_verified && <VerifiedBadge size={12} />}
-              {topComment.parent?.profile?.username && (
-                <span className="text-xxs font-mono text-text-muted truncate">
-                  ↳ <span className="text-text-primary">@{topComment.parent.profile.username}</span>
-                </span>
-              )}
-            </div>
-            <p className="text-xxs font-mono text-text-secondary leading-relaxed line-clamp-2 break-words">
-              {topComment.content}
-            </p>
-          </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!onToggleTopCommentLike) return;
-              if (requireAuth('like this comment')) onToggleTopCommentLike(post.id, topComment.id);
-            }}
-            className={`flex items-center gap-1 text-xxs font-mono shrink-0 mt-0.5 pointer-events-auto transition-colors duration-150 ease-[var(--ease-snap)] ${
-              topComment.liked_by_me ? 'text-gold' : 'text-text-muted hover:text-gold'
-            }`}
-            aria-label={topComment.liked_by_me ? 'Unlike comment' : 'Like comment'}
-          >
-            <Heart
-              size={12}
-              strokeWidth={2}
-              fill={topComment.liked_by_me ? 'currentColor' : 'none'}
-            />
-            <span>{topComment.like_count}</span>
-          </button>
-        </div>
-      )}
-
       {/* Footer: vote pill + comment + share */}
       <div className="flex items-center gap-2 mt-3">
         <button
@@ -223,23 +184,32 @@ export default function PostCard({
           className={`flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans transition-all duration-150 ease-[var(--ease-snap)] pointer-events-auto ${
             post.liked_by_me
               ? 'bg-gold text-base hover:bg-gold-bright'
-              : 'text-text-muted bg-surface/60 hover:text-gold hover:bg-gold/10'
+              : 'text-text-primary bg-hover hover:text-gold hover:bg-gold/10'
           }`}
           aria-label={post.liked_by_me ? 'Unlike' : 'Like'}
         >
           <ArrowBigUp size={16} strokeWidth={2} fill={post.liked_by_me ? 'currentColor' : 'none'} />
           <span className="font-mono tabular-nums">{post.like_count}</span>
         </button>
-        <div
-          className="flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans text-text-muted bg-surface/60"
-          aria-label={`${post.comment_count || 0} comments`}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setCommentsOpen((v) => !v);
+          }}
+          className={`flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans transition-all duration-150 ease-[var(--ease-snap)] pointer-events-auto ${
+            commentsOpen
+              ? 'text-text-primary bg-hover'
+              : 'text-text-primary bg-hover'
+          }`}
+          aria-expanded={commentsOpen}
+          aria-label={commentsOpen ? 'Hide comments' : `Show ${post.comment_count || 0} comments`}
         >
           <MessageCircle size={14} strokeWidth={1.75} />
           <span className="font-mono tabular-nums">{post.comment_count || 0}</span>
-        </div>
+        </button>
         <button
           onClick={() => setShareOpen(true)}
-          className="flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans text-text-muted bg-surface/60 hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)] pointer-events-auto"
+          className="flex items-center gap-1.5 rounded-full h-8 px-3 text-xs font-sans text-text-primary bg-hover transition-all duration-150 ease-[var(--ease-snap)] pointer-events-auto"
           title="Share"
           aria-label="Share post"
         >
@@ -248,7 +218,61 @@ export default function PostCard({
         </button>
       </div>
 
-      {defaultCommentsOpen && (
+      {topComment && (
+        <div className="mt-3 pt-3 border-t border-border/40 flex items-start gap-1.5">
+          <Link href={`/profile/${topComment.user_id}`} className="shrink-0 pointer-events-auto">
+            <UserAvatar avatarUrl={topComment.profile?.avatar_url} size="xs" />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <Link
+                href={`/profile/${topComment.user_id}`}
+                className="text-xs font-mono font-medium truncate text-text-primary hover:underline pointer-events-auto"
+              >
+                {topComment.profile?.username ? `@${topComment.profile.username}` : 'Unknown'}
+              </Link>
+              {topComment.profile?.is_verified && <VerifiedBadge size={12} />}
+              {topComment.parent?.profile?.username && (
+                <span className="text-xs font-mono text-text-primary truncate">
+                  ↳{' '}
+                  <Link
+                    href={`/profile/${topComment.parent.profile.username}`}
+                    className="text-text-primary hover:underline pointer-events-auto"
+                  >
+                    @{topComment.parent.profile.username}
+                  </Link>
+                </span>
+              )}
+            </div>
+            <p className="text-sm font-mono text-text-primary leading-relaxed line-clamp-2 break-words">
+              {topComment.content}
+            </p>
+            <div className="flex items-center gap-3 mt-1">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!onToggleTopCommentLike) return;
+                  if (requireAuth('like this comment')) onToggleTopCommentLike(post.id, topComment.id);
+                }}
+                className={`flex items-center gap-1 text-xs font-mono pointer-events-auto transition-colors ${
+                  topComment.liked_by_me ? 'text-text-primary' : 'text-text-primary'
+                }`}
+                aria-label={topComment.liked_by_me ? 'Unlike comment' : 'Like comment'}
+              >
+                <ArrowBigUp
+                  size={14}
+                  fill={topComment.liked_by_me ? 'currentColor' : 'none'}
+                  strokeWidth={topComment.liked_by_me ? 0 : 2}
+                />
+                {topComment.like_count > 0 && <span>{topComment.like_count}</span>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {commentsOpen && (
         <div className="mt-2">
           <CommentSection postId={post.id} currentUserId={currentUserId} />
         </div>
@@ -259,3 +283,5 @@ export default function PostCard({
     </article>
   );
 }
+
+export default memo(PostCard);

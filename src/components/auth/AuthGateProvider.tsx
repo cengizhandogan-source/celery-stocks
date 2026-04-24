@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useUser } from '@/hooks/useUser';
@@ -21,9 +21,10 @@ export default function AuthGateProvider({ children }: { children: React.ReactNo
   );
 
   const redirectTo = encodeURIComponent(pathname);
+  const contextValue = useMemo(() => ({ requireAuth }), [requireAuth]);
 
   return (
-    <AuthGateContext value={{ requireAuth }}>
+    <AuthGateContext value={contextValue}>
       {children}
 
       {/* Auth gate modal */}

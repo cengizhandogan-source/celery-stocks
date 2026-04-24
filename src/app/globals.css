@@ -22,8 +22,8 @@
   --color-info: #3B82F6;
 
   --color-text-primary: #FFFFFF;
-  --color-text-secondary: #A1A1AA;
-  --color-text-muted: #52525B;
+  --color-text-secondary: #FFFFFF;
+  --color-text-muted: #FFFFFF;
 
   --font-mono: var(--font-plex-mono), 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
   --font-sans: var(--font-instrument-sans), 'Instrument Sans', system-ui, sans-serif;
@@ -87,14 +87,6 @@ html, body {
   box-shadow:
     0 0 0 1px color-mix(in oklab, var(--color-gold) 40%, transparent),
     0 0 24px -8px color-mix(in oklab, var(--color-gold) 60%, transparent);
-}
-
-@utility glow-profit {
-  box-shadow: 0 0 20px -8px color-mix(in oklab, var(--color-profit) 70%, transparent);
-}
-
-@utility glow-loss {
-  box-shadow: 0 0 20px -8px color-mix(in oklab, var(--color-loss) 70%, transparent);
 }
 
 ::selection {

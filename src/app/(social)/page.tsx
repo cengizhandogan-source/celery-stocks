@@ -56,7 +56,7 @@ function FeedPageBody() {
           role="dialog"
           aria-modal="true"
           aria-label="Create post"
-          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-20"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-3 pt-16 md:p-4 md:pt-20"
           onClick={closeComposer}
         >
           <div
@@ -75,7 +75,7 @@ function FeedPageBody() {
 
       {/* Feed */}
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-text-muted text-sm font-sans">
+        <div className="flex items-center justify-center py-20 text-text-muted text-sm font-sans md:-ml-[120px]">
           Loading feed...
         </div>
       ) : posts.length === 0 ? (

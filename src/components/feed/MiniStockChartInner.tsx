@@ -55,9 +55,9 @@ export default function MiniStockChartInner({
                   </div>
                 );
               }}
-              cursor={{ stroke: '#52525B', strokeWidth: 1, strokeDasharray: '3 3' }}
+              cursor={{ stroke: 'rgba(255,255,255,0.25)', strokeWidth: 1, strokeDasharray: '3 3' }}
             />
-            <ReferenceLine y={first} stroke="#52525B" strokeDasharray="3 3" strokeWidth={1} />
+            <ReferenceLine y={first} stroke="rgba(255,255,255,0.25)" strokeDasharray="3 3" strokeWidth={1} />
             <Area type="monotone" dataKey="close" stroke={color} fill="transparent" strokeWidth={1.5} dot={{ r: 1.5, fill: color, strokeWidth: 0 }} isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
@@ -96,11 +96,11 @@ export default function MiniStockChartInner({
                     </div>
                   );
                 }}
-                cursor={{ stroke: '#52525B', strokeWidth: 1, strokeDasharray: '3 3' }}
+                cursor={{ stroke: 'rgba(255,255,255,0.25)', strokeWidth: 1, strokeDasharray: '3 3' }}
               />
               <ReferenceLine
                 y={first}
-                stroke="#52525B"
+                stroke="rgba(255,255,255,0.25)"
                 strokeDasharray="3 3"
                 strokeWidth={1}
               />

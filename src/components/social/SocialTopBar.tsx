@@ -1,4 +1,8 @@
+'use client';
+
 import { ReactNode } from 'react';
+import { Menu } from 'lucide-react';
+import { useUiStore } from '@/stores/uiStore';
 
 export default function SocialTopBar({
   title,
@@ -9,12 +13,26 @@ export default function SocialTopBar({
   left?: ReactNode;
   right?: ReactNode;
 }) {
+  const toggleSidebar = useUiStore((s) => s.toggleSidebar);
+
   return (
     <>
       <div className="fixed top-0 left-0 right-0 z-10 h-[56px] bg-base/80 backdrop-blur-md border-b border-border">
         <div className="relative h-full flex items-center">
-          {left && <div className="absolute left-[calc(240px+1rem)] flex items-center">{left}</div>}
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-xl font-sans font-semibold text-text-primary tracking-tight">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label="Open menu"
+            className="md:hidden absolute left-4 p-2 -m-2 text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <Menu size={20} strokeWidth={1.75} />
+          </button>
+          {left && (
+            <div className="absolute left-14 md:left-[calc(240px+1rem)] flex items-center">
+              {left}
+            </div>
+          )}
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-xl font-sans font-semibold text-text-primary tracking-tight max-w-[50vw] md:max-w-none truncate">
             {title}
           </h1>
           {right && <div className="absolute right-4 flex items-center">{right}</div>}

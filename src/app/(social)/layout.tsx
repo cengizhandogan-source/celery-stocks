@@ -11,7 +11,7 @@ export default function SocialLayout({ children }: { children: React.ReactNode }
     <AuthGateProvider>
       <div className="min-h-screen">
         <SocialSidebar />
-        <main>
+        <main className="md:pl-[240px]">
           <div className="max-w-[760px] mx-auto min-h-screen px-3 py-2">
             {children}
           </div>

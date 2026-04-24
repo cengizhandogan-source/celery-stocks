@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
+import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import PostDetailClient from './PostDetailClient';
 import SocialTopBar from '@/components/social/SocialTopBar';
@@ -70,9 +71,9 @@ export default async function PostPage({ params }: { params: Promise<{ postId: s
       <Link
         href="/"
         aria-label="Back to feed"
-        className="absolute top-[60px] left-0 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full text-text-muted bg-surface/70 backdrop-blur-sm hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
+        className="absolute top-2 left-0 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full text-text-secondary bg-card/80 border border-border backdrop-blur-sm hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
       >
-        <span aria-hidden className="text-base leading-none">&larr;</span>
+        <ArrowLeft size={18} strokeWidth={2} />
       </Link>
       <PostDetailClient initialPost={post} />
     </div>

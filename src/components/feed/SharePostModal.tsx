@@ -92,7 +92,7 @@ export default function SharePostModal({ post, onClose }: { post: Post; onClose:
       role="dialog"
       aria-modal="true"
       aria-label="Share post"
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-20"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-3 pt-16 md:p-4 md:pt-20"
       onClick={onClose}
     >
       <div

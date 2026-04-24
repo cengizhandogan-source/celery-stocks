@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { getLogoUrl } from '@/lib/logoUrl';
 
 // Module-level cache so fetches persist across re-renders
@@ -36,7 +36,7 @@ interface TickerLogoProps {
   className?: string;
 }
 
-export default function TickerLogo({ symbol, website, size = 24, className = '' }: TickerLogoProps) {
+function TickerLogo({ symbol, website, size = 24, className = '' }: TickerLogoProps) {
   const [imgError, setImgError] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(() => {
     // Try to resolve immediately (crypto or with website)
@@ -105,3 +105,5 @@ export default function TickerLogo({ symbol, website, size = 24, className = '' 
     />
   );
 }
+
+export default memo(TickerLogo);

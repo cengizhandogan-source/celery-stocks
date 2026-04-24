@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Instrument_Sans, Exo_2 } from "next/font/google";
 import Link from "next/link";
 import { EperBadge } from "@/components/ui/EperBadge";
@@ -22,10 +22,16 @@ const exo2 = Exo_2({
   subsets: ["latin"],
   variable: "--font-exo2",
   display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://coinly.club";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -124,13 +130,13 @@ const jsonLd = {
       "@type": "Organization",
       name: "Coinly",
       url: siteUrl,
-      logo: `${siteUrl}/coinly-logo.png`,
+      logo: `${siteUrl}/coinly-logo.webp`,
     },
     {
       "@type": "Organization",
       name: "Eper Technologies",
       url: "https://epertechnologies.com",
-      logo: `${siteUrl}/eper-logo.png`,
+      logo: `${siteUrl}/eper-logo.webp`,
     },
   ],
 };

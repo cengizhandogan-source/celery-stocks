@@ -1,12 +1,13 @@
 'use client';
 
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useChatStore } from '@/stores/chatStore';
+import { useUiStore } from '@/stores/uiStore';
 import { createClient } from '@/utils/supabase/client';
 import VerifiedBadge from '@/components/ui/VerifiedBadge';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -23,6 +24,23 @@ export default function SocialSidebar() {
   const { user } = useUser();
   const { profile } = useUserProfile();
   const unreadDmCount = useChatStore((s) => s.unreadDmCount);
+  const sidebarOpen = useUiStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useUiStore((s) => s.setSidebarOpen);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname, setSidebarOpen]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const mql = window.matchMedia('(max-width: 767px)');
+    if (!mql.matches) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [sidebarOpen]);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -31,12 +49,24 @@ export default function SocialSidebar() {
   };
 
   return (
-    <aside className="w-[240px] h-screen fixed top-0 left-0 flex flex-col bg-base z-40">
+    <>
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          aria-hidden
+        />
+      )}
+      <aside
+        className={`w-[240px] h-[100dvh] fixed top-0 left-0 flex flex-col bg-base z-40 transition-transform duration-200 ease-[var(--ease-snap)] md:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
       {/* Logo */}
       <div className="h-[56px] flex items-center px-5 border-b border-border">
         <Link href="/" className="flex items-center">
           <Image
-            src="/coinly-text.png"
+            src="/coinly-text.webp"
             alt="Coinly"
             width={192}
             height={108}
@@ -58,7 +88,7 @@ export default function SocialSidebar() {
               {label === 'Search' && user && (
                 <Link
                   href="/?compose=1"
-                  className="flex items-center gap-3 px-5 py-2.5 font-sans text-sm text-text-secondary hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
+                  className="flex items-center gap-3 px-5 py-3 md:py-2.5 font-sans text-sm text-text-secondary hover:text-text-primary hover:bg-hover transition-all duration-150 ease-[var(--ease-snap)]"
                 >
                   <Plus size={18} strokeWidth={1.75} />
                   <span>Post</span>
@@ -66,7 +96,7 @@ export default function SocialSidebar() {
               )}
               <Link
                 href={href}
-                className={`relative flex items-center gap-3 px-5 py-2.5 font-sans text-sm transition-all duration-150 ease-[var(--ease-snap)] ${
+                className={`relative flex items-center gap-3 px-5 py-3 md:py-2.5 font-sans text-sm transition-all duration-150 ease-[var(--ease-snap)] ${
                   isActive
                     ? 'text-gold bg-gold/5'
                     : 'text-text-secondary hover:text-text-primary hover:bg-hover'
@@ -94,7 +124,7 @@ export default function SocialSidebar() {
             </div>
             <Link
               href={`/profile/${user.id}`}
-            className={`relative flex items-center gap-3 px-5 py-2.5 font-sans text-sm transition-all duration-150 ease-[var(--ease-snap)] ${
+            className={`relative flex items-center gap-3 px-5 py-3 md:py-2.5 font-sans text-sm transition-all duration-150 ease-[var(--ease-snap)] ${
               pathname.startsWith('/profile')
                 ? 'text-gold bg-gold/5'
                 : 'text-text-secondary hover:text-text-primary hover:bg-hover'
@@ -117,7 +147,7 @@ export default function SocialSidebar() {
           <div className="flex items-center justify-end gap-3">
             <Link
               href="/settings"
-              className={`transition-colors duration-150 ${
+              className={`p-2 -m-2 transition-colors duration-150 ${
                 pathname.startsWith('/settings')
                   ? 'text-gold'
                   : 'text-text-muted hover:text-text-secondary'
@@ -128,7 +158,7 @@ export default function SocialSidebar() {
             </Link>
             <button
               onClick={handleSignOut}
-              className="text-text-muted hover:text-loss transition-colors duration-150"
+              className="p-2 -m-2 text-text-muted hover:text-loss transition-colors duration-150"
               aria-label="Sign out"
             >
               <LogOut size={15} strokeWidth={1.75} />
@@ -143,6 +173,7 @@ export default function SocialSidebar() {
           </Link>
         )}
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
