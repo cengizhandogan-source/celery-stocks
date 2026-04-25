@@ -64,7 +64,16 @@ export default function SocialSidebar() {
       >
       {/* Logo */}
       <div className="h-[56px] flex items-center px-5 border-b border-border">
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/coinly-logo.webp"
+            alt=""
+            width={108}
+            height={108}
+            priority
+            className="h-9 w-auto"
+            aria-hidden
+          />
           <Image
             src="/coinly-text.webp"
             alt="Coinly"
@@ -165,12 +174,14 @@ export default function SocialSidebar() {
             </button>
           </div>
         ) : (
-          <Link
-            href="/login"
-            className="text-xs font-sans text-text-muted hover:text-gold transition-colors"
-          >
-            Sign In
-          </Link>
+          <div className="flex items-center justify-end">
+            <Link
+              href="/login"
+              className="text-xs font-sans text-text-muted hover:text-gold transition-colors"
+            >
+              Sign In
+            </Link>
+          </div>
         )}
       </div>
       </aside>

@@ -17,7 +17,7 @@ export default function SocialTopBar({
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-10 h-[56px] bg-base/80 backdrop-blur-md border-b border-border">
+      <div className="fixed top-0 left-0 md:left-[240px] right-0 z-40 h-[56px] bg-black/85 backdrop-blur-md border-b border-border">
         <div className="relative h-full flex items-center">
           <button
             type="button"
@@ -28,7 +28,7 @@ export default function SocialTopBar({
             <Menu size={20} strokeWidth={1.75} />
           </button>
           {left && (
-            <div className="absolute left-14 md:left-[calc(240px+1rem)] flex items-center">
+            <div className="absolute left-14 md:left-4 flex items-center">
               {left}
             </div>
           )}
