@@ -27,10 +27,14 @@ export async function signup(_prevState: AuthState, formData: FormData) {
   const redirectTo = (formData.get('redirectTo') as string) || '/'
 
   const supabase = createClient(await cookies())
-  const { error } = await supabase.auth.signUp({ email, password })
+  const { data, error } = await supabase.auth.signUp({ email, password })
 
   if (error) {
     return { error: error.message }
+  }
+
+  if (!data.session) {
+    redirect(`/check-email?next=${encodeURIComponent(redirectTo)}`)
   }
 
   redirect(redirectTo)

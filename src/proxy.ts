@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 function isPublicRoute(pathname: string): boolean {
-  if (pathname === '/' || pathname === '/search' || pathname === '/login' || pathname === '/signup') {
+  if (pathname === '/' || pathname === '/search' || pathname === '/login' || pathname === '/signup' || pathname === '/check-email') {
     return true;
   }
   if (pathname.startsWith('/api/') || pathname.startsWith('/auth/') || pathname.startsWith('/profile/') || pathname.startsWith('/post/')) {
